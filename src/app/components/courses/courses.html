@@ -1,0 +1,84 @@
+<section id="courses" class="py-24 bg-white relative overflow-hidden">
+  <!-- Accent shape -->
+  <div class="absolute top-1/3 right-0 w-80 h-80 bg-brand-pink/5 rounded-full filter blur-3xl -translate-y-1/2"></div>
+  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-20">
+      <h2 class="text-xs font-bold text-brand-pink uppercase tracking-widest mb-3">
+        {{ i18n.currentLang() === 'vi' ? 'Khóa học tuyển sinh' : '课程设置' }}
+      </h2>
+      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy leading-tight">
+        {{ i18n.translate()('courses.title') }}
+      </p>
+      <div class="w-12 h-1 bg-brand-pink mx-auto mt-4 rounded-full"></div>
+      <p class="text-base sm:text-lg text-gray-500 mt-5 leading-relaxed">
+        {{ i18n.translate()('courses.subtitle') }}
+      </p>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      @for (course of courses; track course.id) {
+        <div class="bg-brand-light hover:bg-white rounded-3xl p-8 border border-brand-navy/5 hover:border-brand-pink/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          
+          <div>
+            <!-- Course Icon Header -->
+            <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-pink shadow-sm border border-brand-navy/5 mb-8 group-hover:bg-brand-pink group-hover:text-white transition-all duration-300">
+              @if (course.id === 'hsk') {
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-16.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-16.25v14.25" />
+                </svg>
+              } @else if (course.id === 'business') {
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v16.5m16.5-16.5v16.5m-15-16.5h13.5m-10.5 3h7.5m-7.5 3h7.5m-7.5 3h7.5M8.25 15h7.5" />
+                </svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25M12 9h4.5m-4.5 3h4.5m-4.5 3h4.5m-10.5-9h16.5c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125H3.375A1.125 1.125 0 012.25 15V5.625C2.25 5.004 2.754 4.5 3.375 4.5h17.25c.621 0 1.125.504 1.125 1.125v3" />
+                </svg>
+              }
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-xl font-display font-black text-brand-navy mb-4 group-hover:text-brand-pink transition-colors">
+              {{ i18n.translate()(course.titleKey) }}
+            </h3>
+
+            <!-- Description -->
+            <p class="text-sm text-gray-500 leading-relaxed font-sans mb-8">
+              {{ i18n.translate()(course.descKey) }}
+            </p>
+
+            <!-- Metadata List -->
+            <div class="border-t border-brand-navy/5 pt-6 space-y-3.5 mb-8">
+              <div class="flex items-center justify-between text-xs sm:text-sm">
+                <span class="text-gray-400 font-medium">{{ i18n.translate()('course.duration') }}</span>
+                <span class="text-brand-navy font-bold">{{ course.duration }}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs sm:text-sm">
+                <span class="text-gray-400 font-medium">{{ i18n.translate()('course.class_size') }}</span>
+                <span class="text-brand-navy font-bold">{{ course.classSize }}</span>
+              </div>
+              <div class="flex items-start justify-between text-xs sm:text-sm gap-4">
+                <span class="text-gray-400 font-medium shrink-0">{{ i18n.translate()('course.target') }}</span>
+                <span class="text-brand-navy font-bold text-right">{{ course.target }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enroll CTA Button -->
+          <a href="https://zalo.me/0345092389"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="w-full py-3.5 bg-brand-navy hover:bg-brand-pink text-white rounded-2xl text-center text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300">
+            {{ i18n.translate()('nav.enroll') }}
+          </a>
+
+        </div>
+      }
+    </div>
+
+  </div>
+</section>

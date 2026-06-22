@@ -1,0 +1,112 @@
+<section id="about" class="py-24 bg-white relative overflow-hidden">
+  <!-- Decorative element -->
+  <div class="absolute top-1/2 left-0 w-64 h-64 bg-brand-pink/5 rounded-full filter blur-3xl -translate-x-1/2"></div>
+  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-20">
+      <h2 class="text-xs font-bold text-brand-pink uppercase tracking-widest mb-3">
+        {{ i18n.currentLang() === 'vi' ? 'Về chúng tôi' : '关于我们' }}
+      </h2>
+      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy leading-tight">
+        {{ i18n.translate()('about.title') }}
+      </p>
+      <div class="w-12 h-1 bg-brand-pink mx-auto mt-4 rounded-full"></div>
+      <p class="text-base sm:text-lg text-gray-500 mt-5 leading-relaxed">
+        {{ i18n.translate()('about.subtitle') }}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+      
+      <!-- Philosophy / Motto Card -->
+      <div class="lg:col-span-5 flex flex-col justify-between p-8 sm:p-10 bg-brand-navy rounded-3xl text-white shadow-xl relative overflow-hidden">
+        <!-- Background highlight -->
+        <div class="absolute -bottom-10 -right-10 w-48 h-48 bg-brand-pink/25 rounded-full filter blur-2xl"></div>
+        
+        <div class="relative z-10">
+          <span class="text-brand-pink text-3xl font-display font-black">“</span>
+          <h3 class="text-xl sm:text-2xl font-display font-bold mb-6 text-brand-accent">
+            {{ i18n.translate()('about.motto_title') }}
+          </h3>
+          <p class="text-base sm:text-lg font-medium leading-relaxed font-sans italic text-white/90">
+            {{ i18n.translate()('about.motto_content') }}
+          </p>
+        </div>
+        
+        <!-- Branding icon or graphic -->
+        <div class="mt-12 flex items-center justify-between border-t border-white/10 pt-6 relative z-10">
+          <span class="text-xs uppercase tracking-widest text-white/50 font-semibold font-display">Mayo Creative Chinese</span>
+          <div class="w-8 h-8 rounded-full bg-brand-pink flex items-center justify-center font-bold text-xs">M</div>
+        </div>
+      </div>
+
+      <!-- 4 Pillars Grid -->
+      <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        
+        <!-- Pillar 1: Pronunciation -->
+        <div class="p-6 bg-brand-light rounded-3xl border border-brand-navy/5 hover:border-brand-pink/25 hover:shadow-lg transition-all duration-300 group">
+          <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-pink shadow-sm mb-5 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+            </svg>
+          </div>
+          <h4 class="text-lg font-bold text-brand-navy font-display mb-2">
+            {{ i18n.translate()('about.pillar.sessions') }}
+          </h4>
+          <p class="text-sm text-gray-500 leading-relaxed font-sans">
+            {{ i18n.translate()('about.pillar.sessions_desc') }}
+          </p>
+        </div>
+
+        <!-- Pillar 2: HSK standard -->
+        <div class="p-6 bg-brand-light rounded-3xl border border-brand-navy/5 hover:border-brand-pink/25 hover:shadow-lg transition-all duration-300 group">
+          <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-navy shadow-sm mb-5 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-16.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-16.25v14.25" />
+            </svg>
+          </div>
+          <h4 class="text-lg font-bold text-brand-navy font-display mb-2">
+            {{ i18n.translate()('about.pillar.hsk') }}
+          </h4>
+          <p class="text-sm text-gray-500 leading-relaxed font-sans">
+            {{ i18n.translate()('about.pillar.hsk_desc') }}
+          </p>
+        </div>
+
+        <!-- Pillar 3: Applied -->
+        <div class="p-6 bg-brand-light rounded-3xl border border-brand-navy/5 hover:border-brand-pink/25 hover:shadow-lg transition-all duration-300 group">
+          <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-navy shadow-sm mb-5 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125H4.875A1.125 1.125 0 013.75 18.4v-4.25m16.5 0a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25m16.5 0V7.425c0-.621-.504-1.125-1.125-1.125H4.875A1.125 1.125 0 003.75 7.425V14.15m16.5 0h-16.5m16.5 0H16.875" />
+            </svg>
+          </div>
+          <h4 class="text-lg font-bold text-brand-navy font-display mb-2">
+            {{ i18n.translate()('about.pillar.practical') }}
+          </h4>
+          <p class="text-sm text-gray-500 leading-relaxed font-sans">
+            {{ i18n.translate()('about.pillar.practical_desc') }}
+          </p>
+        </div>
+
+        <!-- Pillar 4: Classroom -->
+        <div class="p-6 bg-brand-light rounded-3xl border border-brand-navy/5 hover:border-brand-pink/25 hover:shadow-lg transition-all duration-300 group">
+          <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-pink shadow-sm mb-5 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+            </svg>
+          </div>
+          <h4 class="text-lg font-bold text-brand-navy font-display mb-2">
+            {{ i18n.translate()('about.pillar.classroom') }}
+          </h4>
+          <p class="text-sm text-gray-500 leading-relaxed font-sans">
+            {{ i18n.translate()('about.pillar.classroom_desc') }}
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>

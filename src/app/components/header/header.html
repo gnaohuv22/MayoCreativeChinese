@@ -1,0 +1,147 @@
+<header class="fixed top-0 left-0 w-full z-50 border-b border-white/10 transition-all duration-300"
+        [class.bg-white/85]="isScrolled()"
+        [class.backdrop-blur-md]="isScrolled()"
+        [class.shadow-md]="isScrolled()"
+        [class.py-3]="isScrolled()"
+        [class.bg-transparent]="!isScrolled()"
+        [class.py-5]="!isScrolled()">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#home" class="flex items-center space-x-3 group">
+        <div class="relative w-10 h-10 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <img ngSrc="android-chrome-192x192.png" width="36" height="36" alt="MCC Logo" class="object-contain" priority />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-lg font-bold font-display tracking-tight text-brand-navy group-hover:text-brand-pink transition-colors duration-300">
+            Mayo Creative
+          </span>
+          <span class="text-xs font-semibold uppercase tracking-widest text-brand-pink -mt-1">
+            Chinese
+          </span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center space-x-8">
+        @for (item of navItems; track item.id) {
+          <a [href]="'#' + item.id"
+             class="text-sm font-medium transition-colors duration-300 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-brand-pink after:transition-all after:duration-300 hover:after:w-full"
+             [class.text-brand-pink]="activeSection() === item.id"
+             [class.text-brand-navy]="activeSection() !== item.id"
+             [class.hover:text-brand-pink]="activeSection() !== item.id">
+            {{ i18n.translate()('nav.' + item.id) }}
+          </a>
+        }
+      </nav>
+
+      <!-- Right side Controls -->
+      <div class="hidden md:flex items-center space-x-4">
+        <!-- Language Selector Dropdown -->
+        <div class="relative">
+          <button (click)="toggleLangDropdown()"
+                  class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border border-brand-navy/10 text-xs font-semibold text-brand-navy hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none"
+                  aria-haspopup="true"
+                  [attr.aria-expanded]="isLangDropdownOpen()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138A14.25 14.25 0 000 5.621m12 5.565c-1.39.251-2.735.723-3.994 1.402M12 11.25c.123.545.408 1.058.82 1.47" />
+            </svg>
+            <span class="uppercase">{{ i18n.currentLang() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 transition-transform duration-300" [class.rotate-180]="isLangDropdownOpen()">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+
+          <!-- Dropdown menu -->
+          @if (isLangDropdownOpen()) {
+            <div class="absolute right-0 mt-2 w-40 rounded-2xl bg-white border border-brand-navy/5 shadow-xl py-2 z-50">
+              @for (lang of i18n.languages; track lang.code) {
+                <button (click)="changeLang(lang.code)"
+                        class="w-full text-left px-4 py-2 text-xs font-semibold text-brand-navy hover:bg-brand-pink hover:text-white flex items-center justify-between transition-colors duration-200">
+                  <span>{{ lang.label }}</span>
+                  @if (i18n.currentLang() === lang.code) {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Zalo CTA -->
+        <a href="https://zalo.me/0345092389"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="px-5 py-2.5 bg-brand-navy hover:bg-brand-pink text-white rounded-full text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+          {{ i18n.translate()('nav.enroll') }}
+        </a>
+      </div>
+
+      <!-- Mobile Controls -->
+      <div class="md:hidden flex items-center space-x-2">
+        <!-- Language selector dropdown for Mobile -->
+        <div class="relative">
+          <button (click)="toggleLangDropdown()"
+                  class="px-2.5 py-1.5 rounded-full border border-brand-navy/10 text-[10px] font-bold text-brand-navy uppercase">
+            {{ i18n.currentLang() }}
+          </button>
+          
+          @if (isLangDropdownOpen()) {
+            <div class="absolute right-0 mt-2 w-32 rounded-xl bg-white border border-brand-navy/5 shadow-xl py-1.5 z-50">
+              @for (lang of i18n.languages; track lang.code) {
+                <button (click)="changeLang(lang.code)"
+                        class="w-full text-left px-3 py-2 text-[10px] font-bold text-brand-navy hover:bg-brand-pink hover:text-white flex items-center justify-between">
+                  <span>{{ lang.label }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <button (click)="toggleMobileMenu()"
+                class="p-2 rounded-md text-brand-navy hover:text-brand-pink focus:outline-none"
+                aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          @if (isMobileMenuOpen()) {
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          } @else {
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Drawer -->
+  <div class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 backdrop-blur-lg border-t border-brand-navy/5 shadow-inner"
+       [class.max-h-[400px]]="isMobileMenuOpen()"
+       [class.py-4]="isMobileMenuOpen()">
+    <div class="px-4 space-y-2">
+      @for (item of navItems; track item.id) {
+        <a [href]="'#' + item.id"
+           (click)="closeMobileMenu()"
+           class="block px-3 py-2.5 rounded-lg text-base font-medium transition-colors"
+           [class.bg-brand-pink/10]="activeSection() === item.id"
+           [class.text-brand-pink]="activeSection() === item.id"
+           [class.text-brand-navy]="activeSection() !== item.id">
+          {{ i18n.translate()('nav.' + item.id) }}
+        </a>
+      }
+      <div class="pt-4 border-t border-brand-navy/5 flex flex-col space-y-3 px-3">
+        <a href="https://zalo.me/0345092389"
+           target="_blank"
+           rel="noopener noreferrer"
+           (click)="closeMobileMenu()"
+           class="w-full py-3 bg-brand-pink text-white rounded-xl text-center text-base font-semibold shadow-md">
+          {{ i18n.translate()('nav.enroll') }}
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
