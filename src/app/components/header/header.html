@@ -1,5 +1,6 @@
-<header class="fixed top-0 left-0 w-full z-50 border-b border-white/10 transition-all duration-300"
-        [class.bg-white/85]="isScrolled()"
+<header class="fixed top-0 left-0 w-full z-50 border-b border-brand-navy/5 dark:border-white/10 transition-all duration-300"
+        [class.bg-white/85]="isScrolled() && !theme.isDarkMode()"
+        [class.bg-brand-dark/85]="isScrolled() && theme.isDarkMode()"
         [class.backdrop-blur-md]="isScrolled()"
         [class.shadow-md]="isScrolled()"
         [class.py-3]="isScrolled()"
@@ -13,7 +14,7 @@
           <img ngSrc="android-chrome-192x192.png" width="36" height="36" alt="MCC Logo" class="object-contain" priority />
         </div>
         <div class="flex flex-col">
-          <span class="text-lg font-bold font-display tracking-tight text-brand-navy group-hover:text-brand-pink transition-colors duration-300">
+          <span class="text-lg font-bold font-display tracking-tight text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300">
             Mayo Creative
           </span>
           <span class="text-xs font-semibold uppercase tracking-widest text-brand-pink -mt-1">
@@ -28,7 +29,8 @@
           <a [href]="'#' + item.id"
              class="text-sm font-medium transition-colors duration-300 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-brand-pink after:transition-all after:duration-300 hover:after:w-full"
              [class.text-brand-pink]="activeSection() === item.id"
-             [class.text-brand-navy]="activeSection() !== item.id"
+             [class.text-brand-navy]="activeSection() !== item.id && !theme.isDarkMode()"
+             [class.text-white]="activeSection() !== item.id && theme.isDarkMode()"
              [class.hover:text-brand-pink]="activeSection() !== item.id">
             {{ i18n.translate()('nav.' + item.id) }}
           </a>
@@ -40,7 +42,7 @@
         <!-- Language Selector Dropdown -->
         <div class="relative">
           <button (click)="toggleLangDropdown()"
-                  class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border border-brand-navy/10 text-xs font-semibold text-brand-navy hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none"
+                  class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border border-brand-navy/10 dark:border-white/20 text-xs font-semibold text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none"
                   aria-haspopup="true"
                   [attr.aria-expanded]="isLangDropdownOpen()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -54,10 +56,10 @@
 
           <!-- Dropdown menu -->
           @if (isLangDropdownOpen()) {
-            <div class="absolute right-0 mt-2 w-40 rounded-2xl bg-white border border-brand-navy/5 shadow-xl py-2 z-50">
+            <div class="absolute right-0 mt-2 w-40 rounded-2xl bg-white dark:bg-brand-dark border border-brand-navy/5 dark:border-white/10 shadow-xl py-2 z-50">
               @for (lang of i18n.languages; track lang.code) {
                 <button (click)="changeLang(lang.code)"
-                        class="w-full text-left px-4 py-2 text-xs font-semibold text-brand-navy hover:bg-brand-pink hover:text-white flex items-center justify-between transition-colors duration-200">
+                        class="w-full text-left px-4 py-2 text-xs font-semibold text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white flex items-center justify-between transition-colors duration-200">
                   <span>{{ lang.label }}</span>
                   @if (i18n.currentLang() === lang.code) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3.5 h-3.5">
@@ -70,29 +72,61 @@
           }
         </div>
 
+        <!-- Dark Mode Toggle Button -->
+        <button (click)="theme.toggleTheme()"
+                class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none cursor-pointer"
+                aria-label="Toggle dark mode">
+          @if (theme.isDarkMode()) {
+            <!-- Sun Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-gold animate-pulse">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+            </svg>
+          } @else {
+            <!-- Moon Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-navy">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          }
+        </button>
+
         <!-- Zalo CTA -->
-        <a href="https://zalo.me/0345092389"
+        <a href="https://zalo.me/0353149176"
            target="_blank"
            rel="noopener noreferrer"
-           class="px-5 py-2.5 bg-brand-navy hover:bg-brand-pink text-white rounded-full text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+           class="px-5 py-2.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-full text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
           {{ i18n.translate()('nav.enroll') }}
         </a>
       </div>
 
       <!-- Mobile Controls -->
       <div class="md:hidden flex items-center space-x-2">
+        <!-- Dark Mode Toggle Button for Mobile -->
+        <button (click)="theme.toggleTheme()"
+                class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white focus:outline-none cursor-pointer"
+                aria-label="Toggle dark mode">
+          @if (theme.isDarkMode()) {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-gold">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-navy">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          }
+        </button>
+
         <!-- Language selector dropdown for Mobile -->
         <div class="relative">
           <button (click)="toggleLangDropdown()"
-                  class="px-2.5 py-1.5 rounded-full border border-brand-navy/10 text-[10px] font-bold text-brand-navy uppercase">
+                  class="px-2.5 py-1.5 rounded-full border border-brand-navy/10 dark:border-white/20 text-[10px] font-bold text-brand-navy dark:text-white uppercase">
             {{ i18n.currentLang() }}
           </button>
           
           @if (isLangDropdownOpen()) {
-            <div class="absolute right-0 mt-2 w-32 rounded-xl bg-white border border-brand-navy/5 shadow-xl py-1.5 z-50">
+            <div class="absolute right-0 mt-2 w-32 rounded-xl bg-white dark:bg-brand-dark border border-brand-navy/5 dark:border-white/10 shadow-xl py-1.5 z-50">
               @for (lang of i18n.languages; track lang.code) {
                 <button (click)="changeLang(lang.code)"
-                        class="w-full text-left px-3 py-2 text-[10px] font-bold text-brand-navy hover:bg-brand-pink hover:text-white flex items-center justify-between">
+                        class="w-full text-left px-3 py-2 text-[10px] font-bold text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white flex items-center justify-between">
                   <span>{{ lang.label }}</span>
                 </button>
               }
@@ -101,7 +135,7 @@
         </div>
 
         <button (click)="toggleMobileMenu()"
-                class="p-2 rounded-md text-brand-navy hover:text-brand-pink focus:outline-none"
+                class="p-2 rounded-md text-brand-navy dark:text-white hover:text-brand-pink focus:outline-none"
                 aria-expanded="false">
           <span class="sr-only">Open main menu</span>
           @if (isMobileMenuOpen()) {
@@ -119,7 +153,7 @@
   </div>
 
   <!-- Mobile Menu Drawer -->
-  <div class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 backdrop-blur-lg border-t border-brand-navy/5 shadow-inner"
+  <div class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg border-t border-brand-navy/5 dark:border-white/10 shadow-inner"
        [class.max-h-[400px]]="isMobileMenuOpen()"
        [class.py-4]="isMobileMenuOpen()">
     <div class="px-4 space-y-2">
@@ -129,12 +163,13 @@
            class="block px-3 py-2.5 rounded-lg text-base font-medium transition-colors"
            [class.bg-brand-pink/10]="activeSection() === item.id"
            [class.text-brand-pink]="activeSection() === item.id"
-           [class.text-brand-navy]="activeSection() !== item.id">
+           [class.text-brand-navy]="activeSection() !== item.id && !theme.isDarkMode()"
+           [class.text-white]="activeSection() !== item.id && theme.isDarkMode()">
           {{ i18n.translate()('nav.' + item.id) }}
         </a>
       }
-      <div class="pt-4 border-t border-brand-navy/5 flex flex-col space-y-3 px-3">
-        <a href="https://zalo.me/0345092389"
+      <div class="pt-4 border-t border-brand-navy/5 dark:border-white/10 flex flex-col space-y-3 px-3">
+        <a href="https://zalo.me/0353149176"
            target="_blank"
            rel="noopener noreferrer"
            (click)="closeMobileMenu()"

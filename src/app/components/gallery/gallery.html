@@ -1,4 +1,4 @@
-<section id="gallery" class="py-24 bg-brand-light relative overflow-hidden">
+<section id="gallery" class="py-24 bg-brand-light dark:bg-brand-dark/30 relative overflow-hidden transition-colors duration-300">
   <!-- Accents -->
   <div class="absolute bottom-0 right-0 w-96 h-96 bg-brand-pink/5 rounded-full filter blur-3xl -z-10"></div>
   <div class="absolute top-0 left-0 w-80 h-80 bg-brand-navy/5 rounded-full filter blur-3xl -z-10"></div>
@@ -8,13 +8,13 @@
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-16">
       <h2 class="text-xs font-bold text-brand-pink uppercase tracking-widest mb-3">
-        {{ i18n.currentLang() === 'vi' ? 'Thư viện hình ảnh' : '学员活动' }}
+        {{ i18n.translate()('gallery.badge') }}
       </h2>
-      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy leading-tight">
+      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight">
         {{ i18n.translate()('gallery.title') }}
       </p>
       <div class="w-12 h-1 bg-brand-pink mx-auto mt-4 rounded-full"></div>
-      <p class="text-base sm:text-lg text-gray-500 mt-5 leading-relaxed">
+      <p class="text-base sm:text-lg text-gray-500 dark:text-gray-300 mt-5 leading-relaxed">
         {{ i18n.translate()('gallery.subtitle') }}
       </p>
     </div>
@@ -23,13 +23,18 @@
     <div class="flex flex-wrap items-center justify-center gap-3 mb-12">
       @for (filter of filters; track filter.value) {
         <button (click)="setFilter(filter.value)"
-                class="px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border focus:outline-none"
-                [class.bg-brand-navy]="selectedFilter() === filter.value"
+                class="px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border focus:outline-none cursor-pointer"
+                [class.bg-brand-navy]="selectedFilter() === filter.value && !theme.isDarkMode()"
+                [class.bg-brand-pink]="selectedFilter() === filter.value && theme.isDarkMode()"
                 [class.text-white]="selectedFilter() === filter.value"
-                [class.border-brand-navy]="selectedFilter() === filter.value"
-                [class.bg-white]="selectedFilter() !== filter.value"
-                [class.text-brand-navy]="selectedFilter() !== filter.value"
-                [class.border-brand-navy/10]="selectedFilter() !== filter.value"
+                [class.border-brand-navy]="selectedFilter() === filter.value && !theme.isDarkMode()"
+                [class.border-brand-pink]="selectedFilter() === filter.value && theme.isDarkMode()"
+                [class.bg-white]="selectedFilter() !== filter.value && !theme.isDarkMode()"
+                [class.bg-brand-dark]="selectedFilter() !== filter.value && theme.isDarkMode()"
+                [class.text-brand-navy]="selectedFilter() !== filter.value && !theme.isDarkMode()"
+                [class.text-white]="selectedFilter() !== filter.value && theme.isDarkMode()"
+                [class.border-brand-navy/10]="selectedFilter() !== filter.value && !theme.isDarkMode()"
+                [class.border-white/10]="selectedFilter() !== filter.value && theme.isDarkMode()"
                 [class.hover:bg-brand-pink/5]="selectedFilter() !== filter.value">
           {{ i18n.translate()(filter.labelKey) }}
         </button>
@@ -45,7 +50,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       @for (item of filteredItems(); track item.id) {
         <div (click)="openLightbox(item)"
-             class="group relative aspect-[4/3] rounded-3xl overflow-hidden shadow-md hover:shadow-xl border border-brand-navy/5 bg-white cursor-zoom-in transition-all duration-500 hover:-translate-y-1">
+             class="group relative aspect-[4/3] rounded-3xl overflow-hidden shadow-md hover:shadow-xl border border-brand-navy/5 dark:border-white/5 bg-white dark:bg-brand-dark/50 cursor-zoom-in transition-all duration-500 hover:-translate-y-1">
           
           <img [ngSrc]="item.src"
                fill
@@ -89,14 +94,14 @@
 
       <!-- Navigation Arrows -->
       <button (click)="prevImage($event)"
-              class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-brand-pink text-white flex items-center justify-center transition-colors duration-300 focus:outline-none z-50">
+              class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-brand-pink text-white flex items-center justify-center transition-colors duration-300 focus:outline-none z-50 animate-pulse">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
       </button>
 
       <button (click)="nextImage($event)"
-              class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-brand-pink text-white flex items-center justify-center transition-colors duration-300 focus:outline-none z-50">
+              class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-brand-pink text-white flex items-center justify-center transition-colors duration-300 focus:outline-none z-50 animate-pulse">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
@@ -123,3 +128,4 @@
     </div>
   }
 </section>
+

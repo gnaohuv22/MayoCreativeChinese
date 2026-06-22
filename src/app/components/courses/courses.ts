@@ -1,46 +1,145 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, ElementRef, viewChild } from '@angular/core';
 import { I18nService } from '../../services/i18n.service';
 
 interface Course {
   id: string;
   titleKey: string;
   descKey: string;
-  duration: string;
-  classSize: string;
-  target: string;
+  durationKey: string;
+  classSizeKey: string;
+  objectiveKey: string;
+  icon: string;
+  accentClass: string;
 }
 
 @Component({
   selector: 'app-courses',
-  templateUrl: './courses.html'
+  templateUrl: './courses.html',
+  styleUrl: './courses.css'
 })
 export class CoursesComponent {
   protected readonly i18n = inject(I18nService);
 
+  private readonly sliderRef = viewChild<ElementRef<HTMLDivElement>>('slider');
+  readonly canScrollLeft = signal(false);
+  readonly canScrollRight = signal(true);
+  readonly activeCardIndex = signal(0);
+
   readonly courses: Course[] = [
+    {
+      id: 'kids',
+      titleKey: 'course.kids.title',
+      descKey: 'course.kids.desc',
+      durationKey: 'course.kids.duration',
+      classSizeKey: 'course.kids.class_size',
+      objectiveKey: 'course.kids.objective',
+      icon: 'academic',
+      accentClass: 'from-blue-500 to-indigo-600'
+    },
+    {
+      id: 'communication',
+      titleKey: 'course.communication.title',
+      descKey: 'course.communication.desc',
+      durationKey: 'course.communication.duration',
+      classSizeKey: 'course.communication.class_size',
+      objectiveKey: 'course.communication.objective',
+      icon: 'chat',
+      accentClass: 'from-brand-pink to-rose-500'
+    },
     {
       id: 'hsk',
       titleKey: 'course.hsk.title',
       descKey: 'course.hsk.desc',
-      duration: '2.5 - 3.5 Months / Level',
-      classSize: '8 - 12 Students',
-      target: 'HSK 1 - HSK 5 Standardized Outputs'
+      durationKey: 'course.hsk.duration',
+      classSizeKey: 'course.hsk.class_size',
+      objectiveKey: 'course.hsk.objective',
+      icon: 'certificate',
+      accentClass: 'from-amber-500 to-orange-600'
+    },
+    {
+      id: 'hsk_old',
+      titleKey: 'course.hsk_old.title',
+      descKey: 'course.hsk_old.desc',
+      durationKey: 'course.hsk_old.duration',
+      classSizeKey: 'course.hsk_old.class_size',
+      objectiveKey: 'course.hsk_old.objective',
+      icon: 'certificate',
+      accentClass: 'from-teal-500 to-emerald-600'
     },
     {
       id: 'business',
       titleKey: 'course.business.title',
       descKey: 'course.business.desc',
-      duration: '3 Months',
-      classSize: '6 - 10 Students',
-      target: 'Negotiation, Commercial Mail, Corporate communication'
+      durationKey: 'course.business.duration',
+      classSizeKey: 'course.business.class_size',
+      objectiveKey: 'course.business.objective',
+      icon: 'business',
+      accentClass: 'from-purple-500 to-violet-600'
     },
     {
       id: 'logistics',
       titleKey: 'course.logistics.title',
       descKey: 'course.logistics.desc',
-      duration: '2.5 Months',
-      classSize: '8 - 12 Students',
-      target: 'Sourcing, Customs, Freight Terms, Taobao/1688 negotiation'
+      durationKey: 'course.logistics.duration',
+      classSizeKey: 'course.logistics.class_size',
+      objectiveKey: 'course.logistics.objective',
+      icon: 'logistics',
+      accentClass: 'from-cyan-500 to-sky-600'
     }
   ];
+
+  scrollSlider(direction: 'left' | 'right'): void {
+    const slider = this.sliderRef()?.nativeElement;
+    if (!slider) return;
+    const cardWidth = slider.querySelector('.course-card')?.clientWidth ?? 380;
+    const scrollAmount = cardWidth + 32; // card width + gap
+    slider.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  }
+
+  onSliderScroll(): void {
+    const slider = this.sliderRef()?.nativeElement;
+    if (!slider) return;
+    this.canScrollLeft.set(slider.scrollLeft > 10);
+    this.canScrollRight.set(
+      slider.scrollLeft < slider.scrollWidth - slider.clientWidth - 10
+    );
+
+    const children = slider.querySelectorAll('.course-card');
+    if (children.length === 0) return;
+
+    let bestIndex = 0;
+    let minDiff = Infinity;
+    const sliderRect = slider.getBoundingClientRect();
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i] as HTMLElement;
+      const childRect = child.getBoundingClientRect();
+      const diff = Math.abs(childRect.left - sliderRect.left);
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestIndex = i;
+      }
+    }
+    this.activeCardIndex.set(bestIndex);
+  }
+
+  scrollToCard(index: number): void {
+    const slider = this.sliderRef()?.nativeElement;
+    if (!slider) return;
+    const children = slider.querySelectorAll('.course-card');
+    const targetCard = children[index] as HTMLElement;
+    if (targetCard) {
+      const sliderRect = slider.getBoundingClientRect();
+      const targetRect = targetCard.getBoundingClientRect();
+      const relativeLeft = targetRect.left - sliderRect.left + slider.scrollLeft;
+      
+      slider.scrollTo({
+        left: relativeLeft,
+        behavior: 'smooth'
+      });
+    }
+  }
 }

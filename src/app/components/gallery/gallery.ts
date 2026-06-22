@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { I18nService } from '../../services/i18n.service';
+import { ThemeService } from '../../services/theme.service';
 
 interface GalleryItem {
   id: string;
@@ -19,6 +20,7 @@ interface GalleryItem {
 })
 export class GalleryComponent {
   protected readonly i18n = inject(I18nService);
+  protected readonly theme = inject(ThemeService);
 
   readonly selectedFilter = signal<string>('all');
   readonly selectedItem = signal<GalleryItem | null>(null);

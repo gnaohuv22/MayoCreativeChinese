@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { I18nService, Lang } from '../../services/i18n.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-header',
@@ -12,6 +13,7 @@ import { I18nService, Lang } from '../../services/i18n.service';
 })
 export class HeaderComponent {
   protected readonly i18n = inject(I18nService);
+  protected readonly theme = inject(ThemeService);
 
   readonly isScrolled = signal(false);
   readonly isMobileMenuOpen = signal(false);

@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-navy: #2D2D5F;
   --color-brand-pink: #E84C8A;
@@ -21,6 +23,12 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-brand-light);
   color: #1f2937; /* Tailwind gray-800 */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+html.dark body {
+  background-color: var(--color-brand-dark);
+  color: #f3f4f6; /* Tailwind gray-100 */
 }
 
 /* Glassmorphism scrollbar */

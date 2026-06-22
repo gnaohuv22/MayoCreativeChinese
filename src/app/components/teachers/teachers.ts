@@ -14,7 +14,8 @@ interface Teacher {
 @Component({
   selector: 'app-teachers',
   imports: [NgOptimizedImage],
-  templateUrl: './teachers.html'
+  templateUrl: './teachers.html',
+  styleUrl: './teachers.css'
 })
 export class TeachersComponent {
   protected readonly i18n = inject(I18nService);
@@ -24,7 +25,7 @@ export class TeachersComponent {
   readonly teachers: Teacher[] = [
     {
       id: 'mai',
-      image: 'teacher-introduce/2.png',
+      image: 'teacher-introduce/Mai.png',
       nameKey: 'teacher.mai.name',
       roleKey: 'teachers.role.founder',
       bioKey: 'teacher.mai.bio',
@@ -32,7 +33,7 @@ export class TeachersComponent {
     },
     {
       id: 'thao',
-      image: 'teacher-introduce/3.png',
+      image: 'teacher-introduce/Thao.png',
       nameKey: 'teacher.thao.name',
       roleKey: 'teachers.role.cofounder',
       bioKey: 'teacher.thao.bio',
@@ -40,7 +41,7 @@ export class TeachersComponent {
     },
     {
       id: 'ly',
-      image: 'teacher-introduce/4.png',
+      image: 'teacher-introduce/Ly.png',
       nameKey: 'teacher.ly.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.ly.bio',
@@ -48,22 +49,15 @@ export class TeachersComponent {
     },
     {
       id: 'dung',
-      image: 'teacher-introduce/5.png',
+      image: 'teacher-introduce/Dung.png',
       nameKey: 'teacher.dung.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.dung.bio',
       credentials: ['ULIS Alumna', 'Anhui Univ Master', 'HSK 6', 'CTCSOL Cert', 'CSC Scholar']
     },
     {
-      id: 'linh',
-      image: 'teacher-introduce/6.png',
-      nameKey: 'teacher.linh.name',
-      roleKey: 'teachers.role.tutor',
-      bioKey: 'teacher.linh.bio',
-      credentials: ['FTU CLC', 'MCC Alumna', 'HSK 4', 'HSKK Intermediate', 'IELTS 7.5']
-    },
-    {
       id: 'lina',
+      image: 'teacher-introduce/Lina.png',
       nameKey: 'teacher.lina.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.lina.bio',
@@ -71,10 +65,19 @@ export class TeachersComponent {
     },
     {
       id: 'hong',
+      image: 'teacher-introduce/Hong.png',
       nameKey: 'teacher.hong.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.hong.bio',
       credentials: ['Friendship Scholar', 'HSK 6', 'HSKK Advanced', 'Oratorical Prize', '3+ Yrs Exp']
+    },
+    {
+      id: 'linh',
+      image: 'teacher-introduce/Linh.png',
+      nameKey: 'teacher.linh.name',
+      roleKey: 'teachers.role.tutor',
+      bioKey: 'teacher.linh.bio',
+      credentials: ['FTU CLC', 'MCC Alumna', 'HSK 4', 'HSKK Intermediate', 'IELTS 7.5']
     }
   ];
 

@@ -1,0 +1,61 @@
+/* Courses Component - Horizontal Slider */
+
+:host {
+  display: block;
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.course-slider {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.course-slider::-webkit-scrollbar {
+  display: none;
+}
+
+/* Subtle card entrance stagger */
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.course-card {
+  animation: card-rise 0.5s ease-out both;
+}
+
+.course-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.course-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* Gradient line animation on hover */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-line-animated {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-card {
+    animation: none;
+    opacity: 1;
+  }
+  .gradient-line-animated {
+    animation: none;
+  }
+}
