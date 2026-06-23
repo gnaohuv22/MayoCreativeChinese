@@ -10,18 +10,17 @@
 
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight">
+      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
         {{ i18n.translate()('teachers.title') }}
       </p>
-      <div class="w-12 h-1 bg-brand-pink mx-auto mt-4 rounded-full"></div>
-      <p class="text-base sm:text-lg text-gray-500 dark:text-gray-300 mt-5 leading-relaxed">
+      <p class="text-base sm:text-lg text-brand-navy/60 dark:text-white/70 mt-5 leading-relaxed">
         {{ i18n.translate()('teachers.subtitle') }}
       </p>
     </div>
 
     <!-- Banner / Team Group Photo -->
     <div
-      class="relative w-full aspect-[21/9] sm:aspect-[24/9] rounded-3xl overflow-hidden shadow-xl border border-brand-navy/5 dark:border-white/5 mb-16 group">
+      class="relative w-full aspect-[21/9] sm:aspect-[24/9] rounded-2xl overflow-hidden border border-brand-navy/5 dark:border-white/5 mb-16 group">
       <img ngSrc="teacher-introduce/1.png" fill alt="Mayo Creative Chinese Faculty Team"
         class="object-cover group-hover:scale-[1.02] transition-transform duration-700" priority />
       <div
@@ -113,7 +112,7 @@
             [class.max-h-[1000px]]="expandedTeacherId() === teacher.id"
             [class.max-h-0]="expandedTeacherId() !== teacher.id">
             <p
-              class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-brand-navy/5 dark:border-white/5 pt-4 pb-4 whitespace-pre-line">
+              class="text-xs sm:text-sm text-brand-navy/55 dark:text-white/60 leading-relaxed border-t border-brand-navy/5 dark:border-white/5 pt-4 pb-4 whitespace-pre-line">
               {{ i18n.translate()(teacher.bioKey) }}
             </p>
           </div>

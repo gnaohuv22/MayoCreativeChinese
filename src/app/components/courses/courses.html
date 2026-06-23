@@ -6,11 +6,10 @@
 
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-14">
-      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight">
+      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
         {{ i18n.translate()('courses.title') }}
       </p>
-      <div class="w-12 h-1 bg-brand-pink mx-auto mt-4 rounded-full"></div>
-      <p class="text-base sm:text-lg text-gray-500 dark:text-gray-300 mt-5 leading-relaxed">
+      <p class="text-base sm:text-lg text-brand-navy/60 dark:text-white/70 mt-5 leading-relaxed">
         {{ i18n.translate()('courses.subtitle') }}
       </p>
     </div>
@@ -43,10 +42,10 @@
          (scroll)="onSliderScroll()">
 
       @for (course of courses; track course.id) {
-        <div class="course-card snap-start shrink-0 w-[85vw] sm:w-[420px] lg:w-[calc(33.333%-22px)] bg-brand-light dark:bg-brand-dark/50 rounded-2xl border border-brand-navy/5 dark:border-white/5 hover:border-brand-pink/20 dark:hover:border-brand-pink/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group overflow-hidden">
+        <div class="course-card snap-start shrink-0 w-[85vw] sm:w-[420px] lg:w-[calc(33.333%-22px)] bg-brand-light dark:bg-brand-dark/50 rounded-2xl border border-brand-navy/5 dark:border-white/5 hover:border-brand-pink/20 dark:hover:border-brand-pink/20 hover:shadow-lg transition-all duration-300 flex flex-col justify-between group overflow-hidden">
 
-          <!-- Animated top accent line -->
-          <div class="h-1 w-full bg-gradient-to-r gradient-line-animated" [class]="course.accentClass"></div>
+          <!-- Top accent line -->
+          <div class="h-1 w-full bg-brand-pink"></div>
 
           <div class="p-8 flex-1 flex flex-col">
             <!-- Course Icon -->
@@ -85,7 +84,7 @@
             </h3>
 
             <!-- Description -->
-            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-sans mb-8 flex-1">
+            <p class="text-sm text-brand-navy/55 dark:text-white/60 leading-relaxed font-sans mb-8 flex-1">
               {{ i18n.translate()(course.descKey) }}
             </p>
 
@@ -93,7 +92,7 @@
             <div class="border-t border-brand-navy/5 dark:border-white/5 pt-6 space-y-3.5 mb-8">
               <!-- Duration -->
               <div class="flex items-center justify-between text-xs sm:text-sm">
-                <span class="flex items-center gap-2 text-gray-400 font-medium">
+                <span class="flex items-center gap-2 text-brand-navy/50 dark:text-white/50 font-medium">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-pink">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                   </svg>
@@ -103,7 +102,7 @@
               </div>
               <!-- Class Size -->
               <div class="flex items-center justify-between text-xs sm:text-sm">
-                <span class="flex items-center gap-2 text-gray-400 font-medium">
+                <span class="flex items-center gap-2 text-brand-navy/50 dark:text-white/50 font-medium">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-pink">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                   </svg>
