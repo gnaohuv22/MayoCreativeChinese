@@ -100,7 +100,7 @@
               @for (cred of teacher.credentials; track cred) {
               <span
                 class="inline-block px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-brand-navy/40 text-[10px] font-bold text-brand-navy/70 dark:text-brand-accent border border-brand-navy/10 dark:border-brand-navy/30 hover:bg-brand-pink/10 hover:text-brand-pink hover:border-brand-pink/20 transition-colors duration-200">
-                {{ cred }}
+                {{ i18n.translate()(cred) }}
               </span>
               }
             </div>
@@ -110,7 +110,7 @@
         <!-- Biography Text (Dynamic Expand) -->
         <div class="px-6 pb-6 pt-0 flex flex-col justify-end">
           <div class="overflow-hidden transition-all duration-300"
-            [class.max-h-[500px]]="expandedTeacherId() === teacher.id"
+            [class.max-h-[1000px]]="expandedTeacherId() === teacher.id"
             [class.max-h-0]="expandedTeacherId() !== teacher.id">
             <p
               class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-brand-navy/5 dark:border-white/5 pt-4 pb-4 whitespace-pre-line">
