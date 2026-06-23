@@ -9,7 +9,6 @@ interface Course {
   classSizeKey: string;
   objectiveKey: string;
   icon: string;
-  accentClass: string;
 }
 
 @Component({
@@ -33,8 +32,7 @@ export class CoursesComponent {
       durationKey: 'course.kids.duration',
       classSizeKey: 'course.kids.class_size',
       objectiveKey: 'course.kids.objective',
-      icon: 'academic',
-      accentClass: 'from-blue-500 to-indigo-600'
+      icon: 'academic'
     },
     {
       id: 'communication',
@@ -43,8 +41,7 @@ export class CoursesComponent {
       durationKey: 'course.communication.duration',
       classSizeKey: 'course.communication.class_size',
       objectiveKey: 'course.communication.objective',
-      icon: 'chat',
-      accentClass: 'from-brand-pink to-rose-500'
+      icon: 'chat'
     },
     {
       id: 'hsk',
@@ -53,8 +50,7 @@ export class CoursesComponent {
       durationKey: 'course.hsk.duration',
       classSizeKey: 'course.hsk.class_size',
       objectiveKey: 'course.hsk.objective',
-      icon: 'certificate',
-      accentClass: 'from-amber-500 to-orange-600'
+      icon: 'certificate'
     },
     {
       id: 'hsk_old',
@@ -63,8 +59,7 @@ export class CoursesComponent {
       durationKey: 'course.hsk_old.duration',
       classSizeKey: 'course.hsk_old.class_size',
       objectiveKey: 'course.hsk_old.objective',
-      icon: 'certificate',
-      accentClass: 'from-teal-500 to-emerald-600'
+      icon: 'certificate'
     },
     {
       id: 'business',
@@ -73,8 +68,7 @@ export class CoursesComponent {
       durationKey: 'course.business.duration',
       classSizeKey: 'course.business.class_size',
       objectiveKey: 'course.business.objective',
-      icon: 'business',
-      accentClass: 'from-purple-500 to-violet-600'
+      icon: 'business'
     },
     {
       id: 'logistics',
@@ -83,8 +77,7 @@ export class CoursesComponent {
       durationKey: 'course.logistics.duration',
       classSizeKey: 'course.logistics.class_size',
       objectiveKey: 'course.logistics.objective',
-      icon: 'logistics',
-      accentClass: 'from-cyan-500 to-sky-600'
+      icon: 'logistics'
     }
   ];
 

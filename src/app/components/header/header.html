@@ -136,7 +136,9 @@
 
         <button (click)="toggleMobileMenu()"
                 class="p-2 rounded-md text-brand-navy dark:text-white hover:text-brand-pink focus:outline-none"
-                aria-expanded="false">
+                [attr.aria-expanded]="isMobileMenuOpen()"
+                aria-controls="mobile-menu-drawer"
+                aria-label="Toggle navigation menu">
           <span class="sr-only">Open main menu</span>
           @if (isMobileMenuOpen()) {
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,8 +154,15 @@
     </div>
   </div>
 
+  <!-- Mobile Menu Backdrop -->
+  @if (isMobileMenuOpen()) {
+    <div class="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-40 md:hidden"
+         aria-hidden="true"
+         (click)="closeMobileMenu()"></div>
+  }
+
   <!-- Mobile Menu Drawer -->
-  <div class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg border-t border-brand-navy/5 dark:border-white/10 shadow-inner"
+  <div id="mobile-menu-drawer" class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg border-t border-brand-navy/5 dark:border-white/10 shadow-inner relative z-50"
        [class.max-h-[400px]]="isMobileMenuOpen()"
        [class.py-4]="isMobileMenuOpen()">
     <div class="px-4 space-y-2">

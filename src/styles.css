@@ -10,7 +10,9 @@
   --color-brand-gold: #D4AF37;
   --color-brand-accent: #FFA6C9;
   --color-brand-dark: #1E1E45;
-  
+  /* Lavender-tinted body text for dark mode — sits between white and brand-accent */
+  --color-brand-text-dark: #e8e0f0;
+
   --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Outfit', 'Inter Tight', system-ui, sans-serif;
 }
@@ -28,7 +30,7 @@ body {
 
 html.dark body {
   background-color: var(--color-brand-dark);
-  color: #e8e0f0;
+  color: var(--color-brand-text-dark);
 }
 
 /* Glassmorphism scrollbar */
