@@ -5,7 +5,7 @@
 
 @theme {
   --color-brand-navy: #2D2D5F;
-  --color-brand-pink: #E84C8A;
+  --color-brand-pink: #CE2D6E;
   --color-brand-light: #FDF8F9;
   --color-brand-gold: #D4AF37;
   --color-brand-accent: #FFA6C9;
@@ -39,11 +39,17 @@ html.dark body {
   background: rgba(45, 45, 95, 0.05);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(232, 76, 138, 0.3);
-  border-radius: 4px;
+  background: rgba(206, 45, 110, 0.3);
+  border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 76, 138, 0.6);
+  background: rgba(206, 45, 110, 0.6);
+}
+
+/* Smooth transitions for theme toggle */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, text-decoration-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
 }
 
 /* Reduced motion: respect user preference */

@@ -10,10 +10,10 @@
 
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <p class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
+      <h2 class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
         {{ i18n.translate()('teachers.title') }}
-      </p>
-      <p class="text-base sm:text-lg text-brand-navy/60 dark:text-white/70 mt-5 leading-relaxed">
+      </h2>
+      <p class="text-base sm:text-lg text-brand-navy/75 dark:text-white/80 mt-5 leading-relaxed">
         {{ i18n.translate()('teachers.subtitle') }}
       </p>
     </div>
@@ -112,7 +112,7 @@
             [class.max-h-[1000px]]="expandedTeacherId() === teacher.id"
             [class.max-h-0]="expandedTeacherId() !== teacher.id">
             <p
-              class="text-xs sm:text-sm text-brand-navy/55 dark:text-white/60 leading-relaxed border-t border-brand-navy/5 dark:border-white/5 pt-4 pb-4 whitespace-pre-line">
+              class="text-xs sm:text-sm text-brand-navy/80 dark:text-white/80 leading-relaxed border-t border-brand-navy/5 dark:border-white/5 pt-4 pb-4 whitespace-pre-line">
               {{ i18n.translate()(teacher.bioKey) }}
             </p>
           </div>

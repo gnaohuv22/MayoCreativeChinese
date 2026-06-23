@@ -22,7 +22,11 @@ export class ThemeService {
   }
 
   toggleTheme(): void {
+    document.documentElement.classList.add('theme-transitioning');
     this.isDarkMode.update(v => !v);
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    }, 300);
   }
 
   private updateThemeClass(dark: boolean): void {
