@@ -58,21 +58,19 @@
         </div>
 
         <!-- Stats Block -->
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-8 mt-8 border-t border-brand-navy/5 dark:border-white/5">
-          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy dark:text-white">
-            <span class="text-lg font-display font-black text-brand-pink">{{ i18n.translate()('hero.stats.classes') }}</span>
-            {{ i18n.translate()('hero.stats.classes_desc') }}
-          </span>
-          <span class="w-px h-5 bg-brand-navy/10 dark:bg-white/10 hidden sm:block"></span>
-          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy dark:text-white">
-            <span class="text-lg font-display font-black text-brand-pink dark:text-brand-accent">{{ i18n.translate()('hero.stats.graduates') }}</span>
-            {{ i18n.translate()('hero.stats.graduates_desc') }}
-          </span>
-          <span class="w-px h-5 bg-brand-navy/10 dark:bg-white/10 hidden sm:block"></span>
-          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy dark:text-white">
-            <span class="text-lg font-display font-black">{{ i18n.translate()('hero.stats.rate') }}</span>
-            {{ i18n.translate()('hero.stats.rate_desc') }}
-          </span>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6 pt-8 mt-8 border-t border-brand-navy/5 dark:border-white/5 w-full max-w-md sm:max-w-none mx-auto lg:mx-0">
+          <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.classes') }}</span>
+            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight">{{ i18n.translate()('hero.stats.classes_desc') }}</span>
+          </div>
+          <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.graduates') }}</span>
+            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight">{{ i18n.translate()('hero.stats.graduates_desc') }}</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.rate') }}</span>
+            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight max-w-[280px] lg:max-w-none">{{ i18n.translate()('hero.stats.rate_desc') }}</span>
+          </div>
         </div>
       </div>
       
