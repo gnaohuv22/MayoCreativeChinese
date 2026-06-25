@@ -24,7 +24,7 @@
       </a>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden md:flex items-center space-x-8">
+      <nav class="hidden lg:flex items-center space-x-8">
         @for (item of navItems; track item.id) {
           <a [href]="'#' + item.id"
              class="text-sm font-medium transition-colors duration-300 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-brand-pink after:transition-all after:duration-300 hover:after:w-full"
@@ -38,7 +38,7 @@
       </nav>
 
       <!-- Right side Controls -->
-      <div class="hidden md:flex items-center space-x-4">
+      <div class="hidden lg:flex items-center space-x-4">
         <!-- Language Selector Dropdown -->
         <div class="relative">
           <button (click)="toggleLangDropdown()"
@@ -89,50 +89,20 @@
           }
         </button>
 
-        <!-- Zalo CTA -->
-        <a href="https://zalo.me/0353149176"
-           target="_blank"
-           rel="noopener noreferrer"
-           class="px-5 py-2.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-full text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-          {{ i18n.translate()('nav.enroll') }}
-        </a>
+        <!-- Register Trial CTA (Primary Action) -->
+        <button (click)="openRegisterModal()"
+                class="px-5 py-2.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-full text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer">
+          {{ i18n.translate()('nav.register_trial') }}
+        </button>
       </div>
 
       <!-- Mobile Controls -->
-      <div class="md:hidden flex items-center space-x-2">
-        <!-- Dark Mode Toggle Button for Mobile -->
-        <button (click)="theme.toggleTheme()"
-                class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white focus:outline-none cursor-pointer"
-                aria-label="Toggle dark mode">
-          @if (theme.isDarkMode()) {
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-gold">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
-            </svg>
-          } @else {
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-brand-navy">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-            </svg>
-          }
+      <div class="lg:hidden flex items-center space-x-3">
+        <!-- Register Trial CTA for Mobile/Tablet (Visible out of Drawer) -->
+        <button (click)="openRegisterModal()"
+                class="px-3.5 py-1.5 bg-brand-pink text-white rounded-full text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer animate-subtle-glow">
+          {{ i18n.translate()('nav.register_trial') }}
         </button>
-
-        <!-- Language selector dropdown for Mobile -->
-        <div class="relative">
-          <button (click)="toggleLangDropdown()"
-                  class="px-2.5 py-1.5 rounded-full border border-brand-navy/10 dark:border-white/20 text-[10px] font-bold text-brand-navy dark:text-white uppercase">
-            {{ i18n.currentLang() }}
-          </button>
-          
-          @if (isLangDropdownOpen()) {
-            <div class="absolute right-0 mt-2 w-32 rounded-xl bg-white dark:bg-brand-dark border border-brand-navy/5 dark:border-white/10 shadow-xl py-1.5 z-50">
-              @for (lang of i18n.languages; track lang.code) {
-                <button (click)="changeLang(lang.code)"
-                        class="w-full text-left px-3 py-2 text-[10px] font-bold text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white flex items-center justify-between">
-                  <span>{{ lang.label }}</span>
-                </button>
-              }
-            </div>
-          }
-        </div>
 
         <button (click)="toggleMobileMenu()"
                 class="p-2 rounded-md text-brand-navy dark:text-white hover:text-brand-pink focus:outline-none"
@@ -156,14 +126,14 @@
 
   <!-- Mobile Menu Backdrop -->
   @if (isMobileMenuOpen()) {
-    <div class="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-40 md:hidden"
+    <div class="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-40 lg:hidden"
          aria-hidden="true"
          (click)="closeMobileMenu()"></div>
   }
 
   <!-- Mobile Menu Drawer -->
-  <div id="mobile-menu-drawer" class="md:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg border-t border-brand-navy/5 dark:border-white/10 shadow-inner relative z-50"
-       [class.max-h-[400px]]="isMobileMenuOpen()"
+  <div id="mobile-menu-drawer" class="lg:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg border-t border-brand-navy/5 dark:border-white/10 shadow-inner relative z-50"
+       [class.max-h-[460px]]="isMobileMenuOpen()"
        [class.py-4]="isMobileMenuOpen()">
     <div class="px-4 space-y-2">
       @for (item of navItems; track item.id) {
@@ -177,14 +147,48 @@
           {{ i18n.translate()('nav.' + item.id) }}
         </a>
       }
-      <div class="pt-4 border-t border-brand-navy/5 dark:border-white/10 flex flex-col space-y-3 px-3">
-        <a href="https://zalo.me/0353149176"
-           target="_blank"
-           rel="noopener noreferrer"
-           (click)="closeMobileMenu()"
-           class="w-full py-3 bg-brand-pink text-white rounded-xl text-center text-base font-semibold shadow-md">
-          {{ i18n.translate()('nav.enroll') }}
-        </a>
+      
+      <!-- Drawer Extras: Language and Theme controls -->
+      <div class="pt-4 border-t border-brand-navy/5 dark:border-white/10 flex items-center justify-between px-3">
+        <!-- Language selector dropdown for Mobile Drawer -->
+        <div class="relative">
+          <button (click)="toggleLangDropdown()"
+                  class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full border border-brand-navy/10 dark:border-white/20 text-xs font-semibold text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138A14.25 14.25 0 000 5.621m12 5.565c-1.39.251-2.735.723-3.994 1.402M12 11.25c.123.545.408 1.058.82 1.47" />
+            </svg>
+            <span class="uppercase">{{ i18n.currentLang() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-2.5 h-2.5 transition-transform duration-300" [class.rotate-180]="isLangDropdownOpen()">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          
+          @if (isLangDropdownOpen()) {
+            <div class="absolute left-0 bottom-10 mt-2 w-36 rounded-2xl bg-white dark:bg-brand-dark border border-brand-navy/5 dark:border-white/10 shadow-xl py-2 z-50">
+              @for (lang of i18n.languages; track lang.code) {
+                <button (click)="changeLang(lang.code)"
+                        class="w-full text-left px-4 py-2 text-xs font-semibold text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white flex items-center justify-between transition-colors duration-200">
+                  <span>{{ lang.label }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Dark Mode Toggle Button for Mobile Drawer -->
+        <button (click)="theme.toggleTheme()"
+                class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none cursor-pointer"
+                aria-label="Toggle dark mode">
+          @if (theme.isDarkMode()) {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-gold animate-pulse">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-navy">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          }
+        </button>
       </div>
     </div>
   </div>

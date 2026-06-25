@@ -1,0 +1,205 @@
+@if (modalService.isOpen()) {
+  <!-- Modal Backdrop with blur -->
+  <div class="fixed inset-0 bg-brand-dark/70 dark:bg-brand-dark/85 backdrop-blur-md z-[100] transition-opacity duration-300"
+       (click)="closeModal()"
+       aria-hidden="true"></div>
+
+  <!-- Modal Wrapper -->
+  <div class="fixed inset-0 overflow-y-auto z-[101] flex items-center justify-center p-4 sm:p-6"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="modal-title">
+       
+    <!-- Modal Card Container -->
+    <div class="relative w-full max-w-lg bg-brand-light dark:bg-brand-dark border border-brand-navy/10 dark:border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 transform transition-all duration-300 scale-100 flex flex-col">
+      
+      <!-- Close Button (X) -->
+      <button (click)="closeModal()"
+              class="absolute top-4 right-4 p-2 text-brand-navy/60 dark:text-brand-text-dark/60 hover:text-brand-pink dark:hover:text-brand-pink rounded-full hover:bg-brand-pink/5 dark:hover:bg-brand-pink/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-pink cursor-pointer"
+              [attr.aria-label]="i18n.translate()('register.close')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Form Content / Success Screen -->
+      @if (isSuccess()) {
+        <!-- Success Confirmation State -->
+        <div class="flex flex-col items-center text-center py-8 px-4 animate-fade-in">
+          <div class="w-16 h-16 bg-brand-pink/10 rounded-full flex items-center justify-center mb-6 border border-brand-pink/20">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8 text-brand-pink">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+          <h2 id="modal-title" class="text-2xl font-display font-black text-brand-navy dark:text-white mb-2">
+            {{ i18n.translate()('register.success_title') }}
+          </h2>
+          <p class="text-sm text-brand-navy/70 dark:text-brand-text-dark/80 mb-8 max-w-sm">
+            {{ i18n.translate()('register.success_desc') }}
+          </p>
+          <button (click)="closeModal()"
+                  class="w-full py-3.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white font-bold rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer">
+            {{ i18n.translate()('register.done') }}
+          </button>
+        </div>
+      } @else {
+        <!-- Registration Form -->
+        <div class="flex flex-col">
+          <div class="mb-6">
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-pink">Mayo Creative Chinese</span>
+            <h2 id="modal-title" class="text-2xl sm:text-3xl font-display font-black text-brand-navy dark:text-white mt-1">
+              {{ i18n.translate()('register.title') }}
+            </h2>
+            <p class="text-sm text-brand-navy/60 dark:text-brand-text-dark/60 mt-1">
+              {{ i18n.translate()('register.subtitle') }}
+            </p>
+          </div>
+
+          <!-- Error Alert Banner -->
+          @if (errorMessage()) {
+            <div class="mb-4 p-3.5 bg-brand-pink/10 border border-brand-pink/20 text-brand-pink text-xs font-semibold rounded-xl flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <form (submit)="onSubmit($event)" class="space-y-4" novalidate>
+            <!-- Field: Full Name -->
+            <div>
+              <label for="fullName" class="block text-xs font-bold text-brand-navy dark:text-brand-text-dark uppercase tracking-wider mb-1.5">
+                {{ i18n.translate()('register.label.name') }} <span class="text-brand-pink">*</span>
+              </label>
+              <input type="text"
+                     id="fullName"
+                     [value]="fullName()"
+                     (input)="onInputChange('fullName', $event)"
+                     (blur)="markTouched('fullName')"
+                     [placeholder]="i18n.translate()('register.placeholder.name')"
+                     class="w-full px-4 py-3 bg-white dark:bg-brand-dark/50 border rounded-xl text-sm transition-all duration-200 outline-none text-brand-navy dark:text-white"
+                     [class.border-brand-pink]="fullNameTouched() && !isFullNameValid()"
+                     [class.border-brand-navy/10]="!fullNameTouched() || isFullNameValid()"
+                     [class.dark:border-white/10]="!fullNameTouched() || isFullNameValid()"
+                     [class.focus:ring-2]="true"
+                     [class.focus:ring-brand-pink]="true"
+                     [class.focus:border-transparent]="true"
+                     required />
+              @if (fullNameTouched() && !isFullNameValid()) {
+                <span class="block text-[11px] font-semibold text-brand-pink mt-1 animate-fade-in">
+                  {{ i18n.translate()('register.validation.name') }}
+                </span>
+              }
+            </div>
+
+            <!-- Field: Birth Year -->
+            <div>
+              <label for="birthYear" class="block text-xs font-bold text-brand-navy dark:text-brand-text-dark uppercase tracking-wider mb-1.5">
+                {{ i18n.translate()('register.label.birth') }} <span class="text-brand-pink">*</span>
+              </label>
+              <div class="relative">
+                <select id="birthYear"
+                        [value]="birthYear()"
+                        (change)="onSelectChange($event)"
+                        (blur)="markTouched('birthYear')"
+                        class="w-full px-4 py-3 bg-white dark:bg-brand-dark/50 border rounded-xl text-sm appearance-none transition-all duration-200 outline-none text-brand-navy dark:text-white cursor-pointer"
+                        [class.border-brand-pink]="birthYearTouched() && !isBirthYearValid()"
+                        [class.border-brand-navy/10]="!birthYearTouched() || isBirthYearValid()"
+                        [class.dark:border-white/10]="!birthYearTouched() || isBirthYearValid()"
+                        [class.focus:ring-2]="true"
+                        [class.focus:ring-brand-pink]="true"
+                        [class.focus:border-transparent]="true"
+                        required>
+                  <option value="" disabled>{{ i18n.translate()('register.placeholder.birth') }}</option>
+                  @for (year of years; track year) {
+                    <option [value]="year">{{ year }}</option>
+                  }
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-brand-navy/60 dark:text-brand-text-dark/60">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </div>
+              </div>
+              @if (birthYearTouched() && !isBirthYearValid()) {
+                <span class="block text-[11px] font-semibold text-brand-pink mt-1 animate-fade-in">
+                  {{ i18n.translate()('register.validation.birth') }}
+                </span>
+              }
+            </div>
+
+            <!-- Field: Phone Number -->
+            <div>
+              <label for="phoneNumber" class="block text-xs font-bold text-brand-navy dark:text-brand-text-dark uppercase tracking-wider mb-1.5">
+                {{ i18n.translate()('register.label.phone') }} <span class="text-brand-pink">*</span>
+              </label>
+              <input type="tel"
+                     id="phoneNumber"
+                     [value]="phoneNumber()"
+                     (input)="onInputChange('phoneNumber', $event)"
+                     (blur)="markTouched('phoneNumber')"
+                     [placeholder]="i18n.translate()('register.placeholder.phone')"
+                     class="w-full px-4 py-3 bg-white dark:bg-brand-dark/50 border rounded-xl text-sm transition-all duration-200 outline-none text-brand-navy dark:text-white"
+                     [class.border-brand-pink]="phoneNumberTouched() && !isPhoneNumberValid()"
+                     [class.border-brand-navy/10]="!phoneNumberTouched() || isPhoneNumberValid()"
+                     [class.dark:border-white/10]="!phoneNumberTouched() || isPhoneNumberValid()"
+                     [class.focus:ring-2]="true"
+                     [class.focus:ring-brand-pink]="true"
+                     [class.focus:border-transparent]="true"
+                     required />
+              @if (phoneNumberTouched() && !isPhoneNumberValid()) {
+                <span class="block text-[11px] font-semibold text-brand-pink mt-1 animate-fade-in">
+                  {{ i18n.translate()('register.validation.phone') }}
+                </span>
+              }
+            </div>
+
+            <!-- Field: Email -->
+            <div>
+              <label for="email" class="block text-xs font-bold text-brand-navy dark:text-brand-text-dark uppercase tracking-wider mb-1.5">
+                {{ i18n.translate()('register.label.email') }} <span class="text-brand-pink">*</span>
+              </label>
+              <input type="email"
+                     id="email"
+                     [value]="email()"
+                     (input)="onInputChange('email', $event)"
+                     (blur)="markTouched('email')"
+                     [placeholder]="i18n.translate()('register.placeholder.email')"
+                     class="w-full px-4 py-3 bg-white dark:bg-brand-dark/50 border rounded-xl text-sm transition-all duration-200 outline-none text-brand-navy dark:text-white"
+                     [class.border-brand-pink]="emailTouched() && !isEmailValid()"
+                     [class.border-brand-navy/10]="!emailTouched() || isEmailValid()"
+                     [class.dark:border-white/10]="!emailTouched() || isEmailValid()"
+                     [class.focus:ring-2]="true"
+                     [class.focus:ring-brand-pink]="true"
+                     [class.focus:border-transparent]="true"
+                     required />
+              @if (emailTouched() && !isEmailValid()) {
+                <span class="block text-[11px] font-semibold text-brand-pink mt-1 animate-fade-in">
+                  {{ i18n.translate()('register.validation.email') }}
+                </span>
+              }
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-2">
+              <button type="submit"
+                      [disabled]="isSubmitting()"
+                      class="w-full py-4 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                @if (isSubmitting()) {
+                  <!-- Spinner -->
+                  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{{ i18n.translate()('register.submitting') }}</span>
+                } @else {
+                  <span>{{ i18n.translate()('register.submit') }}</span>
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+}

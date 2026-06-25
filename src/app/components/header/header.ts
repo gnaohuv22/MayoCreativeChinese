@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { I18nService, Lang } from '../../services/i18n.service';
 import { ThemeService } from '../../services/theme.service';
+import { RegisterModalService } from '../../services/register-modal.service';
 
 @Component({
   selector: 'app-header',
@@ -14,11 +15,16 @@ import { ThemeService } from '../../services/theme.service';
 export class HeaderComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly theme = inject(ThemeService);
+  protected readonly registerModal = inject(RegisterModalService);
 
   readonly isScrolled = signal(false);
   readonly isMobileMenuOpen = signal(false);
   readonly isLangDropdownOpen = signal(false);
   readonly activeSection = signal('home');
+
+  openRegisterModal(): void {
+    this.registerModal.open();
+  }
 
   readonly navItems = [
     { id: 'about' },

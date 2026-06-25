@@ -33,27 +33,25 @@
         </p>
         
         <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-          <!-- Zalo CTA -->
-          <a href="https://zalo.me/0353149176"
-             target="_blank"
-             rel="noopener noreferrer"
-             class="w-full sm:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-2xl text-base font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-4 pt-4">
+          <!-- Register Trial CTA -->
+          <button (click)="openRegisterModal()"
+                  class="w-full sm:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-brand-pink text-white rounded-2xl text-base font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
             </svg>
-            <span>{{ i18n.translate()('hero.cta_zalo') }}</span>
-          </a>
-          
-          <!-- Messenger CTA -->
-          <a href="https://m.me/mayocreativechinese"
+            <span>{{ i18n.translate()('hero.cta_register_trial') }}</span>
+          </button>
+
+          <!-- Contact Facebook CTA -->
+          <a href="https://www.facebook.com/mayocreativechinese"
              target="_blank"
              rel="noopener noreferrer"
              class="w-full sm:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-white dark:bg-brand-dark hover:bg-brand-pink/5 text-brand-navy hover:text-brand-pink dark:text-white dark:hover:text-brand-pink border border-brand-navy/10 hover:border-brand-pink/30 dark:border-white/10 rounded-2xl text-base font-bold shadow-md transition-all duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785 5.969 5.969 0 001.911-.117c.559-.13 1.132.079 1.547.488A9.158 9.158 0 0012 20.25z" />
             </svg>
-            <span>{{ i18n.translate()('hero.cta_messenger') }}</span>
+            <span>{{ i18n.translate()('hero.cta_contact') }}</span>
           </a>
         </div>
 

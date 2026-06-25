@@ -7,6 +7,7 @@ import { CoursesComponent } from './components/courses/courses';
 import { GalleryComponent } from './components/gallery/gallery';
 import { FooterComponent } from './components/footer/footer';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top';
+import { RegisterModalComponent } from './components/shared/register-modal/register-modal';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,8 @@ import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-t
     CoursesComponent,
     GalleryComponent,
     FooterComponent,
-    ScrollToTopComponent
+    ScrollToTopComponent,
+    RegisterModalComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
