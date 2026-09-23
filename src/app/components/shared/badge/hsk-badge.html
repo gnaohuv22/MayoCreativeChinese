@@ -1,6 +1,6 @@
 <div class="inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap">
   <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-pink text-white shadow-sm shrink-0 whitespace-nowrap inline-block">
-    HSK&nbsp;{{ level() }}
+    {{ (showNewPrefix() || version() === '3.0') ? 'NEW HSK' : 'HSK' }}&nbsp;{{ level() }}
   </span>
 
   @if (showVersion()) {

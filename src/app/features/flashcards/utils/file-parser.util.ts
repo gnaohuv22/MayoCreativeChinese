@@ -1,4 +1,4 @@
-import type { ParsedImportRow, ValidatedImportRow, VocabCard } from '../models/vocab-card.model';
+import type { ParsedImportRow, ValidatedImportRow, VocabCard, HskVersion } from '../models/vocab-card.model';
 
 /**
  * Parse uploaded file (CSV or XLSX) into structured rows.
@@ -38,11 +38,20 @@ export function parseCsv(text: string): ParsedImportRow[] {
     const cells = parseCSVLine(lines[i]);
     if (cells.every(c => !c.trim())) continue; // skip empty rows
 
+    const rawVer = colMap.hsk_version !== undefined ? cells[colMap.hsk_version]?.trim() : '';
+    const ver: HskVersion | undefined = rawVer === '2.0' || rawVer === '2' ? '2.0' : rawVer === '3.0' || rawVer === '3' ? '3.0' : undefined;
+
+    const rawLesson = colMap.lesson_number !== undefined ? cells[colMap.lesson_number]?.trim() : '';
+    const lessonNum = rawLesson ? parseInt(rawLesson, 10) : undefined;
+
     rows.push({
       hanzi: cells[colMap.hanzi]?.trim() ?? '',
       pinyin: cells[colMap.pinyin]?.trim() ?? '',
       meaning: cells[colMap.meaning]?.trim() ?? '',
       hsk_level: parseInt(cells[colMap.hsk_level]?.trim() ?? '0', 10),
+      hsk_version: ver,
+      lesson_number: isNaN(lessonNum as number) ? undefined : lessonNum,
+      lesson_title: colMap.lesson_title !== undefined ? cells[colMap.lesson_title]?.trim() : undefined,
       example: colMap.example !== undefined ? cells[colMap.example]?.trim() : undefined,
       example_pinyin: colMap.example_pinyin !== undefined ? cells[colMap.example_pinyin]?.trim() : undefined,
       example_meaning: colMap.example_meaning !== undefined ? cells[colMap.example_meaning]?.trim() : undefined,
@@ -75,7 +84,6 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
   const rows: ParsedImportRow[] = [];
   for (const row of jsonData) {
     const getValue = (key: string): string => {
-      // Try exact match first, then case-insensitive
       if (row[key] !== undefined) return String(row[key]).trim();
       const mapped = headerMap[key.toLowerCase()];
       if (mapped && row[mapped] !== undefined) return String(row[mapped]).trim();
@@ -85,11 +93,20 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
     const hanzi = getValue('hanzi');
     if (!hanzi) continue; // skip rows without hanzi
 
+    const rawVer = getValue('hsk_version') || getValue('version');
+    const ver: HskVersion | undefined = rawVer === '2.0' || rawVer === '2' ? '2.0' : rawVer === '3.0' || rawVer === '3' ? '3.0' : undefined;
+
+    const rawLesson = getValue('lesson_number') || getValue('lesson') || getValue('bai');
+    const lessonNum = rawLesson ? parseInt(rawLesson, 10) : undefined;
+
     rows.push({
       hanzi,
       pinyin: getValue('pinyin'),
       meaning: getValue('meaning'),
       hsk_level: parseInt(getValue('hsk_level') || '0', 10),
+      hsk_version: ver,
+      lesson_number: isNaN(lessonNum as number) ? undefined : lessonNum,
+      lesson_title: getValue('lesson_title') || getValue('ten_bai') || undefined,
       example: getValue('example') || undefined,
       example_pinyin: getValue('example_pinyin') || undefined,
       example_meaning: getValue('example_meaning') || undefined,
@@ -102,8 +119,10 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
 /** Validate parsed rows against existing data */
 export function validateRows(
   rows: ParsedImportRow[],
-  existingHanzi: Set<string>
+  existingKeys: Set<string>
 ): ValidatedImportRow[] {
+  const seenInFile = new Set<string>();
+
   return rows.map((row, index) => {
     const errors: string[] = [];
 
@@ -114,7 +133,17 @@ export function validateRows(
       errors.push('HSK level phải từ 1 đến 9');
     }
 
-    const isDuplicate = existingHanzi.has(row.hanzi);
+    const ver = row.hsk_version || '2.0';
+    const compoundKey = `${row.hanzi.trim()}_${row.hsk_level}_${ver}`;
+    const levelKey = `${row.hanzi.trim()}_${row.hsk_level}`;
+
+    const isDuplicate =
+      existingKeys.has(compoundKey) ||
+      existingKeys.has(levelKey) ||
+      existingKeys.has(row.hanzi.trim()) ||
+      seenInFile.has(compoundKey);
+
+    seenInFile.add(compoundKey);
 
     let status: 'valid' | 'duplicate' | 'error';
     if (errors.length > 0) {
@@ -130,7 +159,7 @@ export function validateRows(
       rowIndex: index + 1,
       status,
       errors,
-      selected: status === 'valid', // default: auto-select valid, deselect duplicates and errors
+      selected: status === 'valid',
     };
   });
 }
@@ -142,6 +171,9 @@ interface ColumnMap {
   pinyin: number;
   meaning: number;
   hsk_level: number;
+  hsk_version?: number;
+  lesson_number?: number;
+  lesson_title?: number;
   example?: number;
   example_pinyin?: number;
   example_meaning?: number;
@@ -161,11 +193,18 @@ function mapColumns(headers: string[]): ColumnMap | null {
     return null;
   }
 
+  const hsk_version = find(['hsk_version', 'version', 'phiên bản', 'phien_ban', '版本']);
+  const lesson_number = find(['lesson_number', 'lesson', 'bài', 'bai', 'bài số', 'bai_so', '课', '课号']);
+  const lesson_title = find(['lesson_title', 'tên bài', 'ten_bai', 'tiêu đề bài', '课题']);
+
   return {
     hanzi,
     pinyin,
     meaning,
     hsk_level,
+    hsk_version: hsk_version !== -1 ? hsk_version : undefined,
+    lesson_number: lesson_number !== -1 ? lesson_number : undefined,
+    lesson_title: lesson_title !== -1 ? lesson_title : undefined,
     example: find(['example', 'ví dụ', 'vi_du', '例句']) !== -1 ? find(['example', 'ví dụ', 'vi_du', '例句']) : undefined,
     example_pinyin: find(['example_pinyin', 'pinyin ví dụ', '例句拼音']) !== -1 ? find(['example_pinyin', 'pinyin ví dụ', '例句拼音']) : undefined,
     example_meaning: find(['example_meaning', 'nghĩa ví dụ', '例句翻译']) !== -1 ? find(['example_meaning', 'nghĩa ví dụ', '例句翻译']) : undefined,

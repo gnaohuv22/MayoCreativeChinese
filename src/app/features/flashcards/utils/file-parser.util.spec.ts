@@ -27,6 +27,20 @@ describe('file-parser.util', () => {
       expect(rows[0].meaning).toBe('ăn, dùng bữa');
     });
 
+    it('should correctly parse CSV with hsk_version and lesson_number', () => {
+      const csv = `hanzi,pinyin,meaning,hsk_level,hsk_version,lesson_number,lesson_title
+你好,nǐ hǎo,xin chào,1,3.0,1,Bài 1: Lời chào
+再见,zài jiàn,tạm biệt,1,2.0,,`;
+
+      const rows = parseCsv(csv);
+      expect(rows.length).toBe(2);
+      expect(rows[0].hsk_version).toBe('3.0');
+      expect(rows[0].lesson_number).toBe(1);
+      expect(rows[0].lesson_title).toBe('Bài 1: Lời chào');
+      expect(rows[1].hsk_version).toBe('2.0');
+      expect(rows[1].lesson_number).toBeUndefined();
+    });
+
     it('should throw error if required columns are missing', () => {
       const csv = `hanzi,pinyin
 你好,nǐ hǎo`;
@@ -45,6 +59,30 @@ describe('file-parser.util', () => {
       const validated = validateRows(parsed, existing);
       expect(validated[0].status).toBe('duplicate');
       expect(validated[1].status).toBe('valid');
+    });
+
+    it('should validate compound keys without false conflicts between versions', () => {
+      const parsed = [
+        { hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1, hsk_version: '3.0' as const },
+        { hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1, hsk_version: '2.0' as const },
+      ];
+      // Only version 2.0 exists in DB
+      const existingCompound = new Set(['你好_1_2.0']);
+
+      const validated = validateRows(parsed, existingCompound);
+      expect(validated[0].status).toBe('valid'); // 3.0 does not conflict with 2.0!
+      expect(validated[1].status).toBe('duplicate'); // 2.0 is duplicate!
+    });
+
+    it('should detect duplicate rows within the same uploaded file', () => {
+      const parsed = [
+        { hanzi: '猫', pinyin: 'māo', meaning: 'mèo', hsk_level: 1, hsk_version: '3.0' as const },
+        { hanzi: '猫', pinyin: 'māo', meaning: 'mèo', hsk_level: 1, hsk_version: '3.0' as const },
+      ];
+
+      const validated = validateRows(parsed, new Set());
+      expect(validated[0].status).toBe('valid');
+      expect(validated[1].status).toBe('duplicate');
     });
 
     it('should mark invalid rows with error status', () => {

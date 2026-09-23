@@ -1,0 +1,124 @@
+<app-nav-header activeModule="flashcards" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-6 sm:py-10">
+  <div class="px-4 sm:px-6 max-w-6xl mx-auto space-y-6">
+
+    <!-- BREADCRUMB & BACK -->
+    <div class="flex items-center justify-between">
+      <a routerLink="/flashcards" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors">
+        <app-icon name="arrow-left" size="xs" />
+        <span>Quay lại trang Flashcard</span>
+      </a>
+
+      <div class="flex items-center gap-2">
+        @if (hskVersion()) {
+          <app-hsk-badge [level]="1" [version]="hskVersion()!" />
+        }
+      </div>
+    </div>
+
+    <!-- HEADER TITLE -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-brand-navy via-brand-navy to-brand-navy/90 text-white shadow-xl relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl space-y-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/15 text-white backdrop-blur-md">
+          <app-icon name="academic" size="xs" />
+          <span>{{ collection() === 'hsk3' ? 'Chuẩn HSK 3.0 Mới' : 'Hệ thống Từ vựng HSK' }}</span>
+        </span>
+        <h1 class="font-display font-black text-2xl sm:text-4xl tracking-tight text-white">
+          {{ title() }}
+        </h1>
+        <p class="text-white/80 text-xs sm:text-sm leading-relaxed">
+          {{ subtitle() }}
+        </p>
+      </div>
+      <div class="absolute right-4 bottom-2 text-7xl sm:text-9xl opacity-10 font-black font-display pointer-events-none select-none">
+        HSK
+      </div>
+    </div>
+
+    <!-- LEVEL GRID -->
+    @if (loading()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="bg-white/90 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 rounded-2xl p-6 h-[160px] animate-pulse">
+            <div class="flex justify-between items-center h-full">
+              <div class="space-y-3 w-1/2">
+                <div class="h-6 bg-brand-navy/10 dark:bg-white/10 rounded-md w-3/4"></div>
+                <div class="h-4 bg-brand-navy/10 dark:bg-white/10 rounded-md w-1/2"></div>
+              </div>
+              <div class="w-12 h-12 rounded-full bg-brand-navy/10 dark:bg-white/10"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (item of levels(); track item.level) {
+          <div class="group relative bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-none transition-all duration-200 flex flex-col justify-between hover:border-brand-pink/50">
+            <div>
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="flex items-center gap-2.5">
+                    <h2 class="font-display font-black text-2xl text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
+                      {{ collection() === 'hsk3' ? 'NEW HSK ' + item.level : 'HSK ' + item.level }}
+                    </h2>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/60 dark:text-brand-text-dark/70">
+                      {{ item.name }}
+                    </span>
+                  </div>
+
+                  <p class="text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/70 mt-2">
+                    @if (item.hasData) {
+                      <span class="text-brand-navy dark:text-white font-bold">{{ item.totalCards }}</span> từ • 
+                      <span class="text-brand-pink font-semibold">{{ item.mastered }}</span> đã thuộc
+                    } @else {
+                      <span class="text-brand-navy/50 dark:text-white/40">Chưa có từ vựng</span>
+                    }
+                  </p>
+                </div>
+
+                <!-- Progress Ring -->
+                <div class="relative w-12 h-12 flex-shrink-0">
+                  <svg viewBox="0 0 48 48" class="w-full h-full transform -rotate-90">
+                    <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-navy/10 dark:stroke-white/10" />
+                    <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-pink"
+                            stroke-linecap="round"
+                            [style.stroke-dasharray]="'125.6'"
+                            [style.stroke-dashoffset]="getDashOffset(item.mastered, item.totalCards)" />
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-[11px] font-extrabold text-brand-navy dark:text-white font-display">
+                      {{ getPercent(item.mastered, item.totalCards) }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS: FLASHCARD & LIST -->
+            <div class="mt-6 pt-4 border-t border-brand-navy/10 dark:border-white/10 flex items-center gap-2">
+              <a [routerLink]="item.hasData ? item.studyRoute : null"
+                 [class.opacity-40]="!item.hasData"
+                 [class.pointer-events-none]="!item.hasData"
+                 class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 active:scale-95 transition-all shadow-xs">
+                <app-icon name="book-open" size="xs" />
+                <span>{{ collection() === 'hsk3' ? 'Chọn bài học' : 'Học Flashcard' }}</span>
+              </a>
+
+              <a [routerLink]="item.hasData ? item.listRoute : null"
+                 [class.opacity-40]="!item.hasData"
+                 [class.pointer-events-none]="!item.hasData"
+                 class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white hover:border-brand-pink/40 hover:text-brand-pink transition-all"
+                 title="Xem danh sách bảng">
+                <app-icon name="document-text" size="xs" />
+                <span>Dạng bảng</span>
+              </a>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

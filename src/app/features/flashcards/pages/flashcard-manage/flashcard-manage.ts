@@ -5,7 +5,7 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
-import type { VocabCard, ValidatedImportRow } from '../../models/vocab-card.model';
+import type { VocabCard, ValidatedImportRow, HskVersion } from '../../models/vocab-card.model';
 import { parseFile, validateRows } from '../../utils/file-parser.util';
 import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../utils/template-generator.util';
 
@@ -28,6 +28,9 @@ export class FlashcardManageComponent implements OnInit {
   newPinyin = signal('');
   newMeaning = signal('');
   newLevel = signal<number>(1);
+  newVersion = signal<HskVersion>('2.0');
+  newLessonNumber = signal<number | null>(null);
+  newLessonTitle = signal<string>('');
   newExample = signal('');
   newExamplePinyin = signal('');
   newExampleMeaning = signal('');
@@ -44,6 +47,7 @@ export class FlashcardManageComponent implements OnInit {
 
   // Tab: Browse
   browseLevel = signal<number>(0);
+  browseVersion = signal<string>('all');
   browseCards = signal<VocabCard[]>([]);
   browseLoading = signal(false);
   searchQuery = signal('');
@@ -60,13 +64,22 @@ export class FlashcardManageComponent implements OnInit {
     pinyin: '',
     meaning: '',
     hsk_level: 1,
+    hsk_version: '2.0' as HskVersion,
+    lesson_number: null as number | null,
     example: '',
   };
 
   filteredBrowseCards = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    if (!query) return this.browseCards();
-    return this.browseCards().filter(
+    const ver = this.browseVersion();
+    let list = this.browseCards();
+
+    if (ver !== 'all') {
+      list = list.filter(c => c.hsk_version === ver);
+    }
+
+    if (!query) return list;
+    return list.filter(
       c =>
         c.hanzi.toLowerCase().includes(query) ||
         c.pinyin.toLowerCase().includes(query) ||
@@ -109,6 +122,9 @@ export class FlashcardManageComponent implements OnInit {
         pinyin,
         meaning,
         hsk_level: Number(this.newLevel()),
+        hsk_version: this.newVersion(),
+        lesson_number: this.newLessonNumber() ? Number(this.newLessonNumber()) : undefined,
+        lesson_title: this.newLessonTitle().trim() || undefined,
         example: this.newExample().trim() || undefined,
         example_pinyin: this.newExamplePinyin().trim() || undefined,
         example_meaning: this.newExampleMeaning().trim() || undefined,
@@ -133,6 +149,8 @@ export class FlashcardManageComponent implements OnInit {
     this.newHanzi.set('');
     this.newPinyin.set('');
     this.newMeaning.set('');
+    this.newLessonNumber.set(null);
+    this.newLessonTitle.set('');
     this.newExample.set('');
     this.newExamplePinyin.set('');
     this.newExampleMeaning.set('');
@@ -172,25 +190,17 @@ export class FlashcardManageComponent implements OnInit {
     try {
       const rawRows = await parseFile(file);
 
-      // Collect all unique levels in the file to check for existing vocab
       const levels = new Set(rawRows.map(r => r.hsk_level));
       const allExisting = new Set<string>();
 
       for (const level of levels) {
         if (level >= 1 && level <= 9) {
-          const existing = await this.vocabService.getExistingHanzi(level);
-          existing.forEach(h => allExisting.add(`${h}_${level}`));
+          const existingKeys = await this.vocabService.getExistingVocabKeys(level);
+          existingKeys.forEach(k => allExisting.add(k));
         }
       }
 
-      // Build a level-aware existing set
-      const existingForValidation = new Set(
-        rawRows
-          .filter(r => allExisting.has(`${r.hanzi}_${r.hsk_level}`))
-          .map(r => r.hanzi)
-      );
-
-      const validated = validateRows(rawRows, existingForValidation);
+      const validated = validateRows(rawRows, allExisting);
       this.parsedRows.set(validated);
       this.showPreview.set(true);
     } catch (e: any) {
@@ -206,6 +216,9 @@ export class FlashcardManageComponent implements OnInit {
         pinyin: r.row.pinyin,
         meaning: r.row.meaning,
         hsk_level: r.row.hsk_level,
+        hsk_version: r.row.hsk_version ?? '2.0',
+        lesson_number: r.row.lesson_number,
+        lesson_title: r.row.lesson_title,
         example: r.row.example,
         example_pinyin: r.row.example_pinyin,
         example_meaning: r.row.example_meaning,
@@ -251,7 +264,6 @@ export class FlashcardManageComponent implements OnInit {
     this.browseLoading.set(true);
     try {
       if (this.browseLevel() === 0) {
-        // Load all cards — fetch each level
         const allCards: VocabCard[] = [];
         for (let i = 1; i <= 9; i++) {
           const cards = await this.vocabService.getVocabByLevel(i);
@@ -275,6 +287,12 @@ export class FlashcardManageComponent implements OnInit {
     this.currentPage.set(1);
     this.cancelEdit();
     this.loadBrowseCards();
+  }
+
+  setBrowseVersion(ver: string) {
+    this.browseVersion.set(ver);
+    this.currentPage.set(1);
+    this.cancelEdit();
   }
 
   toggleSelection(id: number) {
@@ -349,6 +367,8 @@ export class FlashcardManageComponent implements OnInit {
       pinyin: card.pinyin,
       meaning: card.meaning,
       hsk_level: card.hsk_level,
+      hsk_version: card.hsk_version || '2.0',
+      lesson_number: card.lesson_number ?? null,
       example: card.example || '',
     };
   }
@@ -358,7 +378,7 @@ export class FlashcardManageComponent implements OnInit {
   }
 
   async saveInlineEdit(id: number) {
-    const { hanzi, pinyin, meaning, hsk_level, example } = this.editingForm;
+    const { hanzi, pinyin, meaning, hsk_level, hsk_version, lesson_number, example } = this.editingForm;
     if (!hanzi.trim() || !pinyin.trim() || !meaning.trim()) {
       this.toastService.error('Vui lòng điền đủ Hán tự, Pinyin và Nghĩa.');
       return;
@@ -370,6 +390,8 @@ export class FlashcardManageComponent implements OnInit {
         pinyin: pinyin.trim(),
         meaning: meaning.trim(),
         hsk_level: Number(hsk_level),
+        hsk_version,
+        lesson_number: lesson_number ? Number(lesson_number) : undefined,
         example: example.trim() || undefined,
       });
 
@@ -380,6 +402,8 @@ export class FlashcardManageComponent implements OnInit {
           pinyin: pinyin.trim(),
           meaning: meaning.trim(),
           hsk_level: Number(hsk_level),
+          hsk_version,
+          lesson_number: lesson_number ? Number(lesson_number) : undefined,
           example: example.trim() || undefined,
         } : c));
         this.editingCardId.set(null);

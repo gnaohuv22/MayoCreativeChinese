@@ -1,3 +1,9 @@
+/** Phiên bản chuẩn HSK */
+export type HskVersion = '2.0' | '3.0';
+
+/** Danh mục bộ sưu tập từ vựng */
+export type VocabCollection = 'hsk2' | 'hsk3' | 'combined' | 'supplement';
+
 /** Từ vựng — stored in Supabase PostgreSQL */
 export interface VocabCard {
   id?: number;
@@ -5,6 +11,9 @@ export interface VocabCard {
   pinyin: string;
   meaning: string;
   hsk_level: number;
+  hsk_version?: HskVersion;
+  lesson_number?: number;
+  lesson_title?: string;
   example?: string;
   example_pinyin?: string;
   example_meaning?: string;
@@ -20,6 +29,7 @@ export interface CardProgress {
   id?: number;
   hanzi: string;
   hskLevel: number;
+  hskVersion?: HskVersion;
   confidence: 0 | 1 | 2 | 3;
   reviewCount: number;
   lastReviewed?: number;
@@ -39,6 +49,9 @@ export interface ParsedImportRow {
   pinyin: string;
   meaning: string;
   hsk_level: number;
+  hsk_version?: HskVersion;
+  lesson_number?: number;
+  lesson_title?: string;
   example?: string;
   example_pinyin?: string;
   example_meaning?: string;
@@ -60,4 +73,24 @@ export interface LevelStats {
   reviewed: number;
   mastered: number;
   bookmarked: number;
+  hskVersion?: HskVersion;
+}
+
+/** Thông tin về một bài học (HSK 3.0) */
+export interface LessonInfo {
+  lessonNumber: number;
+  lessonTitle: string;
+  wordCount: number;
+}
+
+/** Thông tin về một bộ sưu tập từ vựng */
+export interface VocabCollectionInfo {
+  key: VocabCollection;
+  title: string;
+  subtitle: string;
+  description: string;
+  badge: string;
+  levels: number[];
+  hskVersion?: HskVersion;
+  hasLessons?: boolean;
 }

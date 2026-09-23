@@ -171,5 +171,14 @@
   "register.validation.email": "Địa chỉ email không hợp lệ",
   "register.submit": "Gửi Đăng Ký",
   "register.submitting": "Đang gửi...",
-  "register.error_msg": "Đã xảy ra lỗi trong quá trình gửi. Vui lòng thử lại sau."
+  "register.error_msg": "Đã xảy ra lỗi trong quá trình gửi. Vui lòng thử lại sau.",
+  "vocab.title": "Kho Từ Vựng HSK",
+  "vocab.hsk2": "Từ Vựng HSK 2.0",
+  "vocab.hsk3": "Từ Vựng HSK 3.0",
+  "vocab.combined": "Từ Vựng HSK 1 - 9",
+  "vocab.supplement": "Bổ Sung HSK 2.0 → 3.0",
+  "vocab.list_view": "Danh sách bảng",
+  "vocab.lesson": "Bài học",
+  "exam.hsk2_title": "Thi Thử HSK 2.0",
+  "exam.hsk3_title": "Thi Thử HSK 3.0"
 }

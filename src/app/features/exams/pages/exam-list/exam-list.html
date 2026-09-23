@@ -18,7 +18,7 @@
         </h1>
 
         <p class="text-sm sm:text-base text-white/80 leading-relaxed">
-          Trải nghiệm thi thử với format chuẩn HSK 2.0 và HSK 3.0 mới nhất. Kiểm tra toàn diện 3 kỹ năng Nghe hiểu, Đọc hiểu và Viết với hệ thống tính điểm tự động.
+          Trải nghiệm phòng thi trực tuyến với format chuẩn HSK 2.0 (HSK 1 - 6) và NEW HSK 3.0 (HSK 1 - 9). Kiểm tra toàn diện 3 kỹ năng Nghe hiểu, Đọc hiểu và Viết với hệ thống tính điểm tự động.
         </p>
 
         <div class="flex flex-wrap items-center gap-3 pt-2">
@@ -44,111 +44,132 @@
       <div class="absolute right-12 top-8 text-8xl opacity-10 select-none font-display">HSK</div>
     </div>
 
-    <!-- BỘ LỌC CẤP ĐỘ & PHIÊN BẢN -->
+    <!-- TÁI CẤU TRÚC: CHỌN PHIÊN BẢN (HSK 2.0 vs HSK 3.0) -->
     <div class="space-y-4">
-      <!-- Level Tabs (HSK 1 - 9) -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+
+      <!-- Version Big Tabs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- TAB HSK 2.0 -->
         <button
           type="button"
-          (click)="setLevel('all')"
-          [class.bg-brand-navy]="selectedLevel() === 'all'"
-          [class.text-white]="selectedLevel() === 'all'"
-          [class.shadow-xs]="selectedLevel() === 'all'"
-          [class.bg-white]="selectedLevel() !== 'all'"
-          [class.text-zinc-700]="selectedLevel() !== 'all'"
-          [class.hover:bg-zinc-50]="selectedLevel() !== 'all'"
-          [class.dark:bg-white/5]="selectedLevel() !== 'all'"
-          [class.dark:text-zinc-300]="selectedLevel() !== 'all'"
-          [class.dark:hover:bg-white/10]="selectedLevel() !== 'all'"
-          class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-all whitespace-nowrap cursor-pointer"
+          (click)="setVersion('2.0')"
+          [class.border-brand-pink]="selectedVersion() === '2.0'"
+          [class.bg-white]="selectedVersion() === '2.0'"
+          [class.dark:bg-white/10]="selectedVersion() === '2.0'"
+          [class.shadow-md]="selectedVersion() === '2.0'"
+          [class.border-brand-navy/10]="selectedVersion() !== '2.0'"
+          [class.dark:border-white/10]="selectedVersion() !== '2.0'"
+          [class.bg-white/60]="selectedVersion() !== '2.0'"
+          [class.dark:bg-white/5]="selectedVersion() !== '2.0'"
+          class="p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between"
         >
-          Tất cả cấp độ
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase">
+                v2.0 Tiêu Chuẩn
+              </span>
+              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
+                Thi Thử HSK 2.0
+              </h3>
+            </div>
+            <p class="text-xs text-brand-navy/60 dark:text-white/60">
+              Hệ thống 6 cấp độ truyền thống: HSK 1 → HSK 6
+            </p>
+          </div>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-brand-pink]="selectedVersion() === '2.0'"
+               [class.text-white]="selectedVersion() === '2.0'"
+               [class.bg-brand-navy/5]="selectedVersion() !== '2.0'"
+               [class.text-brand-navy/40]="selectedVersion() !== '2.0'">
+            <app-icon name="check" size="xs" />
+          </div>
         </button>
 
-        @for (lvl of [1,2,3,4,5,6]; track lvl) {
-          <button
-            type="button"
-            (click)="setLevel(lvl)"
-            [class.bg-brand-pink]="selectedLevel() === lvl"
-            [class.text-white]="selectedLevel() === lvl"
-            [class.shadow-xs]="selectedLevel() === lvl"
-            [class.bg-white]="selectedLevel() !== lvl"
-            [class.text-zinc-700]="selectedLevel() !== lvl"
-            [class.hover:bg-zinc-50]="selectedLevel() !== lvl"
-            [class.dark:bg-white/5]="selectedLevel() !== lvl"
-            [class.dark:text-zinc-300]="selectedLevel() !== lvl"
-            [class.dark:hover:bg-white/10]="selectedLevel() !== lvl"
-            class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-all whitespace-nowrap cursor-pointer"
-          >
-            HSK {{ lvl }}
-          </button>
-        }
+        <!-- TAB HSK 3.0 -->
+        <button
+          type="button"
+          (click)="setVersion('3.0')"
+          [class.border-brand-pink]="selectedVersion() === '3.0'"
+          [class.bg-white]="selectedVersion() === '3.0'"
+          [class.dark:bg-white/10]="selectedVersion() === '3.0'"
+          [class.shadow-md]="selectedVersion() === '3.0'"
+          [class.border-brand-navy/10]="selectedVersion() !== '3.0'"
+          [class.dark:border-white/10]="selectedVersion() !== '3.0'"
+          [class.bg-white/60]="selectedVersion() !== '3.0'"
+          [class.dark:bg-white/5]="selectedVersion() !== '3.0'"
+          class="p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between"
+        >
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase">
+                v3.0 Mới Nhất
+              </span>
+              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
+                Thi Thử HSK 3.0
+              </h3>
+            </div>
+            <p class="text-xs text-brand-navy/60 dark:text-white/60">
+              Chuẩn 9 cấp độ mới: NEW HSK 1 → NEW HSK 9
+            </p>
+          </div>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-brand-pink]="selectedVersion() === '3.0'"
+               [class.text-white]="selectedVersion() === '3.0'"
+               [class.bg-brand-navy/5]="selectedVersion() !== '3.0'"
+               [class.text-brand-navy/40]="selectedVersion() !== '3.0'">
+            <app-icon name="check" size="xs" />
+          </div>
+        </button>
       </div>
 
-      <!-- Version Filter & Stats -->
-      <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/90 dark:bg-brand-dark/90 border border-brand-navy/10 dark:border-white/10 shadow-xs backdrop-blur-md">
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-zinc-600 dark:text-zinc-300 font-semibold flex items-center gap-1">
-            <app-icon name="filter" size="xs" />
-            <span>Phiên bản:</span>
+      <!-- Level Filter Pills for the Selected Version -->
+      <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <span class="text-xs font-bold text-brand-navy/70 dark:text-white/70 whitespace-nowrap mr-1">
+            Cấp độ:
           </span>
+
           <button
             type="button"
-            (click)="setVersion('all')"
-            [class.bg-brand-navy]="selectedVersion() === 'all'"
-            [class.text-white]="selectedVersion() === 'all'"
-            [class.shadow-xs]="selectedVersion() === 'all'"
-            [class.bg-zinc-100]="selectedVersion() !== 'all'"
-            [class.text-zinc-700]="selectedVersion() !== 'all'"
-            [class.hover:bg-zinc-200]="selectedVersion() !== 'all'"
-            [class.dark:bg-white/5]="selectedVersion() !== 'all'"
-            [class.dark:text-zinc-300]="selectedVersion() !== 'all'"
-            [class.dark:hover:bg-white/10]="selectedVersion() !== 'all'"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+            (click)="setLevel('all')"
+            [class.bg-brand-navy]="selectedLevel() === 'all'"
+            [class.text-white]="selectedLevel() === 'all'"
+            [class.shadow-xs]="selectedLevel() === 'all'"
+            [class.bg-brand-navy/5]="selectedLevel() !== 'all'"
+            [class.text-brand-navy/80]="selectedLevel() !== 'all'"
+            [class.dark:bg-white/10]="selectedLevel() !== 'all'"
+            [class.dark:text-white/80]="selectedLevel() !== 'all'"
+            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
           >
-            Tất cả
+            Tất cả cấp độ
           </button>
-          <button
-            type="button"
-            (click)="setVersion('2.0')"
-            [class.bg-brand-navy]="selectedVersion() === '2.0'"
-            [class.text-white]="selectedVersion() === '2.0'"
-            [class.shadow-xs]="selectedVersion() === '2.0'"
-            [class.bg-zinc-100]="selectedVersion() !== '2.0'"
-            [class.text-zinc-700]="selectedVersion() !== '2.0'"
-            [class.hover:bg-zinc-200]="selectedVersion() !== '2.0'"
-            [class.dark:bg-white/5]="selectedVersion() !== '2.0'"
-            [class.dark:text-zinc-300]="selectedVersion() !== '2.0'"
-            [class.dark:hover:bg-white/10]="selectedVersion() !== '2.0'"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-          >
-            HSK 2.0 (Tiêu chuẩn)
-          </button>
-          <button
-            type="button"
-            (click)="setVersion('3.0')"
-            [class.bg-brand-navy]="selectedVersion() === '3.0'"
-            [class.text-white]="selectedVersion() === '3.0'"
-            [class.shadow-xs]="selectedVersion() === '3.0'"
-            [class.bg-zinc-100]="selectedVersion() !== '3.0'"
-            [class.text-zinc-700]="selectedVersion() !== '3.0'"
-            [class.hover:bg-zinc-200]="selectedVersion() !== '3.0'"
-            [class.dark:bg-white/5]="selectedVersion() !== '3.0'"
-            [class.dark:text-zinc-300]="selectedVersion() !== '3.0'"
-            [class.dark:hover:bg-white/10]="selectedVersion() !== '3.0'"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
-          >
-            HSK 3.0 (Mới)
-          </button>
+
+          @for (lvl of availableLevels(); track lvl.level) {
+            <button
+              type="button"
+              (click)="setLevel(lvl.level)"
+              [class.bg-brand-pink]="selectedLevel() === lvl.level"
+              [class.text-white]="selectedLevel() === lvl.level"
+              [class.shadow-xs]="selectedLevel() === lvl.level"
+              [class.bg-brand-navy/5]="selectedLevel() !== lvl.level"
+              [class.text-brand-navy/80]="selectedLevel() !== lvl.level"
+              [class.dark:bg-white/10]="selectedLevel() !== lvl.level"
+              [class.dark:text-white/80]="selectedLevel() !== lvl.level"
+              class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:bg-brand-pink/20"
+            >
+              {{ lvl.label }}
+            </button>
+          }
         </div>
 
-        <div class="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
-          Tìm thấy <strong class="text-brand-pink">{{ exams().length }}</strong> đề thi có sẵn
+        <div class="text-xs text-brand-navy/70 dark:text-white/70 font-semibold whitespace-nowrap">
+          Tìm thấy <strong class="text-brand-pink">{{ exams().length }}</strong> đề thi
         </div>
       </div>
+
     </div>
 
-    <!-- GRID ĐỀ THI (Using generalized ExamCardComponent) -->
+    <!-- GRID ĐỀ THI -->
     @if (isLoading()) {
       <div class="py-20 text-center">
         <app-icon name="arrow-path" size="lg" customClass="animate-spin text-brand-pink inline-block" />
@@ -159,9 +180,14 @@
         <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 flex items-center justify-center mx-auto">
           <app-icon name="book-open" size="lg" />
         </div>
-        <h3 class="text-base font-bold text-brand-navy dark:text-white">Chưa có đề thi nào trong mục này</h3>
+        <h3 class="text-base font-bold text-brand-navy dark:text-white">
+          Chưa có đề thi nào cho {{ selectedVersion() === '2.0' ? 'HSK 2.0' : 'HSK 3.0' }}
+          @if (selectedLevel() !== 'all') {
+            - Cấp {{ selectedLevel() }}
+          }
+        </h3>
         <p class="text-xs text-zinc-600 dark:text-zinc-300 max-w-sm mx-auto">
-          Các đề thi đang được biên soạn và cập nhật liên tục. Vui lòng quay lại sau hoặc chọn cấp độ khác.
+          Các đề thi đang được ban chuyên môn biên soạn. Bạn có thể chọn phiên bản hoặc cấp độ khác để trải nghiệm.
         </p>
       </div>
     } @else {

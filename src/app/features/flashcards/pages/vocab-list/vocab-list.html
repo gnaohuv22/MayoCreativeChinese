@@ -1,0 +1,258 @@
+<app-nav-header activeModule="flashcards" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-6 sm:py-10">
+  <div class="px-4 sm:px-6 max-w-6xl mx-auto space-y-6">
+
+    <!-- BREADCRUMBS & ACTIONS -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs sm:text-sm">
+        <a routerLink="/flashcards" class="font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors">
+          Flashcard
+        </a>
+        <span class="text-zinc-400">/</span>
+        <a [routerLink]="['/flashcards', collection()]" class="font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors">
+          {{ collection() === 'hsk3' ? 'HSK 3.0' : collection() === 'hsk2' ? 'HSK 2.0' : collection() === 'supplement' ? 'Bổ sung' : 'HSK 1-9' }}
+        </a>
+        <span class="text-zinc-400">/</span>
+        <span class="font-bold text-brand-navy dark:text-white">
+          {{ collection() === 'hsk3' ? 'NEW HSK ' + level() : 'HSK ' + level() }}
+        </span>
+      </div>
+
+      <!-- SWITCH TO FLASHCARD VIEW -->
+      <a [routerLink]="getFlashcardRoute()"
+         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 active:scale-95 shadow-xs transition-all">
+        <app-icon name="book-open" size="xs" />
+        <span>Chuyển sang Flashcard</span>
+      </a>
+    </div>
+
+    <!-- HEADER TITLE & STATS -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2.5">
+          <h1 class="font-display font-black text-2xl sm:text-3xl text-brand-navy dark:text-white">
+            Danh sách từ vựng {{ collection() === 'hsk3' ? 'NEW HSK ' + level() : 'HSK ' + level() }}
+          </h1>
+          @if (versionForQuery()) {
+            <app-hsk-badge [level]="level()" [version]="versionForQuery()!" />
+          }
+        </div>
+        <p class="text-xs sm:text-sm text-brand-navy/60 dark:text-white/60">
+          Hiển thị toàn bộ từ vựng dưới dạng bảng tra cứu, hỗ trợ tìm kiếm và phân trang linh hoạt
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="px-4 py-2 rounded-2xl bg-brand-navy/5 dark:bg-white/10 text-center">
+          <div class="text-xs text-brand-navy/60 dark:text-white/60 font-medium">Tổng số từ</div>
+          <div class="text-xl font-black text-brand-navy dark:text-white font-display">{{ totalWords() }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS & FILTER BAR -->
+    <div class="p-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs space-y-4">
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+
+        <!-- SEARCH INPUT -->
+        <div class="relative flex-1 max-w-md">
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearch($event)"
+            placeholder="Tìm theo chữ Hán, Pinyin hoặc nghĩa tiếng Việt..."
+            class="w-full pl-9 pr-4 py-2 rounded-xl text-xs sm:text-sm bg-brand-navy/5 dark:bg-white/10 border border-transparent focus:border-brand-pink/50 focus:bg-white dark:focus:bg-brand-dark text-brand-navy dark:text-white placeholder:text-zinc-400 outline-none transition-all"
+          />
+          <span class="absolute left-3 top-2.5 text-zinc-400">
+            <app-icon name="search" size="xs" />
+          </span>
+          @if (searchQuery()) {
+            <button
+              (click)="onSearch('')"
+              class="absolute right-3 top-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs">
+              ✕
+            </button>
+          }
+        </div>
+
+        <!-- FILTERS: LESSON & PAGE SIZE -->
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Lesson Filter (HSK 3.0 only) -->
+          @if (collection() === 'hsk3' && lessons().length > 0) {
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs font-semibold text-brand-navy/70 dark:text-white/70">Bài học:</label>
+              <select
+                [ngModel]="lessonNumber() ?? 'all'"
+                (ngModelChange)="onLessonChange($event)"
+                class="px-3 py-1.5 rounded-xl text-xs font-medium bg-brand-navy/5 dark:bg-white/10 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white outline-none cursor-pointer">
+                <option value="all">Tất cả các bài</option>
+                @for (les of lessons(); track les.lessonNumber) {
+                  <option [value]="les.lessonNumber">
+                    {{ les.lessonTitle }} ({{ les.wordCount }} từ)
+                  </option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Page Size Dropdown (Step 10/20/50/100 từ/page) -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs font-semibold text-brand-navy/70 dark:text-white/70">Hiển thị:</label>
+            <select
+              [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-navy/5 dark:bg-white/10 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white outline-none cursor-pointer">
+              @for (opt of pageSizeOptions; track opt) {
+                <option [value]="opt">{{ opt }} từ / trang</option>
+              }
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VOCAB TABLE -->
+    <div class="bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 rounded-2xl overflow-hidden shadow-xs">
+      @if (loading()) {
+        <div class="py-20 text-center">
+          <app-icon name="arrow-path" size="lg" customClass="animate-spin text-brand-pink inline-block" />
+          <p class="text-xs text-zinc-500 mt-2 font-semibold">Đang tải danh sách từ vựng...</p>
+        </div>
+      } @else if (words().length === 0) {
+        <div class="py-16 text-center space-y-2">
+          <p class="text-sm font-bold text-brand-navy dark:text-white">Không tìm thấy từ vựng nào</p>
+          <p class="text-xs text-zinc-500">Hãy thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-brand-navy/10 dark:border-white/10 bg-brand-navy/5 dark:bg-white/5 text-[11px] font-bold text-brand-navy/70 dark:text-white/70 uppercase tracking-wider">
+                <th class="py-3 px-4 w-12 text-center">#</th>
+                <th class="py-3 px-4 min-w-[120px]">Chữ Hán</th>
+                <th class="py-3 px-4 min-w-[140px]">Phiên âm (Pinyin)</th>
+                <th class="py-3 px-4 min-w-[180px]">Nghĩa tiếng Việt</th>
+                <th class="py-3 px-4 min-w-[260px]">Câu ví dụ minh họa</th>
+                @if (collection() === 'hsk3') {
+                  <th class="py-3 px-4 w-28 text-center">Bài học</th>
+                }
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-navy/5 dark:divide-white/5 text-xs sm:text-sm">
+              @for (word of words(); track word.id ?? word.hanzi; let idx = $index) {
+                <tr class="hover:bg-brand-pink/5 dark:hover:bg-white/5 transition-colors">
+                  <!-- STT -->
+                  <td class="py-3.5 px-4 text-center text-xs font-semibold text-zinc-400">
+                    {{ rangeStart() + idx }}
+                  </td>
+
+                  <!-- HANZI -->
+                  <td class="py-3.5 px-4">
+                    <span class="font-sans font-bold text-xl text-brand-navy dark:text-white tracking-wide">
+                      {{ word.hanzi }}
+                    </span>
+                  </td>
+
+                  <!-- PINYIN -->
+                  <td class="py-3.5 px-4">
+                    <span class="font-semibold text-brand-pink">
+                      {{ word.pinyin }}
+                    </span>
+                  </td>
+
+                  <!-- MEANING -->
+                  <td class="py-3.5 px-4 font-medium text-brand-navy/90 dark:text-zinc-200">
+                    {{ word.meaning }}
+                  </td>
+
+                  <!-- EXAMPLE -->
+                  <td class="py-3.5 px-4">
+                    @if (word.example) {
+                      <div class="space-y-0.5 text-xs">
+                        <div class="font-medium text-brand-navy dark:text-white">{{ word.example }}</div>
+                        @if (word.example_pinyin) {
+                          <div class="text-zinc-500 dark:text-zinc-400 italic text-[11px]">{{ word.example_pinyin }}</div>
+                        }
+                        @if (word.example_meaning) {
+                          <div class="text-zinc-600 dark:text-zinc-300 text-[11px]">{{ word.example_meaning }}</div>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-zinc-400 text-xs italic">—</span>
+                    }
+                  </td>
+
+                  <!-- LESSON (HSK 3.0) -->
+                  @if (collection() === 'hsk3') {
+                    <td class="py-3.5 px-4 text-center">
+                      @if (word.lesson_number) {
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-pink/10 text-brand-pink">
+                          Bài {{ word.lesson_number }}
+                        </span>
+                      } @else {
+                        <span class="text-zinc-400 text-xs">—</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- PAGINATION FOOTER -->
+      <div class="p-4 border-t border-brand-navy/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- RANGE INFO -->
+        <div class="text-xs text-brand-navy/60 dark:text-white/60 font-medium">
+          Hiển thị <strong class="text-brand-navy dark:text-white">{{ rangeStart() }} - {{ rangeEnd() }}</strong> trên tổng <strong class="text-brand-pink">{{ totalWords() }}</strong> từ
+        </div>
+
+        <!-- PAGINATION BUTTONS -->
+        <div class="flex items-center gap-1.5">
+          <button
+            type="button"
+            (click)="goToPage(1)"
+            [disabled]="currentPage() === 1"
+            class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all"
+            title="Trang đầu">
+            «
+          </button>
+
+          <button
+            type="button"
+            (click)="goToPage(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all">
+            ‹ Trước
+          </button>
+
+          <span class="px-3 py-1.5 text-xs font-bold text-brand-navy dark:text-white">
+            Trang {{ currentPage() }} / {{ totalPages() }}
+          </span>
+
+          <button
+            type="button"
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages() || totalPages() === 0"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all">
+            Sau ›
+          </button>
+
+          <button
+            type="button"
+            (click)="goToPage(totalPages())"
+            [disabled]="currentPage() === totalPages() || totalPages() === 0"
+            class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all"
+            title="Trang cuối">
+            »
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

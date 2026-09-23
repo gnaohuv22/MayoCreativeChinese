@@ -14,4 +14,5 @@ export class HskBadgeComponent {
   level = input.required<number>();
   version = input<HskVersion>('2.0');
   showVersion = input<boolean>(true);
+  showNewPrefix = input<boolean>(false);
 }

@@ -168,5 +168,14 @@
   "register.validation.email": "电子邮件地址无效",
   "register.submit": "提交申请",
   "register.submitting": "正在提交...",
-  "register.error_msg": "提交过程中出错。请稍后再试。"
+  "register.error_msg": "提交过程中出错。请稍后再试。",
+  "vocab.title": "HSK 词汇库",
+  "vocab.hsk2": "HSK 2.0 词汇",
+  "vocab.hsk3": "HSK 3.0 词汇",
+  "vocab.combined": "HSK 1 - 9 综合词汇",
+  "vocab.supplement": "HSK 2.0 → 3.0 增补词汇",
+  "vocab.list_view": "表格列表",
+  "vocab.lesson": "课时",
+  "exam.hsk2_title": "HSK 2.0 模拟考试",
+  "exam.hsk3_title": "HSK 3.0 模拟考试"
 }

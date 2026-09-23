@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -23,8 +23,18 @@ export class ExamListComponent implements OnInit {
   exams = signal<Exam[]>([]);
   isLoading = signal<boolean>(true);
 
+  // Grouped by version first (HSK 2.0 vs HSK 3.0)
+  selectedVersion = signal<HskVersion>('2.0');
   selectedLevel = signal<number | 'all'>('all');
-  selectedVersion = signal<HskVersion | 'all'>('all');
+
+  availableLevels = computed<{ level: number; label: string }[]>(() => {
+    const ver = this.selectedVersion();
+    if (ver === '2.0') {
+      return [1, 2, 3, 4, 5, 6].map(i => ({ level: i, label: `HSK ${i}` }));
+    } else {
+      return [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ level: i, label: `NEW HSK ${i}` }));
+    }
+  });
 
   ngOnInit() {
     this.loadExams();
@@ -41,13 +51,14 @@ export class ExamListComponent implements OnInit {
     this.isLoading.set(false);
   }
 
-  setLevel(lvl: number | 'all') {
-    this.selectedLevel.set(lvl);
+  setVersion(ver: HskVersion) {
+    this.selectedVersion.set(ver);
+    this.selectedLevel.set('all');
     this.loadExams();
   }
 
-  setVersion(ver: HskVersion | 'all') {
-    this.selectedVersion.set(ver);
+  setLevel(lvl: number | 'all') {
+    this.selectedLevel.set(lvl);
     this.loadExams();
   }
 

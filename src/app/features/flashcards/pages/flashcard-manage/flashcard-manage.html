@@ -98,19 +98,34 @@
           </div>
         </div>
 
-        <div class="space-y-2 max-w-xs">
-          <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Cấp độ HSK *</label>
-          <select [ngModel]="newLevel()" (ngModelChange)="newLevel.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
-            <option [value]="1">HSK 1 (一级)</option>
-            <option [value]="2">HSK 2 (二级)</option>
-            <option [value]="3">HSK 3 (三级)</option>
-            <option [value]="4">HSK 4 (四级)</option>
-            <option [value]="5">HSK 5 (五级)</option>
-            <option [value]="6">HSK 6 (六级)</option>
-            <option [value]="7">HSK 7 (七级)</option>
-            <option [value]="8">HSK 8 (八级)</option>
-            <option [value]="9">HSK 9 (九级)</option>
-          </select>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Phiên bản *</label>
+            <select [ngModel]="newVersion()" (ngModelChange)="newVersion.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
+              <option value="3.0">HSK 3.0 (Mới)</option>
+              <option value="2.0">HSK 2.0 (Cũ)</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Cấp độ HSK *</label>
+            <select [ngModel]="newLevel()" (ngModelChange)="newLevel.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
+              <option [value]="1">HSK 1 (一级)</option>
+              <option [value]="2">HSK 2 (二级)</option>
+              <option [value]="3">HSK 3 (三级)</option>
+              <option [value]="4">HSK 4 (四级)</option>
+              <option [value]="5">HSK 5 (五级)</option>
+              <option [value]="6">HSK 6 (六级)</option>
+              <option [value]="7">HSK 7 (七级)</option>
+              <option [value]="8">HSK 8 (八级)</option>
+              <option [value]="9">HSK 9 (九级)</option>
+            </select>
+          </div>
+          @if (newVersion() === '3.0') {
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Bài học (HSK 3.0)</label>
+              <input type="number" [ngModel]="newLessonNumber()" (ngModelChange)="newLessonNumber.set($event)" placeholder="vd: 1" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white font-medium">
+            </div>
+          }
         </div>
 
         <div class="border-t border-brand-navy/10 dark:border-white/10 pt-6 space-y-6">
@@ -241,11 +256,21 @@
         <!-- Filter Bar -->
         <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
           
-          <!-- Filter HSK Level - 5 badges per row -->
-          <div class="grid grid-cols-5 gap-2 w-full sm:w-auto max-w-md">
-            <button
-              (click)="setBrowseLevel(0)"
-              [class.bg-brand-pink]="browseLevel() === 0"
+          <div class="flex items-center gap-3 flex-wrap">
+            <select
+              [ngModel]="browseVersion()"
+              (ngModelChange)="setBrowseVersion($event)"
+              class="px-3.5 py-2 rounded-2xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-white dark:bg-brand-dark text-brand-navy dark:text-white outline-none cursor-pointer">
+              <option value="all">Tất cả phiên bản</option>
+              <option value="3.0">HSK 3.0</option>
+              <option value="2.0">HSK 2.0</option>
+            </select>
+
+            <!-- Filter HSK Level - 5 badges per row -->
+            <div class="grid grid-cols-5 gap-2 w-full sm:w-auto max-w-md">
+              <button
+                (click)="setBrowseLevel(0)"
+                [class.bg-brand-pink]="browseLevel() === 0"
               [class.text-white]="browseLevel() === 0"
               [class.shadow-xs]="browseLevel() === 0"
               [class.bg-white]="browseLevel() !== 0"
@@ -287,6 +312,7 @@
               </button>
             }
           </div>
+        </div>
 
           <div class="flex items-center gap-3 w-full lg:w-auto">
             <div class="relative flex-1 lg:w-64">

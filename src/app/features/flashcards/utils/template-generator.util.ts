@@ -1,10 +1,22 @@
 import type { VocabCard } from '../models/vocab-card.model';
 
-const TEMPLATE_HEADERS = ['hanzi', 'pinyin', 'meaning', 'hsk_level', 'example', 'example_pinyin', 'example_meaning'];
+const TEMPLATE_HEADERS = [
+  'hanzi',
+  'pinyin',
+  'meaning',
+  'hsk_level',
+  'hsk_version',
+  'lesson_number',
+  'lesson_title',
+  'example',
+  'example_pinyin',
+  'example_meaning',
+];
 
 const EXAMPLE_ROWS = [
-  ['你好', 'nǐ hǎo', 'xin chào', '1', '你好，我叫小明。', 'Nǐ hǎo, wǒ jiào Xiǎo Míng.', 'Xin chào, tôi tên là Tiểu Minh.'],
-  ['谢谢', 'xiè xie', 'cảm ơn', '1', '谢谢你的帮助。', 'Xiè xie nǐ de bāng zhù.', 'Cảm ơn sự giúp đỡ của bạn.'],
+  ['你好', 'nǐ hǎo', 'xin chào', '1', '3.0', '1', 'Bài 1: Lời chào', '你好，我叫小明。', 'Nǐ hǎo, wǒ jiào Xiǎo Míng.', 'Xin chào, tôi tên là Tiểu Minh.'],
+  ['谢谢', 'xiè xie', 'cảm ơn', '1', '3.0', '1', 'Bài 1: Lời chào', '谢谢你的帮助。', 'Xiè xie nǐ de bāng zhù.', 'Cảm ơn sự giúp đỡ của bạn.'],
+  ['再见', 'zài jiàn', 'tạm biệt', '1', '2.0', '', '', '明天见，再见！', 'Míng tiān jiàn, zài jiàn!', 'Hẹn gặp ngày mai, tạm biệt!'],
 ];
 
 /** Download a CSV template file */
@@ -28,6 +40,9 @@ export async function downloadXlsxTemplate(): Promise<void> {
     { wch: 15 }, // pinyin
     { wch: 20 }, // meaning
     { wch: 10 }, // hsk_level
+    { wch: 12 }, // hsk_version
+    { wch: 14 }, // lesson_number
+    { wch: 20 }, // lesson_title
     { wch: 30 }, // example
     { wch: 30 }, // example_pinyin
     { wch: 30 }, // example_meaning

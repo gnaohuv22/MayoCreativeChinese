@@ -9,6 +9,9 @@ export class FlashcardDB extends Dexie {
     this.version(1).stores({
       progress: '++id, [hanzi+hskLevel], hskLevel, confidence, bookmarked',
     });
+    this.version(2).stores({
+      progress: '++id, [hanzi+hskLevel], hskLevel, hskVersion, confidence, bookmarked',
+    });
   }
 }
 

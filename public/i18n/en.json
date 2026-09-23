@@ -171,5 +171,14 @@
   "register.validation.email": "Invalid email address",
   "register.submit": "Submit Registration",
   "register.submitting": "Submitting...",
-  "register.error_msg": "An error occurred during submission. Please try again later."
+  "register.error_msg": "An error occurred during submission. Please try again later.",
+  "vocab.title": "HSK Vocabulary Bank",
+  "vocab.hsk2": "HSK 2.0 Vocabulary",
+  "vocab.hsk3": "HSK 3.0 Vocabulary",
+  "vocab.combined": "HSK 1 - 9 Vocabulary",
+  "vocab.supplement": "HSK 2.0 → 3.0 Supplement",
+  "vocab.list_view": "Table View",
+  "vocab.lesson": "Lesson",
+  "exam.hsk2_title": "HSK 2.0 Mock Exams",
+  "exam.hsk3_title": "HSK 3.0 Mock Exams"
 }
