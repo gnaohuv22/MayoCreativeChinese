@@ -1,0 +1,94 @@
+<header class="sticky top-0 z-40 backdrop-blur-md bg-white/90 dark:bg-brand-dark/90 border-b border-brand-navy/10 dark:border-white/10 shadow-xs transition-colors duration-300 w-full">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+    <!-- Left: Brand Logo & Title -->
+    <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+      <a routerLink="/" class="flex items-center space-x-2.5 group" aria-label="Về trang chủ Mayo Creative Chinese">
+        <div class="relative w-8 h-8 sm:w-9 sm:h-9 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-xs group-hover:scale-105 transition-transform duration-300">
+          <img src="android-chrome-192x192.png" width="32" height="32" alt="MCC Logo" class="object-contain" />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm sm:text-base font-bold font-display tracking-tight text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300 leading-tight">
+            Mayo Creative
+          </span>
+          <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-brand-pink -mt-0.5">
+            Chinese
+          </span>
+        </div>
+      </a>
+
+      <!-- Back Link (optional) -->
+      @if (showBack() && backLink()) {
+        <span class="text-brand-navy/20 dark:text-white/20">|</span>
+        <a [routerLink]="backLink()" class="text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-zinc-300 hover:text-brand-pink dark:hover:text-brand-pink transition-colors flex items-center gap-1">
+          <app-icon name="arrow-left" size="xs" />
+          <span>{{ backLabel() || 'Quay lại' }}</span>
+        </a>
+      }
+    </div>
+
+    <!-- Center: Navigation Links -->
+    @if (showNavLinks()) {
+      <nav class="hidden md:flex items-center gap-1 sm:gap-2">
+        <a
+          routerLink="/exams"
+          [class.bg-brand-navy]="activeModule() === 'exams'"
+          [class.text-white]="activeModule() === 'exams'"
+          [class.shadow-xs]="activeModule() === 'exams'"
+          [class.text-brand-navy/70]="activeModule() !== 'exams'"
+          [class.dark:text-zinc-300]="activeModule() !== 'exams'"
+          [class.hover:bg-brand-navy/5]="activeModule() !== 'exams'"
+          [class.dark:hover:bg-white/5]="activeModule() !== 'exams'"
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
+        >
+          <app-icon name="academic" size="xs" />
+          <span>Đề thi HSK</span>
+        </a>
+
+        <a
+          routerLink="/flashcards"
+          [class.bg-brand-navy]="activeModule() === 'flashcards'"
+          [class.text-white]="activeModule() === 'flashcards'"
+          [class.shadow-xs]="activeModule() === 'flashcards'"
+          [class.text-brand-navy/70]="activeModule() !== 'flashcards'"
+          [class.dark:text-zinc-300]="activeModule() !== 'flashcards'"
+          [class.hover:bg-brand-navy/5]="activeModule() !== 'flashcards'"
+          [class.dark:hover:bg-white/5]="activeModule() !== 'flashcards'"
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
+        >
+          <app-icon name="book-open" size="xs" />
+          <span>Flashcard</span>
+        </a>
+
+        <a
+          routerLink="/exams/manage"
+          [class.bg-brand-navy]="activeModule() === 'ops'"
+          [class.text-white]="activeModule() === 'ops'"
+          [class.shadow-xs]="activeModule() === 'ops'"
+          [class.text-brand-navy/70]="activeModule() !== 'ops'"
+          [class.dark:text-zinc-300]="activeModule() !== 'ops'"
+          [class.hover:bg-brand-navy/5]="activeModule() !== 'ops'"
+          [class.dark:hover:bg-white/5]="activeModule() !== 'ops'"
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
+        >
+          <app-icon name="pencil" size="xs" />
+          <span>Quản lý đề</span>
+        </a>
+      </nav>
+    }
+
+    <!-- Right: Theme Toggle & Quick Action -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Mobile quick link to exams if on other pages -->
+      <a
+        routerLink="/exams"
+        class="md:hidden p-2 rounded-xl text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
+        title="Đề thi HSK"
+      >
+        <app-icon name="academic" size="sm" />
+      </a>
+
+      <!-- Reusable Circular Theme Toggle Component -->
+      <app-theme-toggle />
+    </div>
+  </div>
+</header>

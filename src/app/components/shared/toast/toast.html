@@ -1,0 +1,87 @@
+<div class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="toast-item pointer-events-auto p-4 rounded-2xl border shadow-xl backdrop-blur-md flex items-start gap-3 transition-all duration-300 transform translate-y-0"
+      [class.bg-white]="toast.type === 'info'"
+      [class.dark:bg-[#1E1E45]]="toast.type === 'info'"
+      [class.border-brand-navy/10]="toast.type === 'info'"
+      [class.dark:border-white/10]="toast.type === 'info'"
+      [class.bg-emerald-50]="toast.type === 'success'"
+      [class.dark:bg-emerald-950/80]="toast.type === 'success'"
+      [class.border-emerald-200]="toast.type === 'success'"
+      [class.dark:border-emerald-800/50]="toast.type === 'success'"
+      [class.bg-rose-50]="toast.type === 'error'"
+      [class.dark:bg-rose-950/80]="toast.type === 'error'"
+      [class.border-rose-200]="toast.type === 'error'"
+      [class.dark:border-rose-800/50]="toast.type === 'error'"
+      [class.bg-amber-50]="toast.type === 'warning'"
+      [class.dark:bg-amber-950/80]="toast.type === 'warning'"
+      [class.border-amber-200]="toast.type === 'warning'"
+      [class.dark:border-amber-800/50]="toast.type === 'warning'"
+      role="alert"
+    >
+      <!-- Icon -->
+      <div class="shrink-0 mt-0.5">
+        @if (toast.type === 'success') {
+          <div class="w-7 h-7 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+            <app-icon name="check" size="xs" />
+          </div>
+        } @else if (toast.type === 'error') {
+          <div class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-xs">
+            <app-icon name="x-mark" size="xs" />
+          </div>
+        } @else if (toast.type === 'warning') {
+          <div class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+            <app-icon name="sparkles" size="xs" />
+          </div>
+        } @else {
+          <div class="w-7 h-7 rounded-xl bg-brand-pink text-white flex items-center justify-center shadow-xs">
+            <app-icon name="sparkles" size="xs" />
+          </div>
+        }
+      </div>
+
+      <!-- Text content -->
+      <div class="flex-1 min-w-0">
+        @if (toast.title) {
+          <h4
+            class="text-xs font-bold leading-tight mb-1"
+            [class.text-emerald-900]="toast.type === 'success'"
+            [class.dark:text-emerald-200]="toast.type === 'success'"
+            [class.text-rose-900]="toast.type === 'error'"
+            [class.dark:text-rose-200]="toast.type === 'error'"
+            [class.text-amber-900]="toast.type === 'warning'"
+            [class.dark:text-amber-200]="toast.type === 'warning'"
+            [class.text-brand-navy]="toast.type === 'info'"
+            [class.dark:text-white]="toast.type === 'info'"
+          >
+            {{ toast.title }}
+          </h4>
+        }
+        <p
+          class="text-xs font-medium leading-relaxed"
+          [class.text-emerald-800]="toast.type === 'success'"
+          [class.dark:text-emerald-300]="toast.type === 'success'"
+          [class.text-rose-800]="toast.type === 'error'"
+          [class.dark:text-rose-300]="toast.type === 'error'"
+          [class.text-amber-800]="toast.type === 'warning'"
+          [class.dark:text-amber-300]="toast.type === 'warning'"
+          [class.text-zinc-700]="toast.type === 'info'"
+          [class.dark:text-zinc-200]="toast.type === 'info'"
+        >
+          {{ toast.message }}
+        </p>
+      </div>
+
+      <!-- Dismiss Button -->
+      <button
+        type="button"
+        (click)="dismiss(toast)"
+        class="shrink-0 p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+        aria-label="Đóng thông báo"
+      >
+        <app-icon name="x-mark" size="xs" />
+      </button>
+    </div>
+  }
+</div>

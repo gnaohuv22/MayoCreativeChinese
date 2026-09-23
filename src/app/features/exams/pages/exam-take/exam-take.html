@@ -1,0 +1,759 @@
+<div class="min-h-screen w-full overflow-x-hidden bg-zinc-50 dark:bg-[#0b0f19] text-zinc-800 dark:text-zinc-100 flex flex-col">
+  @if (isLoading()) {
+    <div class="flex-1 flex flex-col items-center justify-center p-12">
+      <div class="w-12 h-12 rounded-full border-4 border-brand-pink/20 border-t-brand-pink animate-spin"></div>
+      <p class="mt-4 text-sm font-medium text-zinc-500">Đang tải nội dung đề thi...</p>
+    </div>
+  } @else if (!exam()) {
+    <div class="flex-1 flex flex-col items-center justify-center p-12 text-center">
+      <app-icon name="question-mark" size="xl" customClass="text-zinc-400 mb-3" />
+      <h2 class="text-xl font-bold text-brand-navy dark:text-white">Không tìm thấy đề thi</h2>
+      <p class="text-sm text-zinc-500 mt-1 mb-6">Đề thi này không tồn tại hoặc đã bị gỡ bỏ.</p>
+      <a routerLink="/exams" class="px-5 py-2.5 rounded-2xl bg-brand-navy text-white text-sm font-semibold">
+        Quay lại danh sách đề thi
+      </a>
+    </div>
+  } @else if (!isExamStarted()) {
+    <!-- ===================================================================== -->
+    <!-- MÀN HÌNH BRIEFING / CHUẨN BỊ LÀM BÀI -->
+    <!-- ===================================================================== -->
+    <div class="flex-1 max-w-4xl w-full mx-auto px-4 py-12 flex flex-col justify-center">
+      <div class="p-8 sm:p-10 rounded-3xl bg-white dark:bg-brand-dark/95 border border-zinc-200 dark:border-white/10 shadow-xl space-y-8">
+        
+        <!-- Header info -->
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <app-hsk-badge [level]="exam()!.hsk_level" [version]="exam()!.hsk_version" />
+            <span class="text-xs font-semibold text-brand-pink flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-pink/10">
+              <app-icon name="sparkles" size="xs" />
+              <span>Đề thi thử trực tuyến</span>
+            </span>
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-navy dark:text-white leading-tight">
+            {{ exam()!.title }}
+          </h1>
+
+          @if (exam()!.description) {
+            <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              {{ exam()!.description }}
+            </p>
+          }
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
+          <div class="text-center p-2">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <app-icon name="clock" size="xs" />
+              <span>Thời gian</span>
+            </div>
+            <div class="text-xl font-bold text-brand-navy dark:text-white mt-1">
+              {{ exam()!.duration_mins }} phút
+            </div>
+          </div>
+
+          <div class="text-center p-2">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <app-icon name="document-text" size="xs" />
+              <span>Số câu hỏi</span>
+            </div>
+            <div class="text-xl font-bold text-brand-pink mt-1">
+              {{ totalQuestionCount() }} câu
+            </div>
+          </div>
+
+          <div class="text-center p-2">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <app-icon name="scale" size="xs" />
+              <span>Thang điểm</span>
+            </div>
+            <div class="text-xl font-bold text-brand-navy dark:text-white mt-1">
+              {{ exam()!.total_score }} điểm
+            </div>
+          </div>
+
+          <div class="text-center p-2">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <app-icon name="trophy" size="xs" />
+              <span>Điểm qua môn</span>
+            </div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              {{ exam()!.passing_score }} điểm
+            </div>
+          </div>
+        </div>
+
+        <!-- Sections Preview -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-brand-navy dark:text-white uppercase tracking-wider">
+            Cấu trúc bài thi:
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            @for (sec of exam()!.sections || []; track sec.id || $index) {
+              <div class="p-4 rounded-2xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 space-y-1">
+                <div class="flex items-center gap-2 font-bold text-sm text-brand-navy dark:text-white">
+                  @if (sec.section_type === 'listening') {
+                    <app-icon name="audio" size="sm" customClass="text-indigo-500" />
+                  } @else if (sec.section_type === 'reading') {
+                    <app-icon name="book-open" size="sm" customClass="text-emerald-500" />
+                  } @else {
+                    <app-icon name="pencil" size="sm" customClass="text-amber-500" />
+                  }
+                  <span>{{ sec.title }}</span>
+                </div>
+                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                  Điểm tối đa: {{ sec.max_score }} điểm
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Quy chế thi -->
+        <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+          <div class="font-bold flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+            <app-icon name="sparkles" size="sm" />
+            <span>Lưu ý khi làm bài:</span>
+          </div>
+          <ul class="list-disc list-inside space-y-1 pl-1 text-zinc-700 dark:text-zinc-300">
+            <li>Đồng hồ đếm ngược sẽ bắt đầu chạy ngay khi bạn nhấn <strong>Bắt đầu làm bài</strong>.</li>
+            <li>Hệ thống tự động lưu bài làm liên tục, bạn không lo mất dữ liệu nếu lỡ tải lại trang.</li>
+            <li>Có thể sử dụng chức năng <strong>Gắn cờ (Flag)</strong> để đánh dấu câu hỏi cần xem lại trước khi nộp.</li>
+            <li>Khi thời gian làm bài kết thúc, hệ thống sẽ tự động nộp bài và tính điểm tức thì.</li>
+          </ul>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-100 dark:border-white/5">
+          <a routerLink="/exams" class="text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:hover:text-white flex items-center gap-1.5">
+            <app-icon name="arrow-left" size="xs" />
+            <span>Quay lại danh sách</span>
+          </a>
+
+          <button
+            type="button"
+            (click)="startExam()"
+            class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-brand-pink to-brand-navy hover:opacity-95 text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <app-icon name="play" size="sm" />
+            <span>Bắt đầu làm bài thi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- ===================================================================== -->
+    <!-- GIAO DIỆN LÀM BÀI THI CHÍNH THỨC -->
+    <!-- ===================================================================== -->
+
+    <!-- TOP STICKY NAVBAR -->
+    <header class="sticky top-0 z-40 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-md border-b border-zinc-200 dark:border-white/10 shadow-sm w-full">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
+        
+        <!-- Left: Exam Badge & Title -->
+        <div class="flex items-center gap-2 min-w-0 shrink-0">
+          <app-hsk-badge [level]="exam()!.hsk_level" [version]="exam()!.hsk_version" class="shrink-0" />
+          <h2 class="text-sm sm:text-base font-bold text-brand-navy dark:text-white truncate hidden md:block">
+            {{ exam()!.title }}
+          </h2>
+        </div>
+
+        <!-- Right: Theme Toggle, Timer & Submit Button -->
+        <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <!-- Theme Toggle -->
+          <app-theme-toggle />
+
+          <!-- Countdown Timer Pill -->
+          <div
+            [class.bg-zinc-100]="!isTimeWarning() && !isTimeCritical()"
+            [class.dark:bg-white/5]="!isTimeWarning() && !isTimeCritical()"
+            [class.text-brand-navy]="!isTimeWarning() && !isTimeCritical()"
+            [class.dark:text-white]="!isTimeWarning() && !isTimeCritical()"
+            [class.bg-amber-500/10]="isTimeWarning()"
+            [class.text-amber-600]="isTimeWarning()"
+            [class.border-amber-500/30]="isTimeWarning()"
+            [class.bg-red-500/10]="isTimeCritical()"
+            [class.text-red-500]="isTimeCritical()"
+            [class.border-red-500/30]="isTimeCritical()"
+            [class.animate-pulse]="isTimeCritical()"
+            class="px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-2xl border border-transparent font-mono font-bold text-xs sm:text-base flex items-center gap-1 sm:gap-1.5 shrink-0"
+            title="Thời gian còn lại"
+          >
+            <app-icon name="clock" size="xs" customClass="sm:w-5 sm:h-5" />
+            <span>{{ formattedTime() }}</span>
+          </div>
+
+          <!-- Nộp bài button (icon-only on mobile, icon+text on desktop) -->
+          <button
+            type="button"
+            (click)="openSubmitModal()"
+            class="p-2 sm:px-4 sm:py-2 rounded-2xl bg-brand-navy hover:bg-brand-navy/90 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            title="Nộp bài thi"
+            aria-label="Nộp bài thi"
+          >
+            <app-icon name="check" size="sm" />
+            <span class="hidden sm:inline">Nộp bài</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- AUDIO PLAYER STICKY SUB-BAR (cho phần Nghe) - Adaptive Dark & Light Modes -->
+    @if (currentSection()?.section_type === 'listening' && currentSection()?.audio_url) {
+      <div class="sticky top-14 sm:top-16 z-30 bg-indigo-50/95 dark:bg-indigo-950/95 text-indigo-950 dark:text-white border-b border-indigo-200 dark:border-indigo-900 shadow-xs backdrop-blur-md py-2 px-3 sm:px-6 w-full transition-colors">
+        <audio
+          #audioPlayer
+          [src]="currentSection()!.audio_url"
+          (timeupdate)="onAudioTimeUpdate()"
+          (ended)="onAudioEnded()"
+          preload="auto"
+        ></audio>
+
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              (click)="toggleAudio()"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0"
+              [title]="isAudioPlaying() ? 'Tạm dừng nghe' : 'Phát âm thanh phần thi'"
+            >
+              <app-icon [name]="isAudioPlaying() ? 'pause' : 'play'" size="sm" />
+            </button>
+
+            <div class="hidden sm:block">
+              <div class="text-xs font-bold leading-tight">File âm thanh phần Nghe hiểu (听力)</div>
+              <div class="text-[10px] text-indigo-600 dark:text-indigo-300">Nhấn Play để lắng nghe các đoạn thoại và bài tập</div>
+            </div>
+          </div>
+
+          <!-- Audio Seekbar -->
+          <div class="flex-1 min-w-0 max-w-md flex items-center gap-1.5 sm:gap-2">
+            <span class="text-[10px] sm:text-[11px] font-mono text-indigo-700 dark:text-indigo-300 shrink-0">{{ formatAudioTime(audioCurrentTime()) }}</span>
+            <input
+              type="range"
+              min="0"
+              [max]="audioDuration() || 100"
+              [value]="audioCurrentTime()"
+              (input)="onAudioSeek($event)"
+              class="flex-1 min-w-0 w-full h-1.5 bg-indigo-200 dark:bg-indigo-800 rounded-lg appearance-none cursor-pointer accent-brand-pink"
+            />
+            <span class="text-[10px] sm:text-[11px] font-mono text-indigo-700 dark:text-indigo-300 shrink-0">{{ formatAudioTime(audioDuration()) }}</span>
+          </div>
+
+          <div class="hidden md:flex items-center gap-1.5 text-xs text-indigo-700 dark:text-indigo-300 shrink-0">
+            <app-icon name="speaker-wave" size="xs" />
+            <span>Âm lượng tiêu chuẩn</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- MAIN TWO-COLUMN BODY -->
+    <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:flex-row gap-6 items-start min-w-0">
+      
+      <!-- LEFT: QUESTION AREA (~70%) -->
+      <main class="flex-1 w-full space-y-6">
+        @if (currentSection(); as sec) {
+          <!-- Section Banner -->
+          <div class="p-5 rounded-3xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-extrabold text-brand-navy dark:text-white flex items-center gap-2">
+                @if (sec.section_type === 'listening') {
+                  <app-icon name="audio" size="md" customClass="text-indigo-500" />
+                } @else if (sec.section_type === 'reading') {
+                  <app-icon name="book-open" size="md" customClass="text-emerald-500" />
+                } @else {
+                  <app-icon name="pencil" size="md" customClass="text-amber-500" />
+                }
+                <span>{{ sec.title }}</span>
+              </h2>
+              <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                Thang điểm: {{ sec.max_score }} điểm
+              </span>
+            </div>
+
+            @if (sec.instructions) {
+              <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed border-t border-zinc-100 dark:border-white/5 pt-2">
+                {{ sec.instructions }}
+              </p>
+            }
+          </div>
+
+          <!-- Parts & Questions -->
+          @for (part of sec.parts || []; track part.id || $index) {
+            <section class="space-y-4">
+              <!-- Part Header -->
+              <div class="px-2 flex flex-col gap-1">
+                <h3 class="text-base font-bold text-brand-navy dark:text-white">
+                  {{ part.title }}
+                </h3>
+                @if (part.instructions) {
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                    {{ part.instructions }}
+                  </p>
+                }
+              </div>
+
+              <!-- Question Cards List -->
+              @for (q of part.questions || []; track q.id || $index) {
+                <article
+                  [id]="'q-' + q.id"
+                  [class.ring-2]="activeQuestionId() === q.id"
+                  [class.ring-brand-pink]="activeQuestionId() === q.id"
+                  class="p-6 rounded-3xl bg-white dark:bg-brand-dark/90 border border-zinc-200 dark:border-white/10 shadow-sm space-y-4 transition-all"
+                >
+                  <!-- Question Card Header -->
+                  <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-white/5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-8 h-8 rounded-xl bg-brand-navy/10 dark:bg-white/10 text-brand-navy dark:text-white font-extrabold text-sm flex items-center justify-center">
+                        {{ q.question_num }}
+                      </span>
+                      <span class="text-xs font-semibold text-zinc-400">
+                        ({{ q.score }} điểm)
+                      </span>
+                    </div>
+
+                    <!-- Flag button -->
+                    <button
+                      type="button"
+                      (click)="toggleFlag(q.id || '')"
+                      [class.text-amber-800]="isFlagged(q.id || '')"
+                      [class.dark:text-amber-300]="isFlagged(q.id || '')"
+                      [class.bg-amber-100]="isFlagged(q.id || '')"
+                      [class.dark:bg-amber-400/20]="isFlagged(q.id || '')"
+                      [class.border-amber-300]="isFlagged(q.id || '')"
+                      [class.dark:border-amber-400/30]="isFlagged(q.id || '')"
+                      [class.border-transparent]="!isFlagged(q.id || '')"
+                      [class.text-zinc-500]="!isFlagged(q.id || '')"
+                      [class.dark:text-zinc-400]="!isFlagged(q.id || '')"
+                      [class.hover:text-amber-700]="!isFlagged(q.id || '')"
+                      [class.dark:hover:text-amber-300]="!isFlagged(q.id || '')"
+                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1 transition-colors cursor-pointer"
+                      [title]="isFlagged(q.id || '') ? 'Bỏ đánh dấu câu hỏi' : 'Đánh dấu xem lại sau'"
+                    >
+                      <app-icon name="flag" size="xs" />
+                      <span class="hidden sm:inline">{{ isFlagged(q.id || '') ? 'Đã gắn cờ' : 'Gắn cờ' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- Question Specific Audio (if any) -->
+                  @if (q.audio_url) {
+                    <div class="p-3 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center gap-3">
+                      <audio controls [src]="q.audio_url" class="w-full h-8"></audio>
+                    </div>
+                  }
+
+                  <!-- Question Image (if any) -->
+                  @if (q.image_url) {
+                    <div class="rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 max-w-md">
+                      <img [src]="q.image_url" alt="Hình ảnh câu hỏi" class="w-full object-contain max-h-72" />
+                    </div>
+                  }
+
+                  <!-- Question Content (Chinese text / sentence) -->
+                  @if (q.content) {
+                    <div class="text-base sm:text-lg font-medium text-brand-navy dark:text-white whitespace-pre-line leading-relaxed font-sans">
+                      {{ q.content }}
+                    </div>
+                  }
+
+                  <!-- DYNAMIC ANSWER INPUT BY QUESTION TYPE -->
+                  <div class="pt-2">
+                    
+                    <!-- 1. SINGLE CHOICE (A, B, C, D) -->
+                    @if (part.question_type === 'single_choice') {
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @for (opt of q.options || []; track opt.id || opt.label) {
+                          <button
+                            type="button"
+                            (click)="selectAnswer(q.id || '', opt.label)"
+                            [class.border-brand-pink]="answers()[q.id || ''] === opt.label"
+                            [class.bg-brand-pink/10]="answers()[q.id || ''] === opt.label"
+                            [class.text-brand-pink]="answers()[q.id || ''] === opt.label"
+                            [class.border-zinc-200]="answers()[q.id || ''] !== opt.label"
+                            [class.dark:border-white/10]="answers()[q.id || ''] !== opt.label"
+                            [class.hover:border-zinc-300]="answers()[q.id || ''] !== opt.label"
+                            class="p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer group"
+                          >
+                            <span
+                              [class.bg-brand-pink]="answers()[q.id || ''] === opt.label"
+                              [class.text-white]="answers()[q.id || ''] === opt.label"
+                              [class.bg-zinc-100]="answers()[q.id || ''] !== opt.label"
+                              [class.dark:bg-white/10]="answers()[q.id || ''] !== opt.label"
+                              [class.text-zinc-700]="answers()[q.id || ''] !== opt.label"
+                              [class.dark:text-zinc-200]="answers()[q.id || ''] !== opt.label"
+                              class="w-7 h-7 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"
+                            >
+                              {{ opt.label }}
+                            </span>
+
+                            <div class="flex-1 space-y-2">
+                              @if (opt.image_url) {
+                                <img [src]="opt.image_url" alt="Option {{ opt.label }}" class="rounded-xl max-h-32 object-contain" />
+                              }
+                              <span class="text-sm font-medium leading-snug">
+                                {{ opt.content }}
+                              </span>
+                            </div>
+                          </button>
+                        }
+                      </div>
+                    }
+
+                    <!-- 2. TRUE / FALSE (Đúng / Sai) -->
+                    @else if (part.question_type === 'true_false') {
+                      <div class="grid grid-cols-2 gap-4 max-w-md">
+                        <!-- True Button -->
+                        <button
+                          type="button"
+                          (click)="selectAnswer(q.id || '', 'true')"
+                          [class.border-emerald-500]="answers()[q.id || ''] === 'true'"
+                          [class.bg-emerald-500/10]="answers()[q.id || ''] === 'true'"
+                          [class.text-emerald-600]="answers()[q.id || ''] === 'true'"
+                          [class.dark:text-emerald-400]="answers()[q.id || ''] === 'true'"
+                          [class.border-zinc-200]="answers()[q.id || ''] !== 'true'"
+                          [class.dark:border-white/10]="answers()[q.id || ''] !== 'true'"
+                          class="p-4 rounded-2xl border text-center font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <app-icon name="check" size="sm" />
+                          <span>Đúng (对)</span>
+                        </button>
+
+                        <!-- False Button -->
+                        <button
+                          type="button"
+                          (click)="selectAnswer(q.id || '', 'false')"
+                          [class.border-rose-500]="answers()[q.id || ''] === 'false'"
+                          [class.bg-rose-500/10]="answers()[q.id || ''] === 'false'"
+                          [class.text-rose-600]="answers()[q.id || ''] === 'false'"
+                          [class.dark:text-rose-400]="answers()[q.id || ''] === 'false'"
+                          [class.border-zinc-200]="answers()[q.id || ''] !== 'false'"
+                          [class.dark:border-white/10]="answers()[q.id || ''] !== 'false'"
+                          class="p-4 rounded-2xl border text-center font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <app-icon name="x-mark" size="sm" />
+                          <span>Sai (错)</span>
+                        </button>
+                      </div>
+                    }
+
+                    <!-- 3. FILL IN THE BLANK (Điền từ) -->
+                    @else if (part.question_type === 'fill_blank') {
+                      <div class="max-w-md space-y-1.5">
+                        <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                          Nhập từ còn thiếu vào chỗ trống:
+                        </label>
+                        <input
+                          type="text"
+                          [ngModel]="answers()[q.id || ''] || ''"
+                          (ngModelChange)="selectAnswer(q.id || '', $event)"
+                          placeholder="Nhập từ / chữ Hán..."
+                          class="w-full px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 focus:border-brand-pink focus:outline-none text-sm font-medium text-brand-navy dark:text-white"
+                        />
+                      </div>
+                    }
+
+                    <!-- 4. ORDERING (Sắp xếp câu) -->
+                    @else if (part.question_type === 'ordering') {
+                      <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                            Thứ tự sắp xếp hiện tại:
+                          </span>
+                          @if (answers()[q.id || '']) {
+                            <button
+                              type="button"
+                              (click)="resetOrder(q.id || '')"
+                              class="text-xs text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <app-icon name="arrow-uturn-left" size="xs" />
+                              <span>Làm lại</span>
+                            </button>
+                          }
+                        </div>
+
+                        <!-- Current assembled display -->
+                        <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 min-h-[48px] flex items-center">
+                          @if (answers()[q.id || '']) {
+                            <span class="font-mono font-bold text-base text-brand-pink">
+                              {{ answers()[q.id || ''] }}
+                            </span>
+                          } @else {
+                            <span class="text-xs text-zinc-400 italic">
+                              Bấm các nút bên dưới hoặc nhập trực tiếp thứ tự (VD: ①④②③)...
+                            </span>
+                          }
+                        </div>
+
+                        <!-- Quick token buttons -->
+                        <div class="flex flex-wrap gap-2">
+                          @for (token of ['①', '②', '③', '④', '⑤']; track token) {
+                            <button
+                              type="button"
+                              (click)="appendOrderToken(q.id || '', token)"
+                              class="px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 text-xs font-bold text-brand-navy dark:text-white transition-colors cursor-pointer"
+                            >
+                              + {{ token }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <!-- 5. SHORT ANSWER / ESSAY -->
+                    @else {
+                      <div class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                          Nhập câu trả lời của bạn:
+                        </label>
+                        <textarea
+                          rows="3"
+                          [ngModel]="answers()[q.id || ''] || ''"
+                          (ngModelChange)="selectAnswer(q.id || '', $event)"
+                          placeholder="Nhập chữ Hán hoặc câu văn hoàn chỉnh..."
+                          class="w-full px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 focus:border-brand-pink focus:outline-none text-sm font-medium text-brand-navy dark:text-white leading-relaxed resize-none"
+                        ></textarea>
+                      </div>
+                    }
+
+                  </div>
+                </article>
+              }
+            </section>
+          }
+
+          <!-- SECTION BOTTOM NAVIGATION SWITCHER -->
+          <div class="p-6 rounded-3xl bg-white dark:bg-brand-dark/95 border border-zinc-200 dark:border-white/10 shadow-sm space-y-5">
+            <div class="flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              <span>Chuyển đổi phần thi</span>
+              <span>Phần {{ activeSectionIndex() + 1 }} / {{ exam()!.sections?.length || 1 }}</span>
+            </div>
+
+            <!-- Section Selector Buttons Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              @for (sec of exam()!.sections || []; track sec.id || $index) {
+                <button
+                  type="button"
+                  (click)="setSection($index)"
+                  [class.border-brand-pink]="activeSectionIndex() === $index"
+                  [class.bg-brand-pink/10]="activeSectionIndex() === $index"
+                  [class.text-brand-pink]="activeSectionIndex() === $index"
+                  [class.border-zinc-200]="activeSectionIndex() !== $index"
+                  [class.dark:border-white/10]="activeSectionIndex() !== $index"
+                  [class.text-zinc-700]="activeSectionIndex() !== $index"
+                  [class.dark:text-zinc-300]="activeSectionIndex() !== $index"
+                  class="p-4 rounded-2xl border text-left font-bold text-xs flex items-center justify-between transition-all cursor-pointer"
+                >
+                  <div class="flex items-center gap-2">
+                    @if (sec.section_type === 'listening') {
+                      <app-icon name="audio" size="sm" />
+                    } @else if (sec.section_type === 'reading') {
+                      <app-icon name="book-open" size="sm" />
+                    } @else {
+                      <app-icon name="pencil" size="sm" />
+                    }
+                    <span>{{ sec.title }}</span>
+                  </div>
+                  @if (activeSectionIndex() === $index) {
+                    <span class="w-2 h-2 rounded-full bg-brand-pink shrink-0"></span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Prev / Next Navigation Controls -->
+            <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-white/5">
+              <button
+                type="button"
+                (click)="prevSection()"
+                [disabled]="!hasPrevSection()"
+                class="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-white/10 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-zinc-700 dark:text-zinc-200"
+              >
+                <app-icon name="chevron-left" size="xs" />
+                <span>Phần trước</span>
+              </button>
+
+              @if (hasNextSection()) {
+                <button
+                  type="button"
+                  (click)="nextSection()"
+                  class="px-5 py-2.5 rounded-xl bg-brand-navy hover:bg-brand-navy/90 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>Phần tiếp theo</span>
+                  <app-icon name="chevron-right" size="xs" />
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="openSubmitModal()"
+                  class="px-5 py-2.5 rounded-xl bg-brand-pink hover:bg-brand-pink/90 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
+                >
+                  <app-icon name="check" size="xs" />
+                  <span>Hoàn tất & Nộp bài</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </main>
+
+      <!-- RIGHT: STICKY SIDEBAR / ANSWER PALETTE (~30%) -->
+      <aside class="w-full lg:w-80 shrink-0 sticky top-24 space-y-4">
+        <div class="p-6 rounded-3xl bg-white dark:bg-brand-dark/95 border border-zinc-200 dark:border-white/10 shadow-sm space-y-5">
+          
+          <!-- Progress Header -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-brand-navy dark:text-white">
+              <span>Tiến độ làm bài</span>
+              <span class="text-brand-pink">{{ answeredCount() }} / {{ totalQuestionCount() }} câu</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-brand-pink to-brand-navy rounded-full transition-all duration-300"
+                [style.width.%]="progressPercent()"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Status Legend -->
+          <div class="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-100 dark:border-white/5">
+            <span class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-pink"></span>
+              Đã làm
+            </span>
+            <span class="flex items-center gap-1 font-semibold text-zinc-600 dark:text-zinc-300">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs"></span>
+              Gắn cờ
+            </span>
+            <span class="flex items-center gap-1 font-semibold text-zinc-600 dark:text-zinc-300">
+              <span class="w-2.5 h-2.5 rounded-full bg-zinc-200 dark:bg-white/20"></span>
+              Chưa làm
+            </span>
+          </div>
+
+          <!-- Question Grid (1..N) -->
+          <div class="space-y-2">
+            <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              Danh sách câu hỏi:
+            </div>
+
+            <div class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto p-1">
+              @for (item of allQuestions(); track item.q.id || $index) {
+                <button
+                  type="button"
+                  (click)="scrollToQuestion(item.q.id || '', item.sectionIndex)"
+                  [class.bg-brand-pink]="isAnswered(item.q.id || '')"
+                  [class.text-white]="isAnswered(item.q.id || '')"
+                  [class.ring-2]="isFlagged(item.q.id || '')"
+                  [class.ring-amber-500]="isFlagged(item.q.id || '')"
+                  [class.shadow-md]="isFlagged(item.q.id || '')"
+                  [class.z-10]="isFlagged(item.q.id || '')"
+                  [class.bg-zinc-100]="!isAnswered(item.q.id || '')"
+                  [class.dark:bg-white/10]="!isAnswered(item.q.id || '')"
+                  [class.text-zinc-700]="!isAnswered(item.q.id || '')"
+                  [class.dark:text-zinc-300]="!isAnswered(item.q.id || '')"
+                  [class.hover:bg-zinc-200]="!isAnswered(item.q.id || '')"
+                  class="relative h-10 rounded-xl font-bold text-xs flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                >
+                  <span>{{ item.q.question_num }}</span>
+
+                  @if (isFlagged(item.q.id || '')) {
+                    <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500 ring-1.5 ring-white dark:ring-brand-dark z-20"></span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Bottom Submit CTA in Sidebar -->
+          <button
+            type="button"
+            (click)="openSubmitModal()"
+            class="w-full py-3.5 rounded-2xl bg-brand-navy hover:bg-brand-navy/90 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <app-icon name="check" size="xs" />
+            <span>Xác nhận nộp bài thi</span>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL XÁC NHẬN NỘP BÀI -->
+    <!-- ===================================================================== -->
+    @if (isSubmitModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div class="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 shadow-2xl space-y-6">
+          
+          <div class="text-center space-y-2">
+            <div class="w-12 h-12 rounded-full bg-brand-pink/10 text-brand-pink flex items-center justify-center mx-auto">
+              <app-icon name="document-text" size="md" />
+            </div>
+            <h3 class="text-xl font-extrabold text-brand-navy dark:text-white">
+              Xác nhận nộp bài thi?
+            </h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+              Hãy kiểm tra lại tiến độ làm bài trước khi hoàn tất nộp bài.
+            </p>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/5 text-center text-xs">
+            <div>
+              <div class="text-[10px] text-zinc-400">Đã trả lời</div>
+              <div class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm mt-0.5">
+                {{ answeredCount() }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[10px] text-zinc-400">Chưa trả lời</div>
+              <div class="font-extrabold text-rose-500 text-sm mt-0.5">
+                {{ totalQuestionCount() - answeredCount() }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[10px] text-zinc-400">Đang gắn cờ</div>
+              <div class="font-extrabold text-amber-500 text-sm mt-0.5">
+                {{ flaggedQuestionIds().size }}
+              </div>
+            </div>
+          </div>
+
+          @if (totalQuestionCount() - answeredCount() > 0) {
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+              <app-icon name="sparkles" size="xs" customClass="shrink-0 mt-0.5" />
+              <span>Bạn còn <strong>{{ totalQuestionCount() - answeredCount() }}</strong> câu hỏi chưa trả lời. Bạn vẫn muốn nộp bài chứ?</span>
+            </div>
+          }
+
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              (click)="closeSubmitModal()"
+              class="flex-1 py-3 rounded-2xl border border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors cursor-pointer"
+            >
+              Tiếp tục làm bài
+            </button>
+
+            <button
+              type="button"
+              (click)="submitExam()"
+              [disabled]="isSubmitting()"
+              class="flex-1 py-3 rounded-2xl bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              @if (isSubmitting()) {
+                <span>Đang chấm điểm...</span>
+              } @else {
+                <app-icon name="check" size="xs" />
+                <span>Nộp bài ngay</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

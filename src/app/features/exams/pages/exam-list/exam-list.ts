@@ -1,21 +1,23 @@
 import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import type { Exam, HskVersion } from '../../models/exam.model';
 import { ExamCardComponent } from '../../components/exam-card/exam-card';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
 @Component({
   selector: 'app-exam-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ExamCardComponent, AppIconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ExamCardComponent, AppIconComponent, NavHeaderComponent],
   templateUrl: './exam-list.html',
   styleUrl: './exam-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExamListComponent implements OnInit {
+  private readonly router = inject(Router);
   private readonly examService = inject(ExamService);
 
   exams = signal<Exam[]>([]);
@@ -50,6 +52,8 @@ export class ExamListComponent implements OnInit {
   }
 
   startExam(item: Exam) {
-    alert(`Đề thi "${item.title}" sẽ mở giao diện làm bài tương tác trực tuyến trong Phase 2!\n\nHiện tại cấu trúc đề thi đã được quản lý hoàn chỉnh trên hệ thống.`);
+    if (item.id) {
+      this.router.navigate(['/exams', item.id, 'take']);
+    }
   }
 }

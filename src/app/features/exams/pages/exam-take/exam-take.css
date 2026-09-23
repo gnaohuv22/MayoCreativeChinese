@@ -1,0 +1,27 @@
+/* ==============================================================================
+   MAYO CREATIVE CHINESE — EXAM TAKE STYLES
+   ============================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Custom scrollbar cho danh sách câu hỏi trong sidebar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.4);
+}

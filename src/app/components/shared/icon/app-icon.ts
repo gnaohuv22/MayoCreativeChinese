@@ -27,7 +27,19 @@ export type IconName =
   | 'scale'
   | 'arrows-right-left'
   | 'chat-bubble'
-  | 'book-open';
+  | 'book-open'
+  | 'play'
+  | 'pause'
+  | 'speaker-wave'
+  | 'flag'
+  | 'check-circle'
+  | 'x-circle'
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'arrow-uturn-left'
+  | 'sun'
+  | 'moon'
+  | 'cog';
 
 @Component({
   selector: 'app-icon',

@@ -1,6 +1,6 @@
-<div class="inline-flex items-center gap-1.5">
-  <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-pink text-white shadow-sm">
-    HSK {{ level() }}
+<div class="inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+  <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-pink text-white shadow-sm shrink-0 whitespace-nowrap inline-block">
+    HSK&nbsp;{{ level() }}
   </span>
 
   @if (showVersion()) {
@@ -15,7 +15,7 @@
       [class.dark:bg-purple-950/60]="version() === '3.0'"
       [class.dark:text-purple-300]="version() === '3.0'"
       [class.border-purple-200]="version() === '3.0'"
-      class="px-2 py-0.5 rounded-full text-[11px] font-bold border"
+      class="px-2 py-0.5 rounded-full text-[11px] font-bold border shrink-0 whitespace-nowrap inline-block"
     >
       v{{ version() }}
     </span>

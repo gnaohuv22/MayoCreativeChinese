@@ -11,6 +11,7 @@ import { GalleryComponent } from './components/gallery/gallery';
 import { FooterComponent } from './components/footer/footer';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top';
 import { RegisterModalComponent } from './components/shared/register-modal/register-modal';
+import { ToastComponent } from './components/shared/toast/toast';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import { RegisterModalComponent } from './components/shared/register-modal/regis
     FooterComponent,
     ScrollToTopComponent,
     RegisterModalComponent,
+    ToastComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',

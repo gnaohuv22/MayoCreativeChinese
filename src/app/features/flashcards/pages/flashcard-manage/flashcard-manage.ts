@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { VocabService } from '../../services/vocab.service';
 import { FlashcardShellComponent } from '../../components/flashcard-shell/flashcard-shell';
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
+import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { ToastService } from '../../../../services/toast.service';
 import type { VocabCard, ValidatedImportRow } from '../../models/vocab-card.model';
 import { parseFile, validateRows } from '../../utils/file-parser.util';
 import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../utils/template-generator.util';
@@ -10,12 +12,14 @@ import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../u
 @Component({
   selector: 'app-flashcard-manage',
   standalone: true,
-  imports: [FormsModule, FlashcardShellComponent, ImportPreviewComponent],
+  imports: [FormsModule, FlashcardShellComponent, ImportPreviewComponent, AppIconComponent],
   templateUrl: './flashcard-manage.html',
   styleUrl: './flashcard-manage.css',
 })
 export class FlashcardManageComponent implements OnInit {
+  protected readonly Math = Math;
   private vocabService = inject(VocabService);
+  private toastService = inject(ToastService);
 
   activeTab = signal<'add' | 'import' | 'browse'>('add');
 
@@ -45,6 +49,20 @@ export class FlashcardManageComponent implements OnInit {
   searchQuery = signal('');
   selectedIds = signal<Set<number>>(new Set());
 
+  // Pagination Signals
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(15);
+
+  // In-row editing state
+  editingCardId = signal<number | null>(null);
+  editingForm = {
+    hanzi: '',
+    pinyin: '',
+    meaning: '',
+    hsk_level: 1,
+    example: '',
+  };
+
   filteredBrowseCards = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     if (!query) return this.browseCards();
@@ -54,6 +72,18 @@ export class FlashcardManageComponent implements OnInit {
         c.pinyin.toLowerCase().includes(query) ||
         c.meaning.toLowerCase().includes(query)
     );
+  });
+
+  totalPages = computed(() => {
+    const total = this.filteredBrowseCards().length;
+    return Math.max(1, Math.ceil(total / this.pageSize()));
+  });
+
+  paginatedCards = computed(() => {
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return this.filteredBrowseCards().slice(start, start + size);
   });
 
   ngOnInit() {
@@ -242,6 +272,8 @@ export class FlashcardManageComponent implements OnInit {
   setBrowseLevel(level: number) {
     this.browseLevel.set(level);
     this.selectedIds.set(new Set());
+    this.currentPage.set(1);
+    this.cancelEdit();
     this.loadBrowseCards();
   }
 
@@ -254,21 +286,110 @@ export class FlashcardManageComponent implements OnInit {
 
   async deleteSelected() {
     if (this.selectedIds().size === 0) return;
-    if (!confirm(`Bạn có chắc muốn xóa ${this.selectedIds().size} từ đã chọn?`)) return;
+    const count = this.selectedIds().size;
+    if (!confirm(`Bạn có chắc muốn xóa ${count} từ đã chọn?`)) return;
 
     try {
       await this.vocabService.deleteCards(Array.from(this.selectedIds()));
       this.selectedIds.set(new Set());
+      this.toastService.success(`Đã xóa thành công ${count} từ vựng.`);
       this.loadBrowseCards();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error deleting cards:', e);
+      this.toastService.error(`Lỗi khi xóa từ: ${e.message}`);
     }
   }
 
   async deleteCard(id: number) {
     if (!confirm('Xóa từ vựng này?')) return;
-    await this.vocabService.deleteCard(id);
-    this.loadBrowseCards();
+    const res = await this.vocabService.deleteCard(id);
+    if (res.success) {
+      this.toastService.success('Đã xóa từ vựng thành công.');
+      this.loadBrowseCards();
+    } else {
+      this.toastService.error(`Xóa thất bại: ${res.error}`);
+    }
+  }
+
+  // === Pagination Methods ===
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.cancelEdit();
+    }
+  }
+
+  prevPage() {
+    this.goToPage(this.currentPage() - 1);
+  }
+
+  nextPage() {
+    this.goToPage(this.currentPage() + 1);
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const delta = 2;
+    const range: number[] = [];
+    for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  }
+
+  // === In-row Editing Methods ===
+
+  startEdit(card: VocabCard) {
+    if (!card.id) return;
+    this.editingCardId.set(card.id);
+    this.editingForm = {
+      hanzi: card.hanzi,
+      pinyin: card.pinyin,
+      meaning: card.meaning,
+      hsk_level: card.hsk_level,
+      example: card.example || '',
+    };
+  }
+
+  cancelEdit() {
+    this.editingCardId.set(null);
+  }
+
+  async saveInlineEdit(id: number) {
+    const { hanzi, pinyin, meaning, hsk_level, example } = this.editingForm;
+    if (!hanzi.trim() || !pinyin.trim() || !meaning.trim()) {
+      this.toastService.error('Vui lòng điền đủ Hán tự, Pinyin và Nghĩa.');
+      return;
+    }
+
+    try {
+      const res = await this.vocabService.updateCard(id, {
+        hanzi: hanzi.trim(),
+        pinyin: pinyin.trim(),
+        meaning: meaning.trim(),
+        hsk_level: Number(hsk_level),
+        example: example.trim() || undefined,
+      });
+
+      if (res.success) {
+        this.browseCards.update(list => list.map(c => c.id === id ? {
+          ...c,
+          hanzi: hanzi.trim(),
+          pinyin: pinyin.trim(),
+          meaning: meaning.trim(),
+          hsk_level: Number(hsk_level),
+          example: example.trim() || undefined,
+        } : c));
+        this.editingCardId.set(null);
+        this.toastService.success(`Đã cập nhật từ vựng "${hanzi.trim()}" thành công!`);
+      } else {
+        this.toastService.error(`Cập nhật thất bại: ${res.error}`);
+      }
+    } catch (e: any) {
+      this.toastService.error(`Lỗi: ${e.message}`);
+    }
   }
 
   exportCurrentLevel() {

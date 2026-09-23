@@ -1,5 +1,7 @@
-<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-10 px-4 sm:px-6 lg:px-8 transition-colors">
-  <div class="max-w-6xl mx-auto space-y-10">
+<app-nav-header activeModule="exams" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 px-4 sm:px-6 lg:px-8 transition-colors">
+  <div class="max-w-6xl mx-auto space-y-8">
 
     <!-- HERO BANNER -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-navy via-brand-navy to-brand-pink/80 text-white p-8 sm:p-12 shadow-xl">
@@ -51,9 +53,14 @@
           (click)="setLevel('all')"
           [class.bg-brand-navy]="selectedLevel() === 'all'"
           [class.text-white]="selectedLevel() === 'all'"
+          [class.shadow-xs]="selectedLevel() === 'all'"
           [class.bg-white]="selectedLevel() !== 'all'"
-          [class.text-brand-navy]="selectedLevel() !== 'all'"
-          class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm transition-all whitespace-nowrap cursor-pointer"
+          [class.text-zinc-700]="selectedLevel() !== 'all'"
+          [class.hover:bg-zinc-50]="selectedLevel() !== 'all'"
+          [class.dark:bg-white/5]="selectedLevel() !== 'all'"
+          [class.dark:text-zinc-300]="selectedLevel() !== 'all'"
+          [class.dark:hover:bg-white/10]="selectedLevel() !== 'all'"
+          class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-all whitespace-nowrap cursor-pointer"
         >
           Tất cả cấp độ
         </button>
@@ -64,9 +71,14 @@
             (click)="setLevel(lvl)"
             [class.bg-brand-pink]="selectedLevel() === lvl"
             [class.text-white]="selectedLevel() === lvl"
+            [class.shadow-xs]="selectedLevel() === lvl"
             [class.bg-white]="selectedLevel() !== lvl"
-            [class.text-brand-navy]="selectedLevel() !== lvl"
-            class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm transition-all whitespace-nowrap cursor-pointer"
+            [class.text-zinc-700]="selectedLevel() !== lvl"
+            [class.hover:bg-zinc-50]="selectedLevel() !== lvl"
+            [class.dark:bg-white/5]="selectedLevel() !== lvl"
+            [class.dark:text-zinc-300]="selectedLevel() !== lvl"
+            [class.dark:hover:bg-white/10]="selectedLevel() !== lvl"
+            class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-all whitespace-nowrap cursor-pointer"
           >
             HSK {{ lvl }}
           </button>
@@ -74,7 +86,7 @@
       </div>
 
       <!-- Version Filter & Stats -->
-      <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/80 dark:bg-brand-dark/80 border border-brand-navy/10 dark:border-white/10 shadow-sm backdrop-blur-md">
+      <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/90 dark:bg-brand-dark/90 border border-brand-navy/10 dark:border-white/10 shadow-xs backdrop-blur-md">
         <div class="flex items-center gap-2">
           <span class="text-xs text-zinc-600 dark:text-zinc-300 font-semibold flex items-center gap-1">
             <app-icon name="filter" size="xs" />
@@ -85,7 +97,14 @@
             (click)="setVersion('all')"
             [class.bg-brand-navy]="selectedVersion() === 'all'"
             [class.text-white]="selectedVersion() === 'all'"
-            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+            [class.shadow-xs]="selectedVersion() === 'all'"
+            [class.bg-zinc-100]="selectedVersion() !== 'all'"
+            [class.text-zinc-700]="selectedVersion() !== 'all'"
+            [class.hover:bg-zinc-200]="selectedVersion() !== 'all'"
+            [class.dark:bg-white/5]="selectedVersion() !== 'all'"
+            [class.dark:text-zinc-300]="selectedVersion() !== 'all'"
+            [class.dark:hover:bg-white/10]="selectedVersion() !== 'all'"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
           >
             Tất cả
           </button>
@@ -94,7 +113,14 @@
             (click)="setVersion('2.0')"
             [class.bg-brand-navy]="selectedVersion() === '2.0'"
             [class.text-white]="selectedVersion() === '2.0'"
-            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+            [class.shadow-xs]="selectedVersion() === '2.0'"
+            [class.bg-zinc-100]="selectedVersion() !== '2.0'"
+            [class.text-zinc-700]="selectedVersion() !== '2.0'"
+            [class.hover:bg-zinc-200]="selectedVersion() !== '2.0'"
+            [class.dark:bg-white/5]="selectedVersion() !== '2.0'"
+            [class.dark:text-zinc-300]="selectedVersion() !== '2.0'"
+            [class.dark:hover:bg-white/10]="selectedVersion() !== '2.0'"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
           >
             HSK 2.0 (Tiêu chuẩn)
           </button>
@@ -103,7 +129,14 @@
             (click)="setVersion('3.0')"
             [class.bg-brand-navy]="selectedVersion() === '3.0'"
             [class.text-white]="selectedVersion() === '3.0'"
-            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+            [class.shadow-xs]="selectedVersion() === '3.0'"
+            [class.bg-zinc-100]="selectedVersion() !== '3.0'"
+            [class.text-zinc-700]="selectedVersion() !== '3.0'"
+            [class.hover:bg-zinc-200]="selectedVersion() !== '3.0'"
+            [class.dark:bg-white/5]="selectedVersion() !== '3.0'"
+            [class.dark:text-zinc-300]="selectedVersion() !== '3.0'"
+            [class.dark:hover:bg-white/10]="selectedVersion() !== '3.0'"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
           >
             HSK 3.0 (Mới)
           </button>

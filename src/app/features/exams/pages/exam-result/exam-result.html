@@ -1,0 +1,347 @@
+<app-nav-header activeModule="exams" backLink="/exams" backLabel="Danh sách đề thi" [showBack]="true" />
+
+<div class="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-800 dark:text-zinc-100 py-8 px-4 sm:px-6">
+  <div class="max-w-5xl mx-auto space-y-8">
+    
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center p-16">
+        <div class="w-12 h-12 rounded-full border-4 border-brand-pink/20 border-t-brand-pink animate-spin"></div>
+        <p class="mt-4 text-sm font-medium text-zinc-500">Đang tải kết quả bài thi...</p>
+      </div>
+    } @else if (!submission()) {
+      <div class="p-12 rounded-3xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-center space-y-4 shadow-sm">
+        <app-icon name="question-mark" size="xl" customClass="text-zinc-400 mx-auto" />
+        <h2 class="text-xl font-bold text-brand-navy dark:text-white">Không tìm thấy kết quả</h2>
+        <p class="text-sm text-zinc-500 max-w-md mx-auto">
+          Không tìm thấy bài làm nào tương ứng. Hãy hoàn thành một đề thi để xem bảng điểm và phân tích năng lực chi tiết.
+        </p>
+        <a routerLink="/exams" class="inline-flex px-6 py-3 rounded-2xl bg-brand-navy text-white text-sm font-bold shadow-md hover:shadow-lg transition-all">
+          Danh sách đề thi
+        </a>
+      </div>
+    } @else {
+      <!-- =================================================================== -->
+      <!-- HERO SCORE BANNER -->
+      <!-- =================================================================== -->
+      @let sub = submission()!;
+      <div
+        [class.border-emerald-500/30]="sub.isPassed"
+        [class.bg-gradient-to-b]="true"
+        [class.from-emerald-500/10]="sub.isPassed"
+        [class.to-white]="sub.isPassed"
+        [class.dark:to-brand-dark]="true"
+        [class.border-rose-500/30]="!sub.isPassed"
+        [class.from-rose-500/10]="!sub.isPassed"
+        class="p-8 sm:p-10 rounded-3xl border shadow-xl relative overflow-hidden space-y-8"
+      >
+        <!-- Top Info: Exam Title & Badges -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <app-hsk-badge [level]="sub.hskLevel" [version]="sub.hskVersion" />
+            <h1 class="text-xl sm:text-2xl font-extrabold text-brand-navy dark:text-white">
+              {{ sub.examTitle }}
+            </h1>
+          </div>
+
+          <!-- Pass/Fail Badge -->
+          <span
+            [class.bg-emerald-500]="sub.isPassed"
+            [class.bg-rose-500]="!sub.isPassed"
+            class="px-4 py-1.5 rounded-full text-white text-xs font-black tracking-wider uppercase shadow-md flex items-center gap-1.5"
+          >
+            <app-icon [name]="sub.isPassed ? 'check' : 'x-mark'" size="xs" />
+            <span>{{ sub.isPassed ? 'ĐẠT YÊU CẦU' : 'CHƯA ĐẠT' }}</span>
+          </span>
+        </div>
+
+        <!-- Center Main Score Display -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+          
+          <!-- Big Score Box -->
+          <div class="md:col-span-2 p-6 rounded-3xl bg-white/90 dark:bg-white/5 border border-zinc-100 dark:border-white/10 shadow-sm flex items-center gap-6">
+            <div class="w-24 h-24 rounded-full flex flex-col items-center justify-center shrink-0 border-4"
+                 [class.border-emerald-500]="sub.isPassed"
+                 [class.text-emerald-600]="sub.isPassed"
+                 [class.dark:text-emerald-400]="sub.isPassed"
+                 [class.border-rose-500]="!sub.isPassed"
+                 [class.text-rose-500]="!sub.isPassed">
+              <span class="text-3xl font-black leading-none">{{ sub.totalScoreEarned }}</span>
+              <span class="text-[10px] font-bold text-zinc-400 mt-0.5">/{{ sub.totalScoreMax }}</span>
+            </div>
+
+            <div class="space-y-1">
+              <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Tổng điểm đạt được</div>
+              <div class="text-base font-extrabold text-brand-navy dark:text-white">
+                {{ sub.isPassed ? 'Chúc mừng bạn đã vượt qua kỳ thi thử!' : 'Cố gắng ôn luyện thêm để vượt qua điểm sàn nhé!' }}
+              </div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                Điểm sàn cần đạt: <strong>{{ sub.passingScore }} / {{ sub.totalScoreMax }} điểm</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Metrics -->
+          <div class="p-5 rounded-2xl bg-white/80 dark:bg-white/5 border border-zinc-100 dark:border-white/10 text-center space-y-1">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-400">
+              <app-icon name="check-circle" size="xs" />
+              <span>Độ chính xác</span>
+            </div>
+            <div class="text-2xl font-black text-brand-pink">
+              {{ sub.accuracyPercentage }}%
+            </div>
+            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              {{ sub.correctCount }} / {{ sub.totalQuestions }} câu đúng
+            </div>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-white/80 dark:bg-white/5 border border-zinc-100 dark:border-white/10 text-center space-y-1">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-400">
+              <app-icon name="clock" size="xs" />
+              <span>Thời gian làm bài</span>
+            </div>
+            <div class="text-2xl font-black text-brand-navy dark:text-white">
+              {{ timeSpentFormatted() }}
+            </div>
+            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Tổng thời lượng: {{ sub.durationMins }}p
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-200/60 dark:border-white/10">
+          <a routerLink="/exams" class="text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white flex items-center gap-1.5 transition-colors">
+            <app-icon name="arrow-left" size="xs" />
+            <span>Về danh sách đề thi</span>
+          </a>
+
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              (click)="retakeExam()"
+              class="px-5 py-2.5 rounded-2xl bg-brand-navy hover:bg-brand-navy/90 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <app-icon name="arrow-path" size="xs" />
+              <span>Làm lại đề này</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- SECTION SKILLS BREAKDOWN -->
+      <!-- =================================================================== -->
+      <section class="space-y-4">
+        <h2 class="text-lg font-bold text-brand-navy dark:text-white flex items-center gap-2">
+          <app-icon name="trophy" size="sm" customClass="text-brand-pink" />
+          <span>Điểm số theo từng Kỹ năng</span>
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          @for (sec of sub.sectionResults; track sec.sectionType) {
+            <div class="p-6 rounded-3xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-sm text-brand-navy dark:text-white flex items-center gap-2">
+                  @if (sec.sectionType === 'listening') {
+                    <app-icon name="audio" size="xs" customClass="text-indigo-500" />
+                  } @else if (sec.sectionType === 'reading') {
+                    <app-icon name="book-open" size="xs" customClass="text-emerald-500" />
+                  } @else {
+                    <app-icon name="pencil" size="xs" customClass="text-amber-500" />
+                  }
+                  <span>{{ sec.title }}</span>
+                </span>
+                <span class="text-xs font-extrabold text-brand-pink">
+                  {{ sec.percentage }}%
+                </span>
+              </div>
+
+              <!-- Big Section Score -->
+              <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-black text-brand-navy dark:text-white">{{ sec.scoreEarned }}</span>
+                <span class="text-xs font-semibold text-zinc-400">/ {{ sec.maxScore }} điểm</span>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-brand-pink to-brand-navy rounded-full"
+                  [style.width.%]="sec.percentage"
+                ></div>
+              </div>
+
+              <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Đúng {{ sec.correctQuestions }} / {{ sec.totalQuestions }} câu hỏi
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- QUESTION BY QUESTION REVIEW (XEM LẠI ĐÁP ÁN & GIẢI THÍCH) -->
+      <!-- =================================================================== -->
+      <section class="space-y-6 pt-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 class="text-lg font-bold text-brand-navy dark:text-white flex items-center gap-2">
+            <app-icon name="document-text" size="sm" customClass="text-brand-pink" />
+            <span>Chi tiết từng câu hỏi & Lời giải</span>
+          </h2>
+
+          <!-- Filter Pills -->
+          <div class="flex items-center gap-1.5 bg-white dark:bg-white/5 p-1 rounded-2xl border border-zinc-200 dark:border-white/10">
+            <button
+              type="button"
+              (click)="setFilter('all')"
+              [class.bg-brand-navy]="currentFilter() === 'all'"
+              [class.text-white]="currentFilter() === 'all'"
+              [class.text-zinc-600]="currentFilter() !== 'all'"
+              [class.dark:text-zinc-300]="currentFilter() !== 'all'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Tất cả ({{ counts().all }})
+            </button>
+
+            <button
+              type="button"
+              (click)="setFilter('correct')"
+              [class.bg-emerald-600]="currentFilter() === 'correct'"
+              [class.text-white]="currentFilter() === 'correct'"
+              [class.text-zinc-600]="currentFilter() !== 'correct'"
+              [class.dark:text-zinc-300]="currentFilter() !== 'correct'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Đúng ({{ counts().correct }})
+            </button>
+
+            <button
+              type="button"
+              (click)="setFilter('incorrect')"
+              [class.bg-rose-600]="currentFilter() === 'incorrect'"
+              [class.text-white]="currentFilter() === 'incorrect'"
+              [class.text-zinc-600]="currentFilter() !== 'incorrect'"
+              [class.dark:text-zinc-300]="currentFilter() !== 'incorrect'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Sai ({{ counts().incorrect }})
+            </button>
+
+            <button
+              type="button"
+              (click)="setFilter('unanswered')"
+              [class.bg-amber-600]="currentFilter() === 'unanswered'"
+              [class.text-white]="currentFilter() === 'unanswered'"
+              [class.text-zinc-600]="currentFilter() !== 'unanswered'"
+              [class.dark:text-zinc-300]="currentFilter() !== 'unanswered'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Chưa làm ({{ counts().unanswered }})
+            </button>
+          </div>
+        </div>
+
+        <!-- Questions List -->
+        <div class="space-y-4">
+          @for (q of filteredQuestions(); track q.questionId || q.questionNum) {
+            <article class="p-6 rounded-3xl bg-white dark:bg-brand-dark/95 border border-zinc-200 dark:border-white/10 shadow-sm space-y-4">
+              
+              <!-- Card Top Header -->
+              <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-white/5">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-brand-navy/10 dark:bg-white/10 text-brand-navy dark:text-white font-extrabold text-sm flex items-center justify-center">
+                    {{ q.questionNum }}
+                  </span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                    Phần {{ q.sectionType }}
+                  </span>
+                </div>
+
+                <!-- Status Badge -->
+                @if (q.isCorrect) {
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                    <app-icon name="check-circle" size="xs" />
+                    <span>Chính xác (+{{ q.scoreEarned }} đ)</span>
+                  </span>
+                } @else if (!q.userAnswer) {
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
+                    <app-icon name="clock" size="xs" />
+                    <span>Chưa làm (0 đ)</span>
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-bold">
+                    <app-icon name="x-circle" size="xs" />
+                    <span>Sai (0 đ)</span>
+                  </span>
+                }
+              </div>
+
+              <!-- Question Specific Audio (if any) -->
+              @if (q.audioUrl) {
+                <div class="p-2 rounded-2xl bg-zinc-50 dark:bg-white/5">
+                  <audio controls [src]="q.audioUrl" class="w-full h-8"></audio>
+                </div>
+              }
+
+              <!-- Question Image (if any) -->
+              @if (q.imageUrl) {
+                <div class="rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 max-w-md">
+                  <img [src]="q.imageUrl" alt="Hình ảnh câu hỏi" class="w-full object-contain max-h-72" />
+                </div>
+              }
+
+              <!-- Question Content -->
+              @if (q.content) {
+                <div class="text-base font-medium text-brand-navy dark:text-white whitespace-pre-line leading-relaxed">
+                  {{ q.content }}
+                </div>
+              }
+
+              <!-- User Answer vs Correct Answer Box -->
+              <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 flex flex-wrap items-center gap-6 text-xs">
+                <div>
+                  <span class="text-zinc-400 block mb-0.5">Câu trả lời của bạn:</span>
+                  <span
+                    [class.text-emerald-600]="q.isCorrect"
+                    [class.dark:text-emerald-400]="q.isCorrect"
+                    [class.text-rose-500]="!q.isCorrect && q.userAnswer"
+                    [class.text-zinc-400]="!q.userAnswer"
+                    class="font-extrabold text-sm"
+                  >
+                    {{ q.userAnswer || '(Để trống)' }}
+                  </span>
+                </div>
+
+                <div class="border-l border-zinc-200 dark:border-white/10 pl-6">
+                  <span class="text-zinc-400 block mb-0.5">Đáp án chuẩn xác:</span>
+                  <span class="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                    {{ q.correctAnswer }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Explanation Box -->
+              @if (q.explanation) {
+                <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 space-y-1.5">
+                  <div class="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
+                    <app-icon name="sparkles" size="xs" />
+                    <span>Giải thích chi tiết & Dịch nghĩa:</span>
+                  </div>
+                  <div class="whitespace-pre-line leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    {{ q.explanation }}
+                  </div>
+                </div>
+              }
+
+            </article>
+          } @empty {
+            <div class="p-8 text-center text-zinc-500 bg-white dark:bg-brand-dark rounded-2xl border border-zinc-200 dark:border-white/10">
+              Không có câu hỏi nào phù hợp với bộ lọc hiện tại.
+            </div>
+          }
+        </div>
+      </section>
+
+    }
+  </div>
+</div>

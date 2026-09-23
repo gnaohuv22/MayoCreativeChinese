@@ -4,6 +4,7 @@ import { FlashcardShellComponent } from '../../components/flashcard-shell/flashc
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { exportProgressJson } from '../../utils/template-generator.util';
+import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 
 export interface LevelInfo {
   level: number;
@@ -17,7 +18,7 @@ export interface LevelInfo {
 @Component({
   selector: 'app-flashcard-hub',
   standalone: true,
-  imports: [RouterLink, FlashcardShellComponent],
+  imports: [RouterLink, FlashcardShellComponent, AppIconComponent],
   templateUrl: './flashcard-hub.html',
   styleUrl: './flashcard-hub.css',
 })

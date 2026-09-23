@@ -6,7 +6,11 @@ import type {
   ExamSection,
   ExamPart,
   ExamQuestion,
-  ExamOption
+  ExamOption,
+  UserAnswers,
+  ExamSubmission,
+  SectionScoreResult,
+  QuestionGradeResult
 } from '../models/exam.model';
 
 @Injectable({ providedIn: 'root' })
@@ -328,4 +332,183 @@ export class ExamService {
       return { error: err.message || 'Lỗi khi upload file' };
     }
   }
+
+  /** Chấm điểm bài thi và sinh kết quả chi tiết */
+  gradeExam(exam: Exam, answers: UserAnswers, timeSpentSeconds: number): ExamSubmission {
+    const questionResults: QuestionGradeResult[] = [];
+    const sectionResults: SectionScoreResult[] = [];
+
+    let totalRawEarned = 0;
+    let totalRawPossible = 0;
+    let totalQuestions = 0;
+    let correctCount = 0;
+
+    for (const sec of exam.sections || []) {
+      let secRawEarned = 0;
+      let secRawPossible = 0;
+      let secTotalQ = 0;
+      let secCorrectQ = 0;
+
+      for (const part of sec.parts || []) {
+        for (const q of part.questions || []) {
+          totalQuestions++;
+          secTotalQ++;
+          const qMaxScore = Number(q.score) || 2.5;
+          secRawPossible += qMaxScore;
+          totalRawPossible += qMaxScore;
+
+          const qId = q.id || '';
+          const userAns = (answers[qId] || '').trim();
+          const correctAns = (q.correct_answer || '').trim();
+
+          const isCorrect = this.checkAnswerCorrectness(userAns, correctAns, part.question_type);
+          const earned = isCorrect ? qMaxScore : 0;
+
+          if (isCorrect) {
+            correctCount++;
+            secCorrectQ++;
+            secRawEarned += earned;
+            totalRawEarned += earned;
+          }
+
+          questionResults.push({
+            questionId: qId,
+            questionNum: q.question_num,
+            sectionType: sec.section_type,
+            questionType: part.question_type,
+            content: q.content,
+            audioUrl: q.audio_url,
+            imageUrl: q.image_url,
+            options: q.options,
+            userAnswer: userAns,
+            correctAnswer: correctAns,
+            isCorrect,
+            scoreEarned: earned,
+            maxScore: qMaxScore,
+            explanation: q.explanation,
+          });
+        }
+      }
+
+      // Điểm chuẩn hoá theo max_score của Section (thường là 100 điểm)
+      const secMax = sec.max_score || 100;
+      const secNormalizedScore = secRawPossible > 0
+        ? Math.round((secRawEarned / secRawPossible) * secMax * 10) / 10
+        : 0;
+      const secPercent = secRawPossible > 0 ? Math.round((secRawEarned / secRawPossible) * 100) : 0;
+
+      sectionResults.push({
+        sectionType: sec.section_type,
+        title: sec.title,
+        scoreEarned: secNormalizedScore,
+        maxScore: secMax,
+        totalQuestions: secTotalQ,
+        correctQuestions: secCorrectQ,
+        percentage: secPercent,
+      });
+    }
+
+    // Tổng điểm chuẩn hoá theo exam.total_score (thường là 300 điểm)
+    const examTotalMax = exam.total_score || 300;
+    const totalScoreEarned = totalRawPossible > 0
+      ? Math.round((totalRawEarned / totalRawPossible) * examTotalMax * 10) / 10
+      : 0;
+
+    const passingScore = exam.passing_score || 180;
+    const isPassed = totalScoreEarned >= passingScore;
+    const accuracyPercentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    const submission: ExamSubmission = {
+      id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      examId: exam.id || '',
+      examTitle: exam.title,
+      hskLevel: exam.hsk_level,
+      hskVersion: exam.hsk_version,
+      submittedAt: new Date().toISOString(),
+      durationMins: exam.duration_mins,
+      timeSpentSeconds,
+      totalScoreEarned,
+      totalScoreMax: examTotalMax,
+      passingScore,
+      isPassed,
+      accuracyPercentage,
+      totalQuestions,
+      correctCount,
+      sectionResults,
+      questionResults,
+    };
+
+    this.saveSubmission(submission);
+    return submission;
+  }
+
+  /** So khớp đáp án người học với đáp án đúng theo từng dạng câu hỏi */
+  private checkAnswerCorrectness(userAns: string, correctAns: string, questionType: string): boolean {
+    if (!userAns) return false;
+
+    const normUser = userAns.trim().toLowerCase();
+    const normCorrect = correctAns.trim().toLowerCase();
+
+    if (questionType === 'true_false') {
+      const isUserTrue = ['true', 't', '1', 'đúng', 'dung', '对', 'dui'].includes(normUser);
+      const isUserFalse = ['false', 'f', '0', 'sai', '错', 'cuo'].includes(normUser);
+      const isCorrectTrue = ['true', 't', '1', 'đúng', 'dung', '对', 'dui'].includes(normCorrect);
+      const isCorrectFalse = ['false', 'f', '0', 'sai', '错', 'cuo'].includes(normCorrect);
+
+      if (isCorrectTrue) return isUserTrue;
+      if (isCorrectFalse) return isUserFalse;
+    }
+
+    // Nếu đáp án có nhiều cách viết chấp nhận được (ngăn cách bởi '/', '|', hoặc 'hoặc')
+    const splitOptions = normCorrect.split(/[/|,]|hoặc/).map(s => s.trim().replace(/\s+/g, ''));
+    const cleanUser = normUser.replace(/\s+/g, '');
+
+    if (splitOptions.includes(cleanUser)) {
+      return true;
+    }
+
+    return cleanUser === normCorrect.replace(/\s+/g, '');
+  }
+
+  /** Lưu bài nộp vào localStorage */
+  saveSubmission(submission: ExamSubmission): void {
+    try {
+      const KEY = 'mayo_exam_submissions';
+      const existingStr = localStorage.getItem(KEY);
+      const existing: ExamSubmission[] = existingStr ? JSON.parse(existingStr) : [];
+      // Thêm mới lên đầu danh sách, giữ tối đa 50 bài nộp gần nhất
+      const updated = [submission, ...existing.filter(s => s.id !== submission.id)].slice(0, 50);
+      localStorage.setItem(KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Không thể lưu submission vào localStorage:', e);
+    }
+  }
+
+  /** Lấy kết quả bài nộp theo ID */
+  getSubmission(submissionId: string): ExamSubmission | null {
+    try {
+      const KEY = 'mayo_exam_submissions';
+      const existingStr = localStorage.getItem(KEY);
+      if (!existingStr) return null;
+      const list: ExamSubmission[] = JSON.parse(existingStr);
+      return list.find(s => s.id === submissionId) || null;
+    } catch (e) {
+      console.error('Lỗi khi đọc submission từ localStorage:', e);
+      return null;
+    }
+  }
+
+  /** Lấy danh sách bài nộp của 1 đề thi cụ thể */
+  getSubmissionsByExam(examId: string): ExamSubmission[] {
+    try {
+      const KEY = 'mayo_exam_submissions';
+      const existingStr = localStorage.getItem(KEY);
+      if (!existingStr) return [];
+      const list: ExamSubmission[] = JSON.parse(existingStr);
+      return list.filter(s => s.examId === examId);
+    } catch {
+      return [];
+    }
+  }
 }
+

@@ -1,0 +1,13 @@
+<button
+  type="button"
+  (click)="theme.toggleTheme()"
+  class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-brand-navy/10 dark:border-white/20 bg-white/80 dark:bg-white/5 hover:bg-brand-navy/5 dark:hover:bg-white/10 flex items-center justify-center transition-all duration-300 cursor-pointer shadow-xs {{ customClass() }}"
+  [attr.aria-label]="theme.isDarkMode() ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'"
+  [title]="theme.isDarkMode() ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'"
+>
+  @if (theme.isDarkMode()) {
+    <app-icon name="sun" size="sm" customClass="text-brand-gold animate-pulse" />
+  } @else {
+    <app-icon name="moon" size="sm" customClass="text-brand-navy" />
+  }
+</button>

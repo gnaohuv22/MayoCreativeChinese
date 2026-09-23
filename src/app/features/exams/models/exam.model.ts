@@ -131,3 +131,56 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, { label: string; icon: I
     description: 'Viết một đoạn văn ngắn dựa theo các từ khóa / hình ảnh'
   }
 };
+
+/** Danh sách câu trả lời của thí sinh: key là question_id, value là chuỗi đáp án */
+export type UserAnswers = Record<string, string>;
+
+/** Kết quả chấm chi tiết từng câu hỏi */
+export interface QuestionGradeResult {
+  questionId: string;
+  questionNum: number;
+  sectionType: SectionType;
+  questionType: QuestionType;
+  content?: string | null;
+  audioUrl?: string | null;
+  imageUrl?: string | null;
+  options?: ExamOption[];
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  scoreEarned: number;
+  maxScore: number;
+  explanation?: string | null;
+}
+
+/** Kết quả điểm số từng Phần thi (Nghe, Đọc, Viết) */
+export interface SectionScoreResult {
+  sectionType: SectionType;
+  title: string;
+  scoreEarned: number;
+  maxScore: number;
+  totalQuestions: number;
+  correctQuestions: number;
+  percentage: number;
+}
+
+/** Toàn bộ bài nộp và kết quả bài thi */
+export interface ExamSubmission {
+  id: string;
+  examId: string;
+  examTitle: string;
+  hskLevel: number;
+  hskVersion: HskVersion;
+  submittedAt: string;
+  durationMins: number;
+  timeSpentSeconds: number;
+  totalScoreEarned: number;
+  totalScoreMax: number;
+  passingScore: number;
+  isPassed: boolean;
+  accuracyPercentage: number;
+  totalQuestions: number;
+  correctCount: number;
+  sectionResults: SectionScoreResult[];
+  questionResults: QuestionGradeResult[];
+}

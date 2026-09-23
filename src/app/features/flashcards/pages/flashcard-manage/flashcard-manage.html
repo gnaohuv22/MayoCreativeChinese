@@ -237,90 +237,266 @@
       <div class="space-y-4">
         <!-- Controls -->
         <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-          <div class="flex flex-wrap gap-1.5">
-            <button (click)="setBrowseLevel(0)" [class.bg-brand-pink]="browseLevel() === 0" [class.text-white]="browseLevel() === 0" class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-colors cursor-pointer">Tất cả</button>
-            @for (level of [1,2,3,4,5,6,7,8,9]; track level) {
-              <button (click)="setBrowseLevel(level)" [class.bg-brand-pink]="browseLevel() === level" [class.text-white]="browseLevel() === level" class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer">HSK {{ level }}</button>
+          <!-- Filter HSK Level - 5 badges per row -->
+          <div class="grid grid-cols-5 gap-2 w-full sm:w-auto max-w-md">
+            <button
+              (click)="setBrowseLevel(0)"
+              [class.bg-brand-pink]="browseLevel() === 0"
+              [class.text-white]="browseLevel() === 0"
+              [class.shadow-xs]="browseLevel() === 0"
+              [class.bg-white]="browseLevel() !== 0"
+              [class.dark:bg-[#252554]]="browseLevel() !== 0"
+              [class.text-brand-navy]="browseLevel() !== 0"
+              [class.dark:text-zinc-300]="browseLevel() !== 0"
+              class="px-3 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-center"
+            >
+              Tất cả
+            </button>
+            @for (level of [1,2,3,4]; track level) {
+              <button
+                (click)="setBrowseLevel(level)"
+                [class.bg-brand-pink]="browseLevel() === level"
+                [class.text-white]="browseLevel() === level"
+                [class.shadow-xs]="browseLevel() === level"
+                [class.bg-white]="browseLevel() !== level"
+                [class.dark:bg-[#252554]]="browseLevel() !== level"
+                [class.text-brand-navy]="browseLevel() !== level"
+                [class.dark:text-zinc-300]="browseLevel() !== level"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-center"
+              >
+                HSK {{ level }}
+              </button>
+            }
+            @for (level of [5,6,7,8,9]; track level) {
+              <button
+                (click)="setBrowseLevel(level)"
+                [class.bg-brand-pink]="browseLevel() === level"
+                [class.text-white]="browseLevel() === level"
+                [class.shadow-xs]="browseLevel() === level"
+                [class.bg-white]="browseLevel() !== level"
+                [class.dark:bg-[#252554]]="browseLevel() !== level"
+                [class.text-brand-navy]="browseLevel() !== level"
+                [class.dark:text-zinc-300]="browseLevel() !== level"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-center"
+              >
+                HSK {{ level }}
+              </button>
             }
           </div>
 
           <div class="flex items-center gap-3 w-full lg:w-auto">
             <div class="relative flex-1 lg:w-64">
-              <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Tìm Hán tự, pinyin, nghĩa..." class="pl-9 pr-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white dark:bg-[#252554] focus:outline-none focus:ring-2 focus:ring-brand-pink/30 text-xs sm:text-sm w-full text-brand-navy dark:text-white shadow-sm">
+              <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); currentPage.set(1)" placeholder="Tìm Hán tự, pinyin, nghĩa..." class="pl-9 pr-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white dark:bg-[#252554] focus:outline-none focus:ring-2 focus:ring-brand-pink/30 text-xs sm:text-sm w-full text-brand-navy dark:text-white shadow-xs">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-navy/40 dark:text-white/40 absolute left-3 top-2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
             
-            <button (click)="exportCurrentLevel()" class="px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 hover:border-brand-pink font-semibold text-xs sm:text-sm whitespace-nowrap bg-white dark:bg-[#252554] text-brand-navy dark:text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              Xuất JSON
+            <button (click)="exportCurrentLevel()" class="px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 hover:border-brand-pink font-semibold text-xs sm:text-sm whitespace-nowrap bg-white dark:bg-[#252554] text-brand-navy dark:text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs">
+              <app-icon name="upload" size="xs" />
+              <span>Xuất JSON</span>
             </button>
 
             @if (selectedIds().size > 0) {
               <button (click)="deleteSelected()" class="px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
-                Xóa {{ selectedIds().size }}
+                <app-icon name="trash" size="xs" />
+                <span>Xóa {{ selectedIds().size }}</span>
               </button>
             }
           </div>
         </div>
 
         <!-- Table -->
-        <div class="backdrop-blur-md bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-3xl overflow-hidden overflow-x-auto shadow-xl shadow-brand-navy/5 dark:shadow-[0_12px_32px_rgba(0,0,0,0.3)]">
+        <div class="backdrop-blur-md bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-3xl overflow-hidden shadow-xl shadow-brand-navy/5 dark:shadow-[0_12px_32px_rgba(0,0,0,0.3)]">
           @if (browseLoading()) {
             <div class="p-12 text-center text-brand-navy/50 dark:text-brand-text-dark/50">
               <p>Đang tải từ vựng...</p>
             </div>
           } @else if (filteredBrowseCards().length > 0) {
-            <table class="w-full text-left text-sm divide-y divide-brand-navy/5 dark:divide-white/10">
-              <thead class="bg-brand-navy/5 dark:bg-white/5 text-brand-navy/60 dark:text-brand-text-dark/70 font-bold text-xs uppercase tracking-wider">
-                <tr>
-                  <th class="p-4 w-12"></th>
-                  <th class="p-4 w-16">ID</th>
-                  <th class="p-4">Hán tự</th>
-                  <th class="p-4">Pinyin</th>
-                  <th class="p-4">Nghĩa</th>
-                  <th class="p-4 text-center">HSK</th>
-                  <th class="p-4 max-w-xs">Ví dụ</th>
-                  <th class="p-4 w-20 text-center">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-brand-navy/5 dark:divide-white/10 font-medium">
-                @for (card of filteredBrowseCards(); track card.id ?? card.hanzi) {
-                  <tr class="hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors">
-                    <td class="p-4">
-                      @if (card.id) {
-                        <input type="checkbox" [checked]="selectedIds().has(card.id)" (change)="toggleSelection(card.id)" class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer border-brand-navy/20">
-                      }
-                    </td>
-                    <td class="p-4 text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">#{{ card.id || '-' }}</td>
-                    <td class="p-4 font-bold text-lg text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;">{{ card.hanzi }}</td>
-                    <td class="p-4 text-brand-pink font-semibold">{{ card.pinyin }}</td>
-                    <td class="p-4 text-brand-navy dark:text-brand-text-dark">{{ card.meaning }}</td>
-                    <td class="p-4 text-center">
-                      <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">{{ card.hsk_level }}</span>
-                    </td>
-                    <td class="p-4 text-brand-navy/60 dark:text-brand-text-dark/70 truncate max-w-xs text-xs" [title]="card.example || ''">
-                      {{ card.example || '-' }}
-                    </td>
-                    <td class="p-4 text-center">
-                      @if (card.id) {
-                        <button (click)="deleteCard(card.id)" class="p-2 text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer" title="Xóa từ này">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                          </svg>
-                        </button>
-                      }
-                    </td>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm divide-y divide-brand-navy/5 dark:divide-white/10">
+                <thead class="bg-brand-navy/5 dark:bg-white/5 text-brand-navy/60 dark:text-brand-text-dark/70 font-bold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5 w-10"></th>
+                    <th class="p-3.5 w-14">ID</th>
+                    <th class="p-3.5 w-32">Hán tự</th>
+                    <th class="p-3.5 w-32">Pinyin</th>
+                    <th class="p-3.5">Nghĩa</th>
+                    <th class="p-3.5 text-center w-24">HSK</th>
+                    <th class="p-3.5 max-w-xs">Ví dụ</th>
+                    <th class="p-3.5 w-24 text-center">Thao tác</th>
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody class="divide-y divide-brand-navy/5 dark:divide-white/10 font-medium">
+                  @for (card of paginatedCards(); track card.id ?? card.hanzi) {
+                    <tr class="hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors" [class.bg-brand-pink/5]="editingCardId() === card.id">
+                      <!-- Checkbox -->
+                      <td class="p-3.5">
+                        @if (card.id && editingCardId() !== card.id) {
+                          <input type="checkbox" [checked]="selectedIds().has(card.id)" (change)="toggleSelection(card.id)" class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer border-brand-navy/20">
+                        }
+                      </td>
+
+                      <!-- ID -->
+                      <td class="p-3.5 text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">#{{ card.id || '-' }}</td>
+
+                      <!-- In-row Edit: Hanzi -->
+                      @if (editingCardId() === card.id) {
+                        <td class="p-3.5">
+                          <input
+                            type="text"
+                            [(ngModel)]="editingForm.hanzi"
+                            class="w-full px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-bold text-base focus:outline-none focus:ring-2 focus:ring-brand-pink/30"
+                            placeholder="Hán tự"
+                          />
+                        </td>
+                        <td class="p-3.5">
+                          <input
+                            type="text"
+                            [(ngModel)]="editingForm.pinyin"
+                            class="w-full px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-pink font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-brand-pink/30"
+                            placeholder="Pinyin"
+                          />
+                        </td>
+                        <td class="p-3.5">
+                          <input
+                            type="text"
+                            [(ngModel)]="editingForm.meaning"
+                            class="w-full min-w-[140px] px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-pink/30"
+                            placeholder="Nghĩa tiếng Việt"
+                          />
+                        </td>
+                        <td class="p-3.5 text-center">
+                          <select
+                            [(ngModel)]="editingForm.hsk_level"
+                            class="px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs font-bold focus:outline-none"
+                          >
+                            @for (lvl of [1,2,3,4,5,6,7,8,9]; track lvl) {
+                              <option [value]="lvl">HSK {{ lvl }}</option>
+                            }
+                          </select>
+                        </td>
+                        <td class="p-3.5">
+                          <input
+                            type="text"
+                            [(ngModel)]="editingForm.example"
+                            class="w-full min-w-[140px] px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-pink/30"
+                            placeholder="Ví dụ minh hoạ..."
+                          />
+                        </td>
+                        <!-- Save & Cancel Actions -->
+                        <td class="p-3.5 text-center">
+                          <div class="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              (click)="saveInlineEdit(card.id!)"
+                              class="p-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors cursor-pointer shadow-xs"
+                              title="Lưu thay đổi"
+                            >
+                              <app-icon name="check" size="xs" />
+                            </button>
+                            <button
+                              type="button"
+                              (click)="cancelEdit()"
+                              class="p-1.5 rounded-xl bg-zinc-200 dark:bg-white/10 hover:bg-zinc-300 dark:hover:bg-white/20 text-zinc-700 dark:text-zinc-200 transition-colors cursor-pointer"
+                              title="Huỷ bỏ"
+                            >
+                              <app-icon name="x-mark" size="xs" />
+                            </button>
+                          </div>
+                        </td>
+                      } @else {
+                        <!-- Read-only Row -->
+                        <td class="p-3.5 font-bold text-lg text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;">{{ card.hanzi }}</td>
+                        <td class="p-3.5 text-brand-pink font-semibold">{{ card.pinyin }}</td>
+                        <td class="p-3.5 text-brand-navy dark:text-brand-text-dark">{{ card.meaning }}</td>
+                        <td class="p-3.5 text-center">
+                          <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">{{ card.hsk_level }}</span>
+                        </td>
+                        <td class="p-3.5 text-brand-navy/60 dark:text-brand-text-dark/70 truncate max-w-xs text-xs" [title]="card.example || ''">
+                          {{ card.example || '-' }}
+                        </td>
+                        <td class="p-3.5 text-center">
+                          @if (card.id) {
+                            <div class="flex items-center justify-center gap-1">
+                              <!-- Pencil Edit Button -->
+                              <button
+                                type="button"
+                                (click)="startEdit(card)"
+                                class="p-1.5 text-zinc-500 hover:text-brand-pink hover:bg-brand-pink/10 rounded-xl transition-colors cursor-pointer"
+                                title="Chỉnh sửa từ vựng"
+                              >
+                                <app-icon name="pencil" size="xs" />
+                              </button>
+
+                              <!-- Delete Button -->
+                              <button
+                                type="button"
+                                (click)="deleteCard(card.id)"
+                                class="p-1.5 text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
+                                title="Xóa từ này"
+                              >
+                                <app-icon name="trash" size="xs" />
+                              </button>
+                            </div>
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Pagination Bar -->
+            @if (totalPages() > 1) {
+              <div class="p-4 border-t border-brand-navy/5 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 bg-brand-navy/2 dark:bg-white/2">
+                <div class="text-xs text-brand-navy/70 dark:text-zinc-300 font-medium">
+                  Hiển thị <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> - <strong>{{ Math.min(currentPage() * pageSize(), filteredBrowseCards().length) }}</strong> trên tổng <strong>{{ filteredBrowseCards().length }}</strong> từ vựng
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    (click)="prevPage()"
+                    [disabled]="currentPage() === 1"
+                    class="px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/10 text-xs font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1 cursor-pointer text-brand-navy dark:text-white"
+                  >
+                    <app-icon name="chevron-left" size="xs" />
+                    <span>Trước</span>
+                  </button>
+
+                  @for (p of getPageNumbers(); track p) {
+                    <button
+                      type="button"
+                      (click)="goToPage(p)"
+                      [class.bg-brand-pink]="currentPage() === p"
+                      [class.text-white]="currentPage() === p"
+                      [class.shadow-xs]="currentPage() === p"
+                      [class.border-brand-navy/10]="currentPage() !== p"
+                      [class.dark:border-white/10]="currentPage() !== p"
+                      [class.text-brand-navy]="currentPage() !== p"
+                      [class.dark:text-zinc-300]="currentPage() !== p"
+                      [class.hover:bg-brand-navy/5]="currentPage() !== p"
+                      [class.dark:hover:bg-white/5]="currentPage() !== p"
+                      class="w-8 h-8 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center"
+                    >
+                      {{ p }}
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    (click)="nextPage()"
+                    [disabled]="currentPage() === totalPages()"
+                    class="px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/10 text-xs font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1 cursor-pointer text-brand-navy dark:text-white"
+                  >
+                    <span>Sau</span>
+                    <app-icon name="chevron-right" size="xs" />
+                  </button>
+                </div>
+              </div>
+            }
           } @else {
             <div class="p-16 text-center text-brand-navy/50 dark:text-brand-text-dark/50">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-12 h-12 mx-auto mb-3 opacity-40">
