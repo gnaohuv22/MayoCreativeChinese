@@ -1,0 +1,108 @@
+<div class="space-y-4">
+  <!-- Summary Bar -->
+  <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm">
+    <div class="flex items-center gap-4 text-xs sm:text-sm font-bold">
+      <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        {{ validCount() }} hợp lệ
+      </span>
+      <span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+        {{ duplicateCount() }} trùng lặp
+      </span>
+      <span class="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+        {{ errorCount() }} lỗi
+      </span>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 text-xs sm:text-sm border-r border-brand-navy/10 dark:border-white/10 pr-3">
+        <button (click)="selectAll()" class="text-brand-pink hover:underline font-bold cursor-pointer">Chọn tất cả</button>
+        <span class="text-brand-navy/20 dark:text-white/20">|</span>
+        <button (click)="deselectAll()" class="text-brand-navy/60 dark:text-brand-text-dark/70 hover:underline font-medium cursor-pointer">Bỏ chọn</button>
+      </div>
+      <button
+        (click)="cancel.emit()"
+        class="px-4 py-2 text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-brand-text-dark/80 hover:bg-brand-navy/5 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer">
+        Hủy
+      </button>
+      <button
+        (click)="onConfirm()"
+        [disabled]="selectedCount() === 0"
+        class="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-brand-pink hover:bg-brand-pink/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-full shadow-md shadow-brand-pink/20 transition-all cursor-pointer flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        Thêm {{ selectedCount() }} từ vào DB
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable Table -->
+  <div class="overflow-x-auto overflow-y-auto max-h-[520px] border border-brand-navy/10 dark:border-white/15 rounded-3xl backdrop-blur-md bg-white dark:bg-[#252554] shadow-xl shadow-brand-navy/5 dark:shadow-[0_12px_32px_rgba(0,0,0,0.3)]">
+    <table class="w-full text-left text-sm divide-y divide-brand-navy/5 dark:divide-white/10 relative">
+      <thead class="sticky top-0 bg-white/95 dark:bg-[#252554]/95 backdrop-blur-md z-10 text-brand-navy/60 dark:text-brand-text-dark/70 font-bold text-xs uppercase tracking-wider shadow-sm">
+        <tr>
+          <th class="p-3.5 w-12 text-center"></th>
+          <th class="p-3.5 w-12 text-center">#</th>
+          <th class="p-3.5">Hán tự</th>
+          <th class="p-3.5">Pinyin</th>
+          <th class="p-3.5">Nghĩa</th>
+          <th class="p-3.5 w-20 text-center">HSK</th>
+          <th class="p-3.5">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-brand-navy/5 dark:divide-white/10 font-medium">
+        @for (item of rows(); track item.rowIndex) {
+          <tr
+            [class]="item.status === 'duplicate' ? 'bg-amber-50/70 dark:bg-amber-950/20' : item.status === 'error' ? 'bg-rose-50/70 dark:bg-rose-950/20' : ''"
+            class="transition-colors hover:bg-brand-navy/5 dark:hover:bg-white/5">
+            <td class="p-3.5 text-center">
+              <input
+                type="checkbox"
+                [checked]="selectedIndices().has(item.rowIndex - 1)"
+                (change)="toggleRow(item.rowIndex - 1, item)"
+                [disabled]="item.status === 'error'"
+                class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 border-brand-navy/20">
+            </td>
+            <td class="p-3.5 text-center text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">{{ item.rowIndex }}</td>
+            <td class="p-3.5 font-bold text-base sm:text-lg text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;">{{ item.row.hanzi }}</td>
+            <td class="p-3.5 text-brand-pink font-semibold">{{ item.row.pinyin }}</td>
+            <td class="p-3.5 text-brand-navy dark:text-brand-text-dark">{{ item.row.meaning }}</td>
+            <td class="p-3.5 text-center">
+              <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">
+                {{ item.row.hsk_level }}
+              </span>
+            </td>
+            <td class="p-3.5">
+              @if (item.status === 'valid') {
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Hợp lệ
+                </span>
+              } @else if (item.status === 'duplicate') {
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  Trùng (ghi đè)
+                </span>
+              } @else if (item.status === 'error') {
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50" [title]="item.errors.join(', ')">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ item.errors[0] || 'Dữ liệu không hợp lệ' }}
+                </span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

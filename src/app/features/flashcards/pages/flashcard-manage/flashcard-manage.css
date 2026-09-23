@@ -1,0 +1,8 @@
+:host { 
+  display: block; 
+}
+
+.drop-zone.drag-over { 
+  border-color: var(--color-brand-pink, #CE2D6E); 
+  background: rgba(206, 45, 110, 0.03); 
+}

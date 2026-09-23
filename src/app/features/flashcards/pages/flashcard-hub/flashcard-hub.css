@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+@keyframes ring-fill {
+  from { stroke-dashoffset: 125.6; }
+}
+
+.progress-ring-fg {
+  animation: ring-fill 0.8s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-ring-fg {
+    animation: none;
+  }
+}

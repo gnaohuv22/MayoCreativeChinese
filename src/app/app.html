@@ -1,11 +1,15 @@
-<app-header />
-<main class="relative">
-  <app-hero />
-  <app-about />
-  <app-teachers />
-  <app-courses />
-  <app-gallery />
-</main>
-<app-footer />
-<app-scroll-to-top />
-<app-register-modal />
+@if (isLandingPage()) {
+  <app-header />
+  <main class="relative">
+    <app-hero />
+    <app-about />
+    <app-teachers />
+    <app-courses />
+    <app-gallery />
+  </main>
+  <app-footer />
+  <app-scroll-to-top />
+  <app-register-modal />
+} @else {
+  <router-outlet />
+}

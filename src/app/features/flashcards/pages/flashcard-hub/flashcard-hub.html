@@ -1,0 +1,118 @@
+<app-flashcard-shell [showBack]="false">
+  <div class="px-4 py-6 sm:px-6 sm:py-8 max-w-6xl mx-auto">
+    <!-- Header banner -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <h1 class="font-display font-black text-3xl sm:text-4xl text-brand-navy dark:text-white tracking-tight">
+          Flashcard Từ Vựng HSK
+        </h1>
+        <p class="text-brand-navy/60 dark:text-brand-text-dark/70 mt-1.5 text-sm sm:text-base">
+          Luyện tập và ghi nhớ từ vựng tiếng Trung theo chuẩn cấp độ HSK 1–9
+        </p>
+      </div>
+
+      <a routerLink="/flashcards/manage" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white/80 dark:bg-[#252554] text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/40 text-xs sm:text-sm font-semibold shadow-sm transition-all duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-4 h-4 text-brand-pink">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27.1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.27-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Quản lý từ vựng
+      </a>
+    </div>
+
+    @if (loading()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+        @for (i of [1,2,3,4,5,6,7,8,9]; track i) {
+          <div class="bg-white/90 dark:bg-[#252554] border border-brand-navy/10 dark:border-white/10 rounded-2xl p-6 h-[120px] shadow-sm animate-pulse">
+            <div class="flex justify-between items-center h-full">
+              <div class="space-y-3 w-1/2">
+                <div class="h-6 bg-brand-navy/10 dark:bg-white/10 rounded-md w-3/4"></div>
+                <div class="h-4 bg-brand-navy/10 dark:bg-white/10 rounded-md w-1/2"></div>
+              </div>
+              <div class="w-12 h-12 rounded-full bg-brand-navy/10 dark:bg-white/10"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- 9 Level Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+        @for (item of levelData(); track item.level) {
+          <a [routerLink]="item.hasData ? ['/flashcards/hsk', item.level] : null"
+             class="group relative block bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all duration-200 ease-out"
+             [class.opacity-50]="!item.hasData"
+             [class.cursor-not-allowed]="!item.hasData"
+             [class.hover:-translate-y-1]="item.hasData"
+             [class.hover:border-brand-pink/50]="item.hasData"
+             [class.hover:shadow-lg]="item.hasData"
+             [class.hover:shadow-brand-pink/5]="item.hasData">
+            
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="flex items-center gap-2.5">
+                  <h2 class="font-display font-black text-2xl text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
+                    HSK {{ item.level }}
+                  </h2>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/60 dark:text-brand-text-dark/70">
+                    {{ item.name }}
+                  </span>
+                </div>
+                
+                <p class="text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/70 mt-2.5">
+                  @if (item.hasData) {
+                    <span class="text-brand-navy dark:text-white font-bold">{{ item.totalCards }}</span> từ • 
+                    <span class="text-brand-pink font-semibold">{{ item.mastered }}</span> đã thuộc
+                  } @else {
+                    Chưa có từ vựng
+                  }
+                </p>
+
+                @if (!item.hasData) {
+                  <span class="inline-flex items-center gap-1 mt-2 text-[11px] font-medium text-brand-navy/40 dark:text-white/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    Đang cập nhật
+                  </span>
+                }
+              </div>
+              
+              <!-- Progress Ring -->
+              <div class="relative w-13 h-13 flex-shrink-0">
+                <svg viewBox="0 0 48 48" class="w-full h-full transform -rotate-90">
+                  <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-navy/10 dark:stroke-white/10" />
+                  <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-pink progress-ring-fg"
+                          stroke-linecap="round"
+                          [style.stroke-dasharray]="'125.6'"
+                          [style.stroke-dashoffset]="getDashOffset(item.mastered, item.totalCards)" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-[11px] font-extrabold text-brand-navy dark:text-white font-display">
+                    {{ getPercent(item.mastered, item.totalCards) }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+      
+      <!-- Footer actions -->
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-brand-navy/10 dark:border-white/10 pt-6">
+        <a routerLink="/flashcards/manage" class="text-sm font-semibold text-brand-pink hover:text-brand-navy dark:hover:text-white transition-colors duration-200 flex items-center gap-1.5">
+          <span>Trang quản lý từ vựng dành cho Ops</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+
+        <button (click)="exportProgress()" class="px-4 py-2 bg-white/80 dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 hover:bg-brand-navy/5 dark:hover:bg-white/10 rounded-full text-xs sm:text-sm font-semibold text-brand-navy dark:text-white shadow-sm transition-colors duration-200 cursor-pointer flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-navy/70 dark:text-white/70">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Sao lưu tiến độ học
+        </button>
+      </div>
+    }
+  </div>
+</app-flashcard-shell>

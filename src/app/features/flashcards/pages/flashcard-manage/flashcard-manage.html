@@ -1,0 +1,337 @@
+<app-flashcard-shell pageTitle="Quản lý từ vựng" backLabel="Flashcard HSK">
+  <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
+    
+    <!-- Tab Bar -->
+    <div class="flex flex-wrap gap-2 p-1.5 bg-brand-navy/5 dark:bg-white/5 rounded-full inline-flex border border-brand-navy/5 dark:border-white/10">
+      <button 
+        (click)="activeTab.set('add')"
+        [class.bg-brand-pink]="activeTab() === 'add'"
+        [class.text-white]="activeTab() === 'add'"
+        [class.shadow-md]="activeTab() === 'add'"
+        [class.text-brand-navy/70]="activeTab() !== 'add'"
+        [class.dark:text-brand-text-dark/70]="activeTab() !== 'add'"
+        [class.hover:bg-brand-navy/5]="activeTab() !== 'add'"
+        [class.dark:hover:bg-white/5]="activeTab() !== 'add'"
+        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Thêm từ
+      </button>
+      <button 
+        (click)="activeTab.set('import')"
+        [class.bg-brand-pink]="activeTab() === 'import'"
+        [class.text-white]="activeTab() === 'import'"
+        [class.shadow-md]="activeTab() === 'import'"
+        [class.text-brand-navy/70]="activeTab() !== 'import'"
+        [class.dark:text-brand-text-dark/70]="activeTab() !== 'import'"
+        [class.hover:bg-brand-navy/5]="activeTab() !== 'import'"
+        [class.dark:hover:bg-white/5]="activeTab() !== 'import'"
+        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        Import
+      </button>
+      <button 
+        (click)="activeTab.set('browse')"
+        [class.bg-brand-pink]="activeTab() === 'browse'"
+        [class.text-white]="activeTab() === 'browse'"
+        [class.shadow-md]="activeTab() === 'browse'"
+        [class.text-brand-navy/70]="activeTab() !== 'browse'"
+        [class.dark:text-brand-text-dark/70]="activeTab() !== 'browse'"
+        [class.hover:bg-brand-navy/5]="activeTab() !== 'browse'"
+        [class.dark:hover:bg-white/5]="activeTab() !== 'browse'"
+        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+        </svg>
+        Duyệt & Sửa
+      </button>
+    </div>
+
+    <!-- TAB 1: Thêm từ -->
+    @if (activeTab() === 'add') {
+      <div class="backdrop-blur-md bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 shadow-xl shadow-brand-navy/5 dark:shadow-[0_12px_32px_rgba(0,0,0,0.3)] rounded-3xl p-6 md:p-8 space-y-6">
+        
+        @if (addStatus()) {
+          <div [class.bg-green-50]="addStatus()?.type === 'success'"
+               [class.text-green-800]="addStatus()?.type === 'success'"
+               [class.border-green-200]="addStatus()?.type === 'success'"
+               [class.dark:bg-green-950/40]="addStatus()?.type === 'success'"
+               [class.dark:text-green-300]="addStatus()?.type === 'success'"
+               [class.dark:border-green-800/40]="addStatus()?.type === 'success'"
+               [class.bg-red-50]="addStatus()?.type === 'error'"
+               [class.text-red-800]="addStatus()?.type === 'error'"
+               [class.border-red-200]="addStatus()?.type === 'error'"
+               [class.dark:bg-red-950/40]="addStatus()?.type === 'error'"
+               [class.dark:text-red-300]="addStatus()?.type === 'error'"
+               [class.dark:border-red-800/40]="addStatus()?.type === 'error'"
+               class="px-4 py-3 rounded-2xl text-sm font-semibold border flex items-center gap-2.5">
+            @if (addStatus()?.type === 'success') {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            }
+            <span>{{ addStatus()?.msg }}</span>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Hán tự *</label>
+            <input type="text" [ngModel]="newHanzi()" (ngModelChange)="newHanzi.set($event)" placeholder="ví dụ: 你好" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all font-medium text-lg text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;">
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Pinyin *</label>
+            <input type="text" [ngModel]="newPinyin()" (ngModelChange)="newPinyin.set($event)" placeholder="ví dụ: nǐ hǎo" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Nghĩa *</label>
+            <input type="text" [ngModel]="newMeaning()" (ngModelChange)="newMeaning.set($event)" placeholder="ví dụ: xin chào" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+          </div>
+        </div>
+
+        <div class="space-y-2 max-w-xs">
+          <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Cấp độ HSK *</label>
+          <select [ngModel]="newLevel()" (ngModelChange)="newLevel.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
+            <option [value]="1">HSK 1 (一级)</option>
+            <option [value]="2">HSK 2 (二级)</option>
+            <option [value]="3">HSK 3 (三级)</option>
+            <option [value]="4">HSK 4 (四级)</option>
+            <option [value]="5">HSK 5 (五级)</option>
+            <option [value]="6">HSK 6 (六级)</option>
+            <option [value]="7">HSK 7 (七级)</option>
+            <option [value]="8">HSK 8 (八级)</option>
+            <option [value]="9">HSK 9 (九级)</option>
+          </select>
+        </div>
+
+        <div class="border-t border-brand-navy/10 dark:border-white/10 pt-6 space-y-6">
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-brand-text-dark/50">Ví dụ câu (Tùy chọn)</h3>
+          
+          <div class="space-y-2">
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Câu ví dụ (Hán tự)</label>
+            <textarea [ngModel]="newExample()" (ngModelChange)="newExample.set($event)" rows="2" placeholder="ví dụ: 你好，我叫小明。" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;"></textarea>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Pinyin ví dụ</label>
+              <input type="text" [ngModel]="newExamplePinyin()" (ngModelChange)="newExamplePinyin.set($event)" placeholder="ví dụ: Nǐ hǎo, wǒ jiào Xiǎo Míng." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Nghĩa ví dụ</label>
+              <input type="text" [ngModel]="newExampleMeaning()" (ngModelChange)="newExampleMeaning.set($event)" placeholder="ví dụ: Xin chào, tôi tên là Tiểu Minh." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-[#1E1E45] p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-end">
+          <button (click)="submitCard()" [disabled]="addLoading()" class="bg-brand-pink text-white rounded-full px-8 py-3.5 font-bold hover:bg-brand-pink/90 disabled:opacity-50 transition-all hover:-translate-y-0.5 shadow-md shadow-brand-pink/25 cursor-pointer flex items-center gap-2">
+            @if (addLoading()) {
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Đang lưu vào DB...</span>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span>Lưu từ vựng</span>
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- TAB 2: Import -->
+    @if (activeTab() === 'import') {
+      <div class="space-y-6">
+        <!-- Template Download Section -->
+        <div class="flex flex-wrap items-center justify-between gap-4 p-5 bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm">
+          <div>
+            <h3 class="font-bold text-sm text-brand-navy dark:text-white">Tải file mẫu để soạn từ vựng</h3>
+            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">Cột bắt buộc: hanzi, pinyin, meaning, hsk_level</p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button (click)="downloadTemplate('csv')" class="px-4 py-2 rounded-full border border-brand-navy/15 dark:border-white/15 hover:border-brand-pink hover:text-brand-pink font-semibold text-xs sm:text-sm transition-colors bg-white/80 dark:bg-[#1E1E45] text-brand-navy dark:text-white cursor-pointer flex items-center gap-1.5 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-pink">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Tải mẫu CSV
+            </button>
+            <button (click)="downloadTemplate('xlsx')" class="px-4 py-2 rounded-full border border-brand-navy/15 dark:border-white/15 hover:border-brand-pink hover:text-brand-pink font-semibold text-xs sm:text-sm transition-colors bg-white/80 dark:bg-[#1E1E45] text-brand-navy dark:text-white cursor-pointer flex items-center gap-1.5 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Tải mẫu Excel (XLSX)
+            </button>
+          </div>
+        </div>
+
+        @if (importStatus()) {
+          <div [class.bg-green-50]="importStatus()?.type === 'success'"
+               [class.text-green-800]="importStatus()?.type === 'success'"
+               [class.border-green-200]="importStatus()?.type === 'success'"
+               [class.dark:bg-green-950/40]="importStatus()?.type === 'success'"
+               [class.dark:text-green-300]="importStatus()?.type === 'success'"
+               [class.dark:border-green-800/40]="importStatus()?.type === 'success'"
+               [class.bg-red-50]="importStatus()?.type === 'error'"
+               [class.text-red-800]="importStatus()?.type === 'error'"
+               [class.border-red-200]="importStatus()?.type === 'error'"
+               [class.dark:bg-red-950/40]="importStatus()?.type === 'error'"
+               [class.dark:text-red-300]="importStatus()?.type === 'error'"
+               [class.dark:border-red-800/40]="importStatus()?.type === 'error'"
+               class="px-4 py-3 rounded-2xl text-sm font-semibold border flex items-center gap-2.5">
+            <span>{{ importStatus()?.msg }}</span>
+          </div>
+        }
+
+        @if (!showPreview()) {
+          <div 
+            class="drop-zone border-2 border-dashed border-brand-navy/20 dark:border-white/20 rounded-3xl p-12 sm:p-16 flex flex-col items-center justify-center text-center transition-all bg-white/60 dark:bg-[#252554] backdrop-blur-sm shadow-sm"
+            [class.drag-over]="dragOver()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onFileDrop($event)">
+            
+            <div class="w-16 h-16 rounded-2xl bg-brand-pink/10 flex items-center justify-center mb-4 text-brand-pink">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+              </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg text-brand-navy dark:text-white mb-1.5">Kéo thả file vào đây</h3>
+            <p class="text-brand-navy/60 dark:text-brand-text-dark/70 text-xs sm:text-sm mb-6 max-w-sm">
+              Hỗ trợ định dạng .csv, .xlsx, .xls. Hệ thống sẽ kiểm tra và hiển thị Preview Gate trước khi lưu.
+            </p>
+            
+            <label class="cursor-pointer bg-brand-navy dark:bg-white text-white dark:text-brand-navy rounded-full px-6 py-2.5 font-bold text-sm hover:opacity-90 transition-opacity shadow-md">
+              Chọn file từ máy
+              <input type="file" accept=".csv,.xlsx,.xls" (change)="onFileSelected($event)" class="hidden">
+            </label>
+
+            @if (importFile()) {
+              <p class="mt-4 text-xs font-semibold text-brand-pink">
+                Đã chọn: {{ importFile()?.name }}
+              </p>
+            }
+          </div>
+        } @else {
+          <app-import-preview 
+            [rows]="parsedRows()"
+            (confirm)="onImportConfirm($event)"
+            (cancel)="cancelImport()">
+          </app-import-preview>
+        }
+      </div>
+    }
+
+    <!-- TAB 3: Duyệt & Sửa -->
+    @if (activeTab() === 'browse') {
+      <div class="space-y-4">
+        <!-- Controls -->
+        <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+          <div class="flex flex-wrap gap-1.5">
+            <button (click)="setBrowseLevel(0)" [class.bg-brand-pink]="browseLevel() === 0" [class.text-white]="browseLevel() === 0" class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 transition-colors cursor-pointer">Tất cả</button>
+            @for (level of [1,2,3,4,5,6,7,8,9]; track level) {
+              <button (click)="setBrowseLevel(level)" [class.bg-brand-pink]="browseLevel() === level" [class.text-white]="browseLevel() === level" class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer">HSK {{ level }}</button>
+            }
+          </div>
+
+          <div class="flex items-center gap-3 w-full lg:w-auto">
+            <div class="relative flex-1 lg:w-64">
+              <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Tìm Hán tự, pinyin, nghĩa..." class="pl-9 pr-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white dark:bg-[#252554] focus:outline-none focus:ring-2 focus:ring-brand-pink/30 text-xs sm:text-sm w-full text-brand-navy dark:text-white shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-navy/40 dark:text-white/40 absolute left-3 top-2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </div>
+            
+            <button (click)="exportCurrentLevel()" class="px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 hover:border-brand-pink font-semibold text-xs sm:text-sm whitespace-nowrap bg-white dark:bg-[#252554] text-brand-navy dark:text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Xuất JSON
+            </button>
+
+            @if (selectedIds().size > 0) {
+              <button (click)="deleteSelected()" class="px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                Xóa {{ selectedIds().size }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="backdrop-blur-md bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-3xl overflow-hidden overflow-x-auto shadow-xl shadow-brand-navy/5 dark:shadow-[0_12px_32px_rgba(0,0,0,0.3)]">
+          @if (browseLoading()) {
+            <div class="p-12 text-center text-brand-navy/50 dark:text-brand-text-dark/50">
+              <p>Đang tải từ vựng...</p>
+            </div>
+          } @else if (filteredBrowseCards().length > 0) {
+            <table class="w-full text-left text-sm divide-y divide-brand-navy/5 dark:divide-white/10">
+              <thead class="bg-brand-navy/5 dark:bg-white/5 text-brand-navy/60 dark:text-brand-text-dark/70 font-bold text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="p-4 w-12"></th>
+                  <th class="p-4 w-16">ID</th>
+                  <th class="p-4">Hán tự</th>
+                  <th class="p-4">Pinyin</th>
+                  <th class="p-4">Nghĩa</th>
+                  <th class="p-4 text-center">HSK</th>
+                  <th class="p-4 max-w-xs">Ví dụ</th>
+                  <th class="p-4 w-20 text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-brand-navy/5 dark:divide-white/10 font-medium">
+                @for (card of filteredBrowseCards(); track card.id ?? card.hanzi) {
+                  <tr class="hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors">
+                    <td class="p-4">
+                      @if (card.id) {
+                        <input type="checkbox" [checked]="selectedIds().has(card.id)" (change)="toggleSelection(card.id)" class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer border-brand-navy/20">
+                      }
+                    </td>
+                    <td class="p-4 text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">#{{ card.id || '-' }}</td>
+                    <td class="p-4 font-bold text-lg text-brand-navy dark:text-white" style="font-family: 'Noto Sans SC', sans-serif;">{{ card.hanzi }}</td>
+                    <td class="p-4 text-brand-pink font-semibold">{{ card.pinyin }}</td>
+                    <td class="p-4 text-brand-navy dark:text-brand-text-dark">{{ card.meaning }}</td>
+                    <td class="p-4 text-center">
+                      <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">{{ card.hsk_level }}</span>
+                    </td>
+                    <td class="p-4 text-brand-navy/60 dark:text-brand-text-dark/70 truncate max-w-xs text-xs" [title]="card.example || ''">
+                      {{ card.example || '-' }}
+                    </td>
+                    <td class="p-4 text-center">
+                      @if (card.id) {
+                        <button (click)="deleteCard(card.id)" class="p-2 text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer" title="Xóa từ này">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                          </svg>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="p-16 text-center text-brand-navy/50 dark:text-brand-text-dark/50">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-12 h-12 mx-auto mb-3 opacity-40">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
+              <p class="font-medium text-sm">Chưa có từ vựng. Thêm từ mới hoặc import từ file mẫu.</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</app-flashcard-shell>

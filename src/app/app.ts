@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { HeaderComponent } from './components/header/header';
 import { HeroComponent } from './components/hero/hero';
 import { AboutComponent } from './components/about/about';
@@ -12,6 +15,7 @@ import { RegisterModalComponent } from './components/shared/register-modal/regis
 @Component({
   selector: 'app-root',
   imports: [
+    RouterOutlet,
     HeaderComponent,
     HeroComponent,
     AboutComponent,
@@ -20,9 +24,24 @@ import { RegisterModalComponent } from './components/shared/register-modal/regis
     GalleryComponent,
     FooterComponent,
     ScrollToTopComponent,
-    RegisterModalComponent
+    RegisterModalComponent,
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {}
+export class App {
+  private readonly router = inject(Router);
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  readonly isLandingPage = computed(() => {
+    const url = this.currentUrl();
+    return url === '/' || url === '' || url.startsWith('/#');
+  });
+}

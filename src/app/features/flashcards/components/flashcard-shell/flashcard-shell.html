@@ -1,0 +1,68 @@
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300">
+  <!-- Top bar -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-brand-dark/85 border-b border-brand-navy/5 dark:border-white/10 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Left: Logo + Back -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <a routerLink="/" class="flex items-center space-x-2.5 group" aria-label="Về trang chủ">
+          <div class="relative w-8 h-8 sm:w-9 sm:h-9 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <img src="android-chrome-192x192.png" width="32" height="32" alt="MCC Logo" class="object-contain" />
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm sm:text-base font-bold font-display tracking-tight text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300 leading-tight">
+              Mayo Creative
+            </span>
+            <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-brand-pink -mt-0.5">
+              Chinese
+            </span>
+          </div>
+        </a>
+
+        <!-- Badge: Đang phát triển -->
+        <span class="hidden xs:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          Đang phát triển
+        </span>
+
+        @if (showBack()) {
+          <span class="text-brand-navy/20 dark:text-white/20">|</span>
+          <a [routerLink]="backLink()" class="text-xs sm:text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/60 hover:text-brand-pink transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            {{ backLabel() }}
+          </a>
+        }
+      </div>
+
+      <!-- Center: Page title (desktop) -->
+      @if (pageTitle()) {
+        <span class="hidden md:block font-display font-bold text-brand-navy dark:text-white text-sm">
+          {{ pageTitle() }}
+        </span>
+      }
+
+      <!-- Right: Theme toggle -->
+      <button
+        (click)="theme.toggleTheme()"
+        class="p-2 rounded-xl text-brand-navy/60 dark:text-brand-text-dark/60 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+        [attr.aria-label]="theme.isDarkMode() ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'"
+      >
+        @if (theme.isDarkMode()) {
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-gold animate-pulse">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-navy">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+          </svg>
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <ng-content />
+  </div>
+</div>
