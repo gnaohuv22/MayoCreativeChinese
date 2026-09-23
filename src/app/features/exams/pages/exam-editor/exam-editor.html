@@ -1,0 +1,392 @@
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 px-4 sm:px-6 lg:px-8 transition-colors">
+  <div class="max-w-5xl mx-auto space-y-8">
+
+    <!-- Top Bar: Nút quay lại & Tiêu đề trang & Nút Lưu -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <a
+          routerLink="/exams/manage"
+          class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-pink hover:underline mb-2"
+        >
+          <app-icon name="arrow-left" size="xs" />
+          <span>Quay lại Quản lý đề thi</span>
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
+          {{ isEditMode() ? 'Chỉnh sửa đề thi' : 'Tạo mới đề thi HSK' }}
+        </h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+          Nhập cấu trúc đề thi, phân đoạn kỹ năng, bộ câu hỏi và file âm thanh/hình ảnh.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="saveExam()"
+          [disabled]="isSaving()"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-sm shadow-lg shadow-brand-pink/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
+        >
+          @if (isSaving()) {
+            <app-icon name="arrow-path" size="sm" customClass="animate-spin" />
+            <span>Đang lưu...</span>
+          } @else {
+            <app-icon name="check" size="sm" />
+            <span>Lưu đề thi</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (saveMessage()) {
+      <div
+        [class.bg-emerald-50]="saveStatus() === 'success'"
+        [class.text-emerald-700]="saveStatus() === 'success'"
+        [class.border-emerald-200]="saveStatus() === 'success'"
+        [class.bg-red-50]="saveStatus() === 'error'"
+        [class.text-red-700]="saveStatus() === 'error'"
+        [class.border-red-200]="saveStatus() === 'error'"
+        class="p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between"
+      >
+        <span>{{ saveMessage() }}</span>
+        <button type="button" (click)="saveMessage.set(null)" class="text-xs cursor-pointer">
+          <app-icon name="x-mark" size="xs" />
+        </button>
+      </div>
+    }
+
+    <!-- 1. THÔNG TIN CHUNG CỦA ĐỀ THI -->
+    <section class="p-6 rounded-3xl bg-white/80 dark:bg-brand-dark/80 border border-brand-navy/10 dark:border-white/10 shadow-sm backdrop-blur-md space-y-6">
+      <div class="flex items-center gap-3 pb-4 border-b border-brand-navy/10 dark:border-white/10">
+        <div class="w-8 h-8 rounded-xl bg-brand-pink/10 text-brand-pink flex items-center justify-center">
+          <app-icon name="document-text" size="sm" />
+        </div>
+        <h2 class="text-lg font-bold text-brand-navy dark:text-white">1. Thông tin chung của đề thi</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Tên đề thi -->
+        <div class="md:col-span-2">
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Tên đề thi <span class="text-brand-pink">*</span>:
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="exam.title"
+            placeholder="VD: HSK 3 — Đề thi thử số 01"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          />
+        </div>
+
+        <!-- Cấp độ HSK (1-9) -->
+        <div>
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Cấp độ HSK:
+          </label>
+          <select
+            [(ngModel)]="exam.hsk_level"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          >
+            @for (lvl of [1,2,3,4,5,6,7,8,9]; track lvl) {
+              <option [value]="lvl">HSK {{ lvl }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Phiên bản HSK (2.0 vs 3.0) -->
+        <div>
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Phiên bản chuẩn:
+          </label>
+          <select
+            [(ngModel)]="exam.hsk_version"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          >
+            <option value="2.0">HSK 2.0 (Cũ - 6 cấp)</option>
+            <option value="3.0">HSK 3.0 (Mới - 9 cấp)</option>
+          </select>
+        </div>
+
+        <!-- Thời gian làm bài -->
+        <div>
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Thời gian (phút):
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="exam.duration_mins"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          />
+        </div>
+
+        <!-- Điểm tối đa -->
+        <div>
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Điểm tối đa:
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="exam.total_score"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          />
+        </div>
+
+        <!-- Điểm qua môn -->
+        <div>
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+            Điểm qua môn (Passing):
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="exam.passing_score"
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          />
+        </div>
+
+        <!-- Trạng thái xuất bản -->
+        <div class="flex items-center pt-5">
+          <label class="inline-flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              [(ngModel)]="exam.is_published"
+              class="w-5 h-5 rounded text-brand-pink focus:ring-brand-pink"
+            />
+            <span class="text-xs font-bold text-brand-navy dark:text-white">
+              Công khai đề thi (Publish)
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Giới thiệu / Mô tả đề thi -->
+      <div>
+        <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+          Mô tả & Hướng dẫn làm bài chung:
+        </label>
+        <textarea
+          rows="2"
+          [(ngModel)]="exam.description"
+          placeholder="Giới thiệu nội dung đề thi, đối tượng học viên hoặc dặn dò..."
+          class="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+        ></textarea>
+      </div>
+    </section>
+
+    <!-- 2. CÁC PHẦN THI (SECTIONS: NGHE, ĐỌC, VIẾT) -->
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-brand-pink/10 text-brand-pink flex items-center justify-center">
+            <app-icon name="book-open" size="sm" />
+          </div>
+          <h2 class="text-lg font-bold text-brand-navy dark:text-white">
+            2. Các phần thi ({{ exam.sections?.length || 0 }} phần)
+          </h2>
+        </div>
+
+        <!-- Nút thêm phần thi -->
+        <div class="flex gap-2">
+          <button
+            type="button"
+            (click)="addSection('listening')"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-brand-pink bg-brand-pink/10 hover:bg-brand-pink/20 border border-brand-pink/30 transition-all cursor-pointer"
+          >
+            <app-icon name="audio" size="xs" />
+            <span>+ Nghe hiểu</span>
+          </button>
+          <button
+            type="button"
+            (click)="addSection('reading')"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer"
+          >
+            <app-icon name="book-open" size="xs" />
+            <span>+ Đọc hiểu</span>
+          </button>
+          <button
+            type="button"
+            (click)="addSection('writing')"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 transition-all cursor-pointer"
+          >
+            <app-icon name="pencil" size="xs" />
+            <span>+ Viết</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Danh sách từng Section -->
+      @for (sec of exam.sections; track sec.sort_order; let sIdx = $index) {
+        <div class="p-6 rounded-3xl bg-white/90 dark:bg-brand-dark/90 border border-brand-navy/10 dark:border-white/10 shadow-sm space-y-6">
+          <!-- Section Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand-navy/10 dark:border-white/10">
+            <div class="flex items-center gap-3 flex-1">
+              <div class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-brand-navy dark:text-white">
+                @if (sec.section_type === 'listening') {
+                  <app-icon name="audio" size="sm" />
+                } @else if (sec.section_type === 'reading') {
+                  <app-icon name="book-open" size="sm" />
+                } @else if (sec.section_type === 'writing') {
+                  <app-icon name="pencil" size="sm" />
+                } @else {
+                  <app-icon name="chat-bubble" size="sm" />
+                }
+              </div>
+              <input
+                type="text"
+                [(ngModel)]="sec.title"
+                class="text-base font-bold text-brand-navy dark:text-white bg-transparent border-b border-transparent hover:border-brand-pink/50 focus:border-brand-pink focus:outline-none flex-1"
+              />
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-zinc-600 dark:text-zinc-300">Điểm tối đa:</span>
+              <input
+                type="number"
+                [(ngModel)]="sec.max_score"
+                class="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10"
+              />
+              <button
+                type="button"
+                (click)="removeSection(sIdx)"
+                class="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <app-icon name="x-mark" size="xs" />
+                <span>Xoá phần này</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Audio tổng cho Section (đặc biệt là listening) -->
+          @if (sec.section_type === 'listening') {
+            <div class="p-3.5 rounded-2xl bg-brand-pink/5 border border-brand-pink/20 space-y-1.5">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-brand-pink">
+                <app-icon name="audio" size="xs" />
+                <span>File âm thanh tổng của phần Nghe (Full Audio):</span>
+              </label>
+              <app-audio-uploader
+                [audioUrl]="sec.audio_url || null"
+                (audioUrlChange)="sec.audio_url = $event || undefined"
+              />
+            </div>
+          }
+
+          <!-- Hướng dẫn phần thi -->
+          <div>
+            <input
+              type="text"
+              [(ngModel)]="sec.instructions"
+              placeholder="Hướng dẫn chung cho phần này (VD: Gồm 40 câu hỏi, thời gian 35 phút...)"
+              class="w-full text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+            />
+          </div>
+
+          <!-- DANH SÁCH CÁC PART TRONG SECTION -->
+          <div class="space-y-4 pl-0 sm:pl-4 border-l-0 sm:border-l-2 border-brand-pink/30">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold tracking-wide uppercase text-zinc-600 dark:text-zinc-300">
+                Các dạng bài (Parts) trong phần này:
+              </h3>
+              <button
+                type="button"
+                (click)="addPart(sec)"
+                class="inline-flex items-center gap-1 text-xs font-bold text-brand-pink hover:underline cursor-pointer"
+              >
+                <app-icon name="plus" size="xs" />
+                <span>Thêm Dạng bài (Part)</span>
+              </button>
+            </div>
+
+            @for (part of sec.parts; track part.sort_order; let pIdx = $index) {
+              <div class="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 space-y-4">
+                <!-- Part Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-white/10">
+                  <div class="flex-1 space-y-1">
+                    <input
+                      type="text"
+                      [(ngModel)]="part.title"
+                      placeholder="Tiêu đề Part (VD: Phần I: Câu 1-10)"
+                      class="w-full text-sm font-bold text-brand-navy dark:text-white bg-transparent border-b border-transparent hover:border-brand-pink/50 focus:border-brand-pink focus:outline-none"
+                    />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <!-- Chọn loại câu hỏi -->
+                    <select
+                      [(ngModel)]="part.question_type"
+                      class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                    >
+                      @for (key of questionTypeKeys; track key) {
+                        <option [value]="key">
+                          {{ questionTypeLabels[key].label }}
+                        </option>
+                      }
+                    </select>
+
+                    <button
+                      type="button"
+                      (click)="removePart(sec, pIdx)"
+                      class="p-1 text-xs text-red-500 hover:text-red-700 cursor-pointer"
+                      title="Xoá Part này"
+                    >
+                      <app-icon name="x-mark" size="xs" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Hướng dẫn cho Part -->
+                <input
+                  type="text"
+                  [(ngModel)]="part.instructions"
+                  placeholder="Hướng dẫn làm bài cho Part này..."
+                  class="w-full text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                />
+
+                <!-- DANH SÁCH CÂU HỎI TRONG PART -->
+                <div class="space-y-3 pt-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-brand-navy dark:text-white">
+                      Danh sách câu hỏi ({{ part.questions?.length || 0 }} câu):
+                    </span>
+                    <button
+                      type="button"
+                      (click)="addQuestion(part)"
+                      class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold text-white bg-brand-pink hover:bg-brand-pink/90 shadow-sm transition-all cursor-pointer"
+                    >
+                      <app-icon name="plus" size="xs" />
+                      <span>Thêm câu hỏi</span>
+                    </button>
+                  </div>
+
+                  @for (q of part.questions; track q.question_num; let qIdx = $index) {
+                    <app-question-editor
+                      [question]="q"
+                      [questionType]="part.question_type"
+                      (remove)="removeQuestion(part, qIdx)"
+                    />
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Bottom Save Button -->
+    <div class="pt-6 pb-12 flex justify-end">
+      <button
+        type="button"
+        (click)="saveExam()"
+        [disabled]="isSaving()"
+        class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-base shadow-xl shadow-brand-pink/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+      >
+        @if (isSaving()) {
+          <app-icon name="arrow-path" size="sm" customClass="animate-spin" />
+          <span>Đang lưu dữ liệu...</span>
+        } @else {
+          <app-icon name="check" size="sm" />
+          <span>Lưu đề thi HSK</span>
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,4 @@
+/* Styles for QuestionEditorComponent */
+:host {
+  display: block;
+}

@@ -1,0 +1,5 @@
+/* Styles for HskBadgeComponent */
+:host {
+  display: inline-flex;
+  align-items: center;
+}

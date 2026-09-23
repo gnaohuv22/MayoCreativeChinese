@@ -1,0 +1,147 @@
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-10 px-4 sm:px-6 lg:px-8 transition-colors">
+  <div class="max-w-6xl mx-auto space-y-10">
+
+    <!-- HERO BANNER -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-navy via-brand-navy to-brand-pink/80 text-white p-8 sm:p-12 shadow-xl">
+      <div class="relative z-10 max-w-2xl space-y-4">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-white/20 backdrop-blur-md border border-white/20">
+          <app-icon name="academic" size="xs" />
+          <span>HSK Mock Exams</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-pink"></span>
+          <span>Chuẩn quốc tế</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight font-display">
+          Luyện thi HSK <span class="text-brand-pink">Chuẩn hoá</span>
+        </h1>
+
+        <p class="text-sm sm:text-base text-white/80 leading-relaxed">
+          Trải nghiệm thi thử với format chuẩn HSK 2.0 và HSK 3.0 mới nhất. Kiểm tra toàn diện 3 kỹ năng Nghe hiểu, Đọc hiểu và Viết với hệ thống tính điểm tự động.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <a
+            routerLink="/exams/manage"
+            class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold bg-white text-brand-navy hover:bg-white/90 shadow-md hover:scale-105 active:scale-95 transition-all"
+          >
+            <app-icon name="pencil" size="xs" />
+            <span>Quản lý kho đề thi (Admin)</span>
+          </a>
+          <a
+            routerLink="/flashcards"
+            class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all"
+          >
+            <app-icon name="book-open" size="xs" />
+            <span>Ôn từ vựng Flashcards</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Trang trí nền -->
+      <div class="absolute -right-12 -bottom-12 w-80 h-80 bg-brand-pink/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute right-12 top-8 text-8xl opacity-10 select-none font-display">HSK</div>
+    </div>
+
+    <!-- BỘ LỌC CẤP ĐỘ & PHIÊN BẢN -->
+    <div class="space-y-4">
+      <!-- Level Tabs (HSK 1 - 9) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <button
+          type="button"
+          (click)="setLevel('all')"
+          [class.bg-brand-navy]="selectedLevel() === 'all'"
+          [class.text-white]="selectedLevel() === 'all'"
+          [class.bg-white]="selectedLevel() !== 'all'"
+          [class.text-brand-navy]="selectedLevel() !== 'all'"
+          class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm transition-all whitespace-nowrap cursor-pointer"
+        >
+          Tất cả cấp độ
+        </button>
+
+        @for (lvl of [1,2,3,4,5,6]; track lvl) {
+          <button
+            type="button"
+            (click)="setLevel(lvl)"
+            [class.bg-brand-pink]="selectedLevel() === lvl"
+            [class.text-white]="selectedLevel() === lvl"
+            [class.bg-white]="selectedLevel() !== lvl"
+            [class.text-brand-navy]="selectedLevel() !== lvl"
+            class="px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 dark:bg-white/5 dark:text-white shadow-sm transition-all whitespace-nowrap cursor-pointer"
+          >
+            HSK {{ lvl }}
+          </button>
+        }
+      </div>
+
+      <!-- Version Filter & Stats -->
+      <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/80 dark:bg-brand-dark/80 border border-brand-navy/10 dark:border-white/10 shadow-sm backdrop-blur-md">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-zinc-600 dark:text-zinc-300 font-semibold flex items-center gap-1">
+            <app-icon name="filter" size="xs" />
+            <span>Phiên bản:</span>
+          </span>
+          <button
+            type="button"
+            (click)="setVersion('all')"
+            [class.bg-brand-navy]="selectedVersion() === 'all'"
+            [class.text-white]="selectedVersion() === 'all'"
+            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            (click)="setVersion('2.0')"
+            [class.bg-brand-navy]="selectedVersion() === '2.0'"
+            [class.text-white]="selectedVersion() === '2.0'"
+            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+          >
+            HSK 2.0 (Tiêu chuẩn)
+          </button>
+          <button
+            type="button"
+            (click)="setVersion('3.0')"
+            [class.bg-brand-navy]="selectedVersion() === '3.0'"
+            [class.text-white]="selectedVersion() === '3.0'"
+            class="px-3 py-1 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/5 text-brand-navy dark:text-white transition-all cursor-pointer"
+          >
+            HSK 3.0 (Mới)
+          </button>
+        </div>
+
+        <div class="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+          Tìm thấy <strong class="text-brand-pink">{{ exams().length }}</strong> đề thi có sẵn
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID ĐỀ THI (Using generalized ExamCardComponent) -->
+    @if (isLoading()) {
+      <div class="py-20 text-center">
+        <app-icon name="arrow-path" size="lg" customClass="animate-spin text-brand-pink inline-block" />
+        <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-2 font-semibold">Đang tải danh sách đề thi...</p>
+      </div>
+    } @else if (exams().length === 0) {
+      <div class="py-16 text-center rounded-3xl bg-white/60 dark:bg-brand-dark/60 border border-dashed border-zinc-300 dark:border-white/10 space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 flex items-center justify-center mx-auto">
+          <app-icon name="book-open" size="lg" />
+        </div>
+        <h3 class="text-base font-bold text-brand-navy dark:text-white">Chưa có đề thi nào trong mục này</h3>
+        <p class="text-xs text-zinc-600 dark:text-zinc-300 max-w-sm mx-auto">
+          Các đề thi đang được biên soạn và cập nhật liên tục. Vui lòng quay lại sau hoặc chọn cấp độ khác.
+        </p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (item of exams(); track item.id) {
+          <app-exam-card
+            [exam]="item"
+            mode="learner"
+            (start)="startExam($event)"
+          />
+        }
+      </div>
+    }
+
+  </div>
+</div>

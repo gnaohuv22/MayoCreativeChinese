@@ -1,0 +1,167 @@
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 px-4 sm:px-6 lg:px-8 transition-colors">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- Top Header & Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-pink/15 text-brand-pink border border-brand-pink/30">
+            Admin & Ops
+          </span>
+          <span class="text-xs text-zinc-600 dark:text-zinc-300">Quản lý kho đề thi</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
+          Quản lý Đề thi HSK
+        </h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+          Tạo, chỉnh sửa, đăng tải đề thi thử HSK 2.0 và HSK 3.0 cho học viên Mayo Creative Chinese.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a
+          routerLink="/exams"
+          class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-all"
+        >
+          <app-icon name="eye" size="xs" />
+          <span>Xem giao diện học viên</span>
+        </a>
+        <a
+          routerLink="/exams/new"
+          class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs shadow-lg shadow-brand-pink/25 hover:scale-105 active:scale-95 transition-all"
+        >
+          <app-icon name="plus" size="xs" />
+          <span>Tạo đề thi mới</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- STATS BANNER (Using generalized StatCardComponent) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <app-stat-card
+        label="Tổng số đề thi"
+        [value]="exams().length"
+        icon="document-text"
+        color="navy"
+      />
+      <app-stat-card
+        label="Đề HSK 2.0"
+        [value]="countByVersion('2.0')"
+        icon="book-open"
+        color="pink"
+      />
+      <app-stat-card
+        label="Đề HSK 3.0"
+        [value]="countByVersion('3.0')"
+        icon="academic"
+        color="indigo"
+      />
+      <app-stat-card
+        label="Đã xuất bản"
+        [value]="countPublished()"
+        icon="check"
+        color="emerald"
+      />
+    </div>
+
+    <!-- BỘ LỌC TÌM KIẾM (FILTERS) -->
+    <div class="p-5 rounded-3xl bg-white/80 dark:bg-brand-dark/80 border border-brand-navy/10 dark:border-white/10 shadow-sm backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+        <!-- Tìm kiếm tên -->
+        <div class="relative flex-1 min-w-[200px]">
+          <input
+            type="text"
+            [(ngModel)]="filter.searchQuery"
+            (input)="loadExams()"
+            placeholder="Tìm theo tên đề thi hoặc mô tả..."
+            class="w-full text-xs pl-8 pr-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+          />
+          <div class="absolute left-2.5 top-2.5 text-zinc-600 dark:text-zinc-300 pointer-events-none">
+            <app-icon name="search" size="xs" />
+          </div>
+        </div>
+
+        <!-- Lọc Cấp độ HSK -->
+        <select
+          [(ngModel)]="filter.hsk_level"
+          (change)="loadExams()"
+          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+        >
+          <option value="all">Tất cả cấp độ HSK</option>
+          @for (lvl of [1,2,3,4,5,6,7,8,9]; track lvl) {
+            <option [value]="lvl">HSK {{ lvl }}</option>
+          }
+        </select>
+
+        <!-- Lọc Phiên bản -->
+        <select
+          [(ngModel)]="filter.hsk_version"
+          (change)="loadExams()"
+          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+        >
+          <option value="all">Tất cả phiên bản</option>
+          <option value="2.0">HSK 2.0 (Cũ)</option>
+          <option value="3.0">HSK 3.0 (Mới)</option>
+        </select>
+
+        <!-- Lọc Trạng thái -->
+        <select
+          [(ngModel)]="filter.is_published"
+          (change)="loadExams()"
+          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option [value]="true">Đã công khai</option>
+          <option [value]="false">Bản nháp</option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        (click)="resetFilters()"
+        class="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300 hover:text-brand-pink font-semibold transition-colors cursor-pointer"
+      >
+        <app-icon name="arrow-path" size="xs" />
+        <span>Đặt lại bộ lọc</span>
+      </button>
+    </div>
+
+    <!-- DANH SÁCH ĐỀ THI -->
+    @if (isLoading()) {
+      <div class="py-16 text-center">
+        <app-icon name="arrow-path" size="lg" customClass="animate-spin text-brand-pink inline-block" />
+        <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-2 font-semibold">Đang tải danh sách đề thi...</p>
+      </div>
+    } @else if (exams().length === 0) {
+      <div class="py-16 text-center rounded-3xl bg-white/60 dark:bg-brand-dark/60 border border-dashed border-zinc-300 dark:border-white/10 space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 flex items-center justify-center mx-auto">
+          <app-icon name="document-text" size="lg" />
+        </div>
+        <h3 class="text-base font-bold text-brand-navy dark:text-white">Chưa có đề thi nào phù hợp</h3>
+        <p class="text-xs text-zinc-600 dark:text-zinc-300 max-w-sm mx-auto">
+          Hãy bấm vào nút "Tạo đề thi mới" bên trên hoặc chạy script SQL seed data trong Supabase để nạp dữ liệu mẫu.
+        </p>
+        <a
+          routerLink="/exams/new"
+          class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-brand-pink text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
+        >
+          <app-icon name="plus" size="xs" />
+          <span>Tạo đề thi đầu tiên</span>
+        </a>
+      </div>
+    } @else {
+      <!-- Using generalized ExamCardComponent in admin mode -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (item of exams(); track item.id) {
+          <app-exam-card
+            [exam]="item"
+            mode="admin"
+            (togglePublish)="togglePublish($event)"
+            (delete)="deleteExam($event)"
+          />
+        }
+      </div>
+    }
+
+  </div>
+</div>

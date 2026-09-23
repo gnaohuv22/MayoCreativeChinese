@@ -1,0 +1,5 @@
+/* Styles for ExamCardComponent */
+:host {
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,204 @@
+<div class="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-brand-dark/90 border border-brand-navy/10 dark:border-white/10 shadow-sm space-y-4 transition-all">
+  <!-- Header câu hỏi: Số câu, Điểm, Nút xoá -->
+  <div class="flex items-center justify-between pb-3 border-b border-brand-navy/10 dark:border-white/10">
+    <div class="flex items-center gap-3">
+      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-brand-pink text-white font-bold text-sm shadow-sm">
+        {{ question().question_num }}
+      </span>
+      <span class="text-sm font-bold text-brand-navy dark:text-white">
+        Câu số {{ question().question_num }}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-xs text-brand-navy/80 dark:text-white/80">
+        <span>Điểm:</span>
+        <input
+          type="number"
+          step="0.5"
+          min="0"
+          [(ngModel)]="question().score"
+          class="w-16 px-2 py-1 text-center font-bold text-brand-pink rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 focus:outline-none focus:border-brand-pink"
+        />
+      </div>
+
+      <button
+        type="button"
+        (click)="remove.emit()"
+        class="inline-flex items-center gap-1 p-1.5 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer"
+        title="Xoá câu hỏi này"
+      >
+        <app-icon name="trash" size="xs" />
+        <span>Xoá</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Nội dung câu hỏi (Text / Đoạn văn / Ngữ cảnh) -->
+  <div>
+    <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+      Nội dung câu hỏi / Đoạn hội thoại / Ngữ cảnh:
+    </label>
+    <textarea
+      rows="3"
+      [(ngModel)]="question().content"
+      placeholder="Nhập đề bài, câu văn hoặc hội thoại tiếng Trung..."
+      class="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink transition-all font-sans"
+    ></textarea>
+  </div>
+
+  <!-- Đính kèm Audio & Hình ảnh cho câu hỏi -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+    <div class="p-3 rounded-xl bg-zinc-50/70 dark:bg-white/5 border border-zinc-200/70 dark:border-white/5">
+      <label class="flex items-center gap-1.5 text-xs font-semibold text-brand-navy dark:text-white mb-1.5">
+        <app-icon name="audio" size="xs" customClass="text-brand-pink" />
+        <span>Âm thanh câu hỏi (Listening):</span>
+      </label>
+      <app-audio-uploader
+        [audioUrl]="question().audio_url || null"
+        (audioUrlChange)="onAudioChange($event)"
+      />
+    </div>
+
+    <div class="p-3 rounded-xl bg-zinc-50/70 dark:bg-white/5 border border-zinc-200/70 dark:border-white/5">
+      <label class="flex items-center gap-1.5 text-xs font-semibold text-brand-navy dark:text-white mb-1.5">
+        <app-icon name="image" size="xs" customClass="text-brand-pink" />
+        <span>Hình ảnh minh họa:</span>
+      </label>
+      <app-image-uploader
+        [imageUrl]="question().image_url || null"
+        (imageUrlChange)="onImageChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Khu vực nhập đáp án tuỳ theo questionType -->
+  <div class="pt-2">
+    <!-- 1. single_choice: Danh sách lựa chọn A, B, C, D -->
+    @if (questionType() === 'single_choice') {
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-brand-navy dark:text-white">
+            Các phương án lựa chọn (chọn nút tròn để đặt đáp án đúng):
+          </label>
+          <button
+            type="button"
+            (click)="addOption()"
+            class="inline-flex items-center gap-1 text-xs font-bold text-brand-pink hover:text-brand-pink/80 px-2 py-1 rounded-lg hover:bg-brand-pink/10 transition-colors cursor-pointer"
+          >
+            <app-icon name="plus" size="xs" />
+            <span>Thêm lựa chọn</span>
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          @for (opt of question().options; track opt.label; let oIdx = $index) {
+            <div class="flex items-center gap-2 p-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
+              <!-- Radio chọn làm đáp án đúng -->
+              <button
+                type="button"
+                (click)="setCorrectOption(opt.label)"
+                [class.bg-brand-pink]="question().correct_answer === opt.label"
+                [class.text-white]="question().correct_answer === opt.label"
+                [class.border-brand-pink]="question().correct_answer === opt.label"
+                class="w-7 h-7 rounded-full border-2 text-xs font-bold flex items-center justify-center transition-all shadow-sm cursor-pointer"
+                title="Đặt làm đáp án đúng"
+              >
+                {{ opt.label }}
+              </button>
+
+              <!-- Nội dung option -->
+              <input
+                type="text"
+                [(ngModel)]="opt.content"
+                placeholder="Nội dung phương án {{ opt.label }}..."
+                class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+              />
+
+              <!-- Xoá option (chỉ khi > 2 options) -->
+              @if ((question().options?.length || 0) > 2) {
+                <button
+                  type="button"
+                  (click)="removeOption(oIdx)"
+                  class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-red-500 p-1 cursor-pointer"
+                  title="Xoá lựa chọn này"
+                >
+                  <app-icon name="x-mark" size="xs" />
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="text-xs text-zinc-600 dark:text-zinc-300">
+          Đáp án đúng hiện tại:
+          <span class="font-bold text-brand-pink ml-1">
+            {{ question().correct_answer || '(Chưa chọn)' }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- 2. true_false: Phán đoán Đúng / Sai -->
+    @if (questionType() === 'true_false') {
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-brand-navy dark:text-white">
+          Chọn đáp án chuẩn:
+        </label>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            (click)="question().correct_answer = 'true'"
+            [class.bg-emerald-500]="question().correct_answer === 'true'"
+            [class.text-white]="question().correct_answer === 'true'"
+            [class.border-emerald-500]="question().correct_answer === 'true'"
+            class="flex-1 py-2 px-4 rounded-xl border-2 border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <app-icon name="check" size="xs" />
+            <span>Đúng (对 - True)</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="question().correct_answer = 'false'"
+            [class.bg-red-500]="question().correct_answer === 'false'"
+            [class.text-white]="question().correct_answer === 'false'"
+            [class.border-red-500]="question().correct_answer === 'false'"
+            class="flex-1 py-2 px-4 rounded-xl border-2 border-red-500/30 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <app-icon name="x-mark" size="xs" />
+            <span>Sai (错 - False)</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- 3. fill_blank / ordering / short_answer / matching / essay -->
+    @if (questionType() !== 'single_choice' && questionType() !== 'true_false') {
+      <div>
+        <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+          Đáp án chuẩn (Từ điền / Thứ tự sắp xếp / Chữ Hán):
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="question().correct_answer"
+          [placeholder]="getAnswerPlaceholder()"
+          class="w-full text-xs p-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-mono focus:outline-none focus:border-brand-pink"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Lời giải thích và dịch nghĩa -->
+  <div>
+    <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
+      Lời giải thích / Dịch nghĩa & Từ vựng (hiển thị khi học viên xem đáp án):
+    </label>
+    <textarea
+      rows="2"
+      [(ngModel)]="question().explanation"
+      placeholder="Giải thích vì sao chọn đáp án này, phân tích ngữ pháp hoặc dịch câu..."
+      class="w-full text-xs p-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+    ></textarea>
+  </div>
+</div>

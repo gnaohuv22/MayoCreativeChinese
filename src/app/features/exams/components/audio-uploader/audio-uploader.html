@@ -1,0 +1,62 @@
+<div class="space-y-2">
+  <!-- Preview nếu đã có audio -->
+  @if (audioUrl()) {
+    <div class="flex items-center gap-3 p-3 bg-white/70 dark:bg-brand-dark/70 rounded-2xl border border-brand-pink/20 backdrop-blur-sm">
+      <div class="w-8 h-8 rounded-full bg-brand-pink/10 text-brand-pink flex items-center justify-center shrink-0">
+        <app-icon name="audio" size="sm" />
+      </div>
+      <audio controls class="h-8 max-w-xs flex-1" [src]="audioUrl()"></audio>
+      <button
+        type="button"
+        (click)="removeAudio()"
+        class="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-1 cursor-pointer"
+        title="Xoá audio"
+      >
+        <app-icon name="x-mark" size="xs" />
+        <span>Xoá</span>
+      </button>
+    </div>
+  } @else {
+    <!-- Khu vực upload hoặc dán link -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <!-- Nút chọn file upload -->
+      <label class="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-brand-navy dark:text-white bg-brand-pink/10 hover:bg-brand-pink/20 border border-brand-pink/30 transition-all">
+        @if (isUploading()) {
+          <app-icon name="arrow-path" size="xs" customClass="animate-spin text-brand-pink" />
+          <span>Đang tải lên...</span>
+        } @else {
+          <app-icon name="upload" size="xs" customClass="text-brand-pink" />
+          <span>Tải file Audio (.mp3, .wav, .m4a)</span>
+        }
+        <input
+          type="file"
+          accept="audio/*"
+          class="hidden"
+          [disabled]="isUploading()"
+          (change)="onFileSelected($event)"
+        />
+      </label>
+
+      <span class="text-xs text-zinc-600 dark:text-zinc-300 text-center font-medium">hoặc</span>
+
+      <!-- Nhập URL trực tiếp -->
+      <div class="relative flex-1">
+        <input
+          type="url"
+          placeholder="Dán link audio trực tiếp (URL)..."
+          [value]="directUrl()"
+          (input)="onDirectUrlChange($event)"
+          (blur)="applyDirectUrl()"
+          class="w-full text-xs pl-8 pr-3 py-2 rounded-xl bg-white/80 dark:bg-brand-dark/80 border border-zinc-300 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+        />
+        <div class="absolute left-2.5 top-2.5 text-zinc-600 dark:text-zinc-300 pointer-events-none">
+          <app-icon name="link" size="xs" />
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (uploadError()) {
+    <p class="text-xs text-red-500">{{ uploadError() }}</p>
+  }
+</div>

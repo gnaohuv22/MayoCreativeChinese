@@ -6,4 +6,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/flashcards/flashcard.routes').then(m => m.flashcardRoutes),
   },
+  {
+    path: 'exams',
+    loadChildren: () =>
+      import('./features/exams/exam.routes').then(m => m.examRoutes),
+  },
 ];

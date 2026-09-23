@@ -1,0 +1,114 @@
+<div class="p-6 rounded-3xl bg-white/90 dark:bg-brand-dark/90 border border-brand-navy/10 dark:border-white/10 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col justify-between space-y-5">
+  <div class="space-y-3.5">
+    <!-- Top row: Badges and Admin Controls -->
+    <div class="flex items-center justify-between">
+      <app-hsk-badge [level]="exam().hsk_level" [version]="exam().hsk_version" />
+
+      @if (mode() === 'admin') {
+        <!-- Toggle Publish Switch -->
+        <button
+          type="button"
+          (click)="togglePublish.emit(exam())"
+          [class.bg-emerald-500]="exam().is_published"
+          [class.bg-zinc-300]="!exam().is_published"
+          class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none cursor-pointer"
+          [title]="exam().is_published ? 'Bấm để gỡ bỏ xuất bản' : 'Bấm để xuất bản'"
+        >
+          <span
+            [class.translate-x-4]="exam().is_published"
+            [class.translate-x-1]="!exam().is_published"
+            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow"
+          ></span>
+        </button>
+      } @else {
+        <span class="text-xs text-brand-pink font-semibold flex items-center gap-1">
+          <app-icon name="sparkles" size="xs" />
+          <span>Tiêu chuẩn</span>
+        </span>
+      }
+    </div>
+
+    <!-- Title -->
+    <h3 class="text-base sm:text-lg font-bold text-brand-navy dark:text-white leading-snug line-clamp-2">
+      {{ exam().title }}
+    </h3>
+
+    <!-- Description -->
+    @if (exam().description) {
+      <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed line-clamp-2">
+        {{ exam().description }}
+      </p>
+    }
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-3 gap-2 pt-3 text-center text-xs border-t border-zinc-100 dark:border-white/5">
+      <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5 flex flex-col items-center">
+        <div class="flex items-center gap-1 text-[10px] text-zinc-600 dark:text-zinc-300">
+          <app-icon name="clock" size="xs" />
+          <span>Thời gian</span>
+        </div>
+        <div class="font-bold text-brand-navy dark:text-white mt-0.5">{{ exam().duration_mins }}p</div>
+      </div>
+
+      <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5 flex flex-col items-center">
+        <div class="flex items-center gap-1 text-[10px] text-zinc-600 dark:text-zinc-300">
+          <app-icon name="document-text" size="xs" />
+          <span>Số câu</span>
+        </div>
+        <div class="font-bold text-brand-pink mt-0.5">{{ exam().question_count || 0 }} câu</div>
+      </div>
+
+      <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5 flex flex-col items-center">
+        <div class="flex items-center gap-1 text-[10px] text-zinc-600 dark:text-zinc-300">
+          <app-icon name="trophy" size="xs" />
+          <span>Điểm đậu</span>
+        </div>
+        <div class="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+          {{ exam().passing_score }}/{{ exam().total_score }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Actions -->
+  @if (mode() === 'learner') {
+    <button
+      type="button"
+      (click)="start.emit(exam())"
+      class="w-full py-3 rounded-2xl bg-brand-navy hover:bg-brand-navy/90 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer"
+    >
+      <span>Bắt đầu làm bài</span>
+      <app-icon name="arrow-right" size="xs" customClass="transition-transform group-hover:translate-x-1" />
+    </button>
+  } @else {
+    <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-white/5">
+      <span class="text-[11px] font-medium flex items-center gap-1"
+            [class.text-emerald-600]="exam().is_published"
+            [class.dark:text-emerald-400]="exam().is_published"
+            [class.text-zinc-600]="!exam().is_published"
+            [class.dark:text-zinc-300]="!exam().is_published">
+        <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="exam().is_published" [class.bg-zinc-400]="!exam().is_published"></span>
+        {{ exam().is_published ? 'Đã công khai' : 'Bản nháp' }}
+      </span>
+
+      <div class="flex items-center gap-2">
+        <a
+          [routerLink]="['/exams', exam().id, 'edit']"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-colors"
+        >
+          <app-icon name="pencil" size="xs" />
+          <span>Sửa</span>
+        </a>
+
+        <button
+          type="button"
+          (click)="delete.emit(exam())"
+          class="p-1.5 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+          title="Xoá đề thi"
+        >
+          <app-icon name="trash" size="xs" />
+        </button>
+      </div>
+    </div>
+  }
+</div>
