@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FlashcardShellComponent } from '../../components/flashcard-shell/flashcard-shell';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { exportProgressJson } from '../../utils/template-generator.util';
@@ -18,7 +18,7 @@ export interface LevelInfo {
 @Component({
   selector: 'app-flashcard-hub',
   standalone: true,
-  imports: [RouterLink, FlashcardShellComponent, AppIconComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent],
   templateUrl: './flashcard-hub.html',
   styleUrl: './flashcard-hub.css',
 })

@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal, HostListener } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FlashcardShellComponent } from '../../components/flashcard-shell/flashcard-shell';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabCardComponent } from '../../components/vocab-card/vocab-card';
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
@@ -9,7 +9,7 @@ import type { VocabCard, CardProgress } from '../../models/vocab-card.model';
 @Component({
   selector: 'app-flashcard-study',
   standalone: true,
-  imports: [FlashcardShellComponent, VocabCardComponent, RouterLink],
+  imports: [NavHeaderComponent, VocabCardComponent, RouterLink],
   templateUrl: './flashcard-study.html',
   styleUrl: './flashcard-study.css',
 })

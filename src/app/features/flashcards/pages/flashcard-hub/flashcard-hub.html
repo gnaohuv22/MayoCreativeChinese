@@ -1,5 +1,7 @@
-<app-flashcard-shell [showBack]="false">
-  <div class="px-4 py-6 sm:px-6 sm:py-8 max-w-6xl mx-auto">
+<app-nav-header activeModule="flashcards" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-6 sm:py-10">
+  <div class="px-4 sm:px-6 max-w-6xl mx-auto">
     <!-- Header banner -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
       <div>
@@ -11,7 +13,7 @@
         </p>
       </div>
 
-      <a routerLink="/flashcards/manage" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white/80 dark:bg-[#252554] text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/40 text-xs sm:text-sm font-semibold shadow-xs transition-all duration-200">
+      <a routerLink="/flashcards/manage" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-navy/10 dark:border-white/15 bg-white/80 dark:bg-white/5 text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/40 text-xs sm:text-sm font-semibold shadow-xs transition-all duration-200">
         <app-icon name="cog" size="sm" customClass="text-brand-pink" />
         <span>Quản lý từ vựng</span>
       </a>
@@ -20,7 +22,7 @@
     @if (loading()) {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
         @for (i of [1,2,3,4,5,6,7,8,9]; track i) {
-          <div class="bg-white/90 dark:bg-[#252554] border border-brand-navy/10 dark:border-white/10 rounded-2xl p-6 h-[120px] shadow-sm animate-pulse">
+          <div class="bg-white/90 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 rounded-2xl p-6 h-[120px] shadow-sm animate-pulse">
             <div class="flex justify-between items-center h-full">
               <div class="space-y-3 w-1/2">
                 <div class="h-6 bg-brand-navy/10 dark:bg-white/10 rounded-md w-3/4"></div>
@@ -36,7 +38,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
         @for (item of levelData(); track item.level) {
           <a [routerLink]="item.hasData ? ['/flashcards/hsk', item.level] : null"
-             class="group relative block bg-white dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all duration-200 ease-out"
+             class="group relative block bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-none transition-all duration-200 ease-out"
              [class.opacity-50]="!item.hasData"
              [class.cursor-not-allowed]="!item.hasData"
              [class.hover:-translate-y-1]="item.hasData"
@@ -103,7 +105,7 @@
           </svg>
         </a>
 
-        <button (click)="exportProgress()" class="px-4 py-2 bg-white/80 dark:bg-[#252554] border border-brand-navy/10 dark:border-white/15 hover:bg-brand-navy/5 dark:hover:bg-white/10 rounded-full text-xs sm:text-sm font-semibold text-brand-navy dark:text-white shadow-sm transition-colors duration-200 cursor-pointer flex items-center gap-1.5">
+        <button (click)="exportProgress()" class="px-4 py-2 bg-white/80 dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 hover:bg-brand-navy/5 dark:hover:bg-white/10 rounded-full text-xs sm:text-sm font-semibold text-brand-navy dark:text-white shadow-sm transition-colors duration-200 cursor-pointer flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-navy/70 dark:text-white/70">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
@@ -112,4 +114,4 @@
       </div>
     }
   </div>
-</app-flashcard-shell>
+</div>

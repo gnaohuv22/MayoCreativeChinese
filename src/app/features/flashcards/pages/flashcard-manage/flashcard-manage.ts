@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VocabService } from '../../services/vocab.service';
-import { FlashcardShellComponent } from '../../components/flashcard-shell/flashcard-shell';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
@@ -12,7 +12,7 @@ import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../u
 @Component({
   selector: 'app-flashcard-manage',
   standalone: true,
-  imports: [FormsModule, FlashcardShellComponent, ImportPreviewComponent, AppIconComponent],
+  imports: [FormsModule, NavHeaderComponent, ImportPreviewComponent, AppIconComponent],
   templateUrl: './flashcard-manage.html',
   styleUrl: './flashcard-manage.css',
 })

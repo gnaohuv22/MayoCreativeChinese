@@ -89,7 +89,7 @@
             [class.dark:text-emerald-400]="exam().is_published"
             [class.text-zinc-600]="!exam().is_published"
             [class.dark:text-zinc-300]="!exam().is_published">
-        <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="exam().is_published" [class.bg-zinc-400]="!exam().is_published"></span>
+        <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="exam().is_published" [class.bg-zinc-400]="!exam().is_published" [class.dark:bg-zinc-500]="!exam().is_published"></span>
         {{ exam().is_published ? 'Đã công khai' : 'Bản nháp' }}
       </span>
 

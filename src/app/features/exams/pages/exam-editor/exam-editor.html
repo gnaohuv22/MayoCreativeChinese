@@ -1,16 +1,11 @@
+<app-nav-header activeModule="ops" backLink="/exams/manage" backLabel="Quản lý đề thi" [showBack]="true" [pageTitle]="isEditMode() ? 'Chỉnh sửa đề thi' : 'Tạo mới đề thi HSK'" />
+
 <div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 px-4 sm:px-6 lg:px-8 transition-colors">
   <div class="max-w-5xl mx-auto space-y-8">
 
-    <!-- Top Bar: Nút quay lại & Tiêu đề trang & Nút Lưu -->
+    <!-- Top Bar: Tiêu đề trang & Nút Lưu -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
       <div>
-        <a
-          routerLink="/exams/manage"
-          class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-pink hover:underline mb-2"
-        >
-          <app-icon name="arrow-left" size="xs" />
-          <span>Quay lại Quản lý đề thi</span>
-        </a>
         <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
           {{ isEditMode() ? 'Chỉnh sửa đề thi' : 'Tạo mới đề thi HSK' }}
         </h1>
@@ -42,9 +37,15 @@
         [class.bg-emerald-50]="saveStatus() === 'success'"
         [class.text-emerald-700]="saveStatus() === 'success'"
         [class.border-emerald-200]="saveStatus() === 'success'"
+        [class.dark:bg-emerald-950/40]="saveStatus() === 'success'"
+        [class.dark:text-emerald-300]="saveStatus() === 'success'"
+        [class.dark:border-emerald-800/40]="saveStatus() === 'success'"
         [class.bg-red-50]="saveStatus() === 'error'"
         [class.text-red-700]="saveStatus() === 'error'"
         [class.border-red-200]="saveStatus() === 'error'"
+        [class.dark:bg-red-950/40]="saveStatus() === 'error'"
+        [class.dark:text-red-300]="saveStatus() === 'error'"
+        [class.dark:border-red-800/40]="saveStatus() === 'error'"
         class="p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between"
       >
         <span>{{ saveMessage() }}</span>
@@ -241,7 +242,7 @@
               <input
                 type="number"
                 [(ngModel)]="sec.max_score"
-                class="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10"
+                class="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white"
               />
               <button
                 type="button"

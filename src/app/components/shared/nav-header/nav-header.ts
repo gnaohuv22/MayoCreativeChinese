@@ -19,4 +19,5 @@ export class NavHeaderComponent {
   backLabel = input<string>('');
   showBack = input<boolean>(false);
   showNavLinks = input<boolean>(true);
+  showDevBadge = input<boolean>(false);
 }

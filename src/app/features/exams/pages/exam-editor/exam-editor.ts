@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import type {
   Exam,
@@ -15,6 +15,7 @@ import { QUESTION_TYPE_LABELS } from '../../models/exam.model';
 import { QuestionEditorComponent } from '../../components/question-editor/question-editor';
 import { AudioUploaderComponent } from '../../components/audio-uploader/audio-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
 @Component({
   selector: 'app-exam-editor',
@@ -22,10 +23,10 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     QuestionEditorComponent,
     AudioUploaderComponent,
-    AppIconComponent
+    AppIconComponent,
+    NavHeaderComponent,
   ],
   templateUrl: './exam-editor.html',
   styleUrl: './exam-editor.css',

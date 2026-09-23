@@ -1,18 +1,18 @@
 <app-nav-header activeModule="exams" backLink="/exams" backLabel="Danh sách đề thi" [showBack]="true" />
 
-<div class="min-h-screen bg-zinc-50 dark:bg-[#0b0f19] text-zinc-800 dark:text-zinc-100 py-8 px-4 sm:px-6">
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-navy dark:text-brand-text-dark py-8 px-4 sm:px-6">
   <div class="max-w-5xl mx-auto space-y-8">
     
     @if (isLoading()) {
       <div class="flex flex-col items-center justify-center p-16">
         <div class="w-12 h-12 rounded-full border-4 border-brand-pink/20 border-t-brand-pink animate-spin"></div>
-        <p class="mt-4 text-sm font-medium text-zinc-500">Đang tải kết quả bài thi...</p>
+        <p class="mt-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">Đang tải kết quả bài thi...</p>
       </div>
     } @else if (!submission()) {
       <div class="p-12 rounded-3xl bg-white dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-center space-y-4 shadow-sm">
-        <app-icon name="question-mark" size="xl" customClass="text-zinc-400 mx-auto" />
+        <app-icon name="question-mark" size="xl" customClass="text-zinc-400 dark:text-zinc-500 mx-auto" />
         <h2 class="text-xl font-bold text-brand-navy dark:text-white">Không tìm thấy kết quả</h2>
-        <p class="text-sm text-zinc-500 max-w-md mx-auto">
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
           Không tìm thấy bài làm nào tương ứng. Hãy hoàn thành một đề thi để xem bảng điểm và phân tích năng lực chi tiết.
         </p>
         <a routerLink="/exams" class="inline-flex px-6 py-3 rounded-2xl bg-brand-navy text-white text-sm font-bold shadow-md hover:shadow-lg transition-all">
@@ -29,9 +29,10 @@
         [class.bg-gradient-to-b]="true"
         [class.from-emerald-500/10]="sub.isPassed"
         [class.to-white]="sub.isPassed"
-        [class.dark:to-brand-dark]="true"
         [class.border-rose-500/30]="!sub.isPassed"
         [class.from-rose-500/10]="!sub.isPassed"
+        [class.to-white]="!sub.isPassed"
+        [class.dark:to-brand-dark]="true"
         class="p-8 sm:p-10 rounded-3xl border shadow-xl relative overflow-hidden space-y-8"
       >
         <!-- Top Info: Exam Title & Badges -->
@@ -64,13 +65,14 @@
                  [class.text-emerald-600]="sub.isPassed"
                  [class.dark:text-emerald-400]="sub.isPassed"
                  [class.border-rose-500]="!sub.isPassed"
-                 [class.text-rose-500]="!sub.isPassed">
+                 [class.text-rose-500]="!sub.isPassed"
+                 [class.dark:text-rose-400]="!sub.isPassed">
               <span class="text-3xl font-black leading-none">{{ sub.totalScoreEarned }}</span>
-              <span class="text-[10px] font-bold text-zinc-400 mt-0.5">/{{ sub.totalScoreMax }}</span>
+              <span class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mt-0.5">/{{ sub.totalScoreMax }}</span>
             </div>
 
             <div class="space-y-1">
-              <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Tổng điểm đạt được</div>
+              <div class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tổng điểm đạt được</div>
               <div class="text-base font-extrabold text-brand-navy dark:text-white">
                 {{ sub.isPassed ? 'Chúc mừng bạn đã vượt qua kỳ thi thử!' : 'Cố gắng ôn luyện thêm để vượt qua điểm sàn nhé!' }}
               </div>
@@ -82,7 +84,7 @@
 
           <!-- Secondary Metrics -->
           <div class="p-5 rounded-2xl bg-white/80 dark:bg-white/5 border border-zinc-100 dark:border-white/10 text-center space-y-1">
-            <div class="flex items-center justify-center gap-1 text-xs text-zinc-400">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
               <app-icon name="check-circle" size="xs" />
               <span>Độ chính xác</span>
             </div>
@@ -95,7 +97,7 @@
           </div>
 
           <div class="p-5 rounded-2xl bg-white/80 dark:bg-white/5 border border-zinc-100 dark:border-white/10 text-center space-y-1">
-            <div class="flex items-center justify-center gap-1 text-xs text-zinc-400">
+            <div class="flex items-center justify-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
               <app-icon name="clock" size="xs" />
               <span>Thời gian làm bài</span>
             </div>
@@ -111,7 +113,7 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-200/60 dark:border-white/10">
-          <a routerLink="/exams" class="text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white flex items-center gap-1.5 transition-colors">
+          <a routerLink="/exams" class="text-xs font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white flex items-center gap-1.5 transition-colors">
             <app-icon name="arrow-left" size="xs" />
             <span>Về danh sách đề thi</span>
           </a>
@@ -160,7 +162,7 @@
               <!-- Big Section Score -->
               <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-black text-brand-navy dark:text-white">{{ sec.scoreEarned }}</span>
-                <span class="text-xs font-semibold text-zinc-400">/ {{ sec.maxScore }} điểm</span>
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">/ {{ sec.maxScore }} điểm</span>
               </div>
 
               <!-- Progress bar -->
@@ -252,7 +254,7 @@
                   <span class="w-8 h-8 rounded-xl bg-brand-navy/10 dark:bg-white/10 text-brand-navy dark:text-white font-extrabold text-sm flex items-center justify-center">
                     {{ q.questionNum }}
                   </span>
-                  <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Phần {{ q.sectionType }}
                   </span>
                 </div>
@@ -300,12 +302,14 @@
               <!-- User Answer vs Correct Answer Box -->
               <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 flex flex-wrap items-center gap-6 text-xs">
                 <div>
-                  <span class="text-zinc-400 block mb-0.5">Câu trả lời của bạn:</span>
+                  <span class="text-zinc-500 dark:text-zinc-400 block mb-0.5">Câu trả lời của bạn:</span>
                   <span
                     [class.text-emerald-600]="q.isCorrect"
                     [class.dark:text-emerald-400]="q.isCorrect"
                     [class.text-rose-500]="!q.isCorrect && q.userAnswer"
-                    [class.text-zinc-400]="!q.userAnswer"
+                    [class.dark:text-rose-400]="!q.isCorrect && q.userAnswer"
+                    [class.text-zinc-500]="!q.userAnswer"
+                    [class.dark:text-zinc-400]="!q.userAnswer"
                     class="font-extrabold text-sm"
                   >
                     {{ q.userAnswer || '(Để trống)' }}
@@ -313,7 +317,7 @@
                 </div>
 
                 <div class="border-l border-zinc-200 dark:border-white/10 pl-6">
-                  <span class="text-zinc-400 block mb-0.5">Đáp án chuẩn xác:</span>
+                  <span class="text-zinc-500 dark:text-zinc-400 block mb-0.5">Đáp án chuẩn xác:</span>
                   <span class="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
                     {{ q.correctAnswer }}
                   </span>
@@ -335,7 +339,7 @@
 
             </article>
           } @empty {
-            <div class="p-8 text-center text-zinc-500 bg-white dark:bg-brand-dark rounded-2xl border border-zinc-200 dark:border-white/10">
+            <div class="p-8 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-brand-dark rounded-2xl border border-zinc-200 dark:border-white/10">
               Không có câu hỏi nào phù hợp với bộ lọc hiện tại.
             </div>
           }
