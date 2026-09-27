@@ -1,0 +1,177 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-8">
+
+    <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Hồ sơ của tôi</h1>
+      <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">Cập nhật họ tên hiển thị và đổi mật khẩu đăng nhập.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-5 gap-6 items-start">
+      <div class="lg:col-span-3 space-y-6">
+
+        <!-- Thông tin tài khoản -->
+        <form (ngSubmit)="saveName()" class="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-sm space-y-5">
+          <h2 class="flex items-center gap-2 text-base font-bold font-display text-brand-navy dark:text-white">
+            <app-icon name="users" size="sm" />
+            <span>Thông tin tài khoản</span>
+          </h2>
+
+          <label class="block space-y-1.5">
+            <span class="text-xs font-bold text-brand-navy dark:text-white">Họ và tên</span>
+            <input
+              type="text"
+              name="fullName"
+              maxlength="80"
+              [ngModel]="fullName()"
+              (ngModelChange)="fullName.set($event)"
+              class="w-full px-4 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40"
+            />
+          </label>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <span class="text-xs font-bold text-brand-navy dark:text-white">Tên đăng nhập</span>
+              <p class="px-4 py-2.5 rounded-xl text-sm bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white font-mono">{{ auth.username() }}</p>
+            </div>
+            <div class="space-y-1.5">
+              <span class="text-xs font-bold text-brand-navy dark:text-white">Vai trò</span>
+              <p class="px-4 py-2.5 rounded-xl text-sm bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white">
+                <span class="font-bold text-brand-pink">{{ roleInfo()?.label }}</span>
+              </p>
+            </div>
+          </div>
+          @if (roleInfo(); as info) {
+            <p class="text-xs text-zinc-600 dark:text-zinc-300 -mt-2">{{ info.description }}</p>
+          }
+
+          <div class="flex justify-end">
+            <button type="submit" [disabled]="!nameChanged() || savingName()" class="px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-sm shadow-lg shadow-brand-pink/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+              {{ savingName() ? 'Đang lưu…' : 'Lưu họ tên' }}
+            </button>
+          </div>
+        </form>
+
+        <!-- Đổi mật khẩu -->
+        <form (ngSubmit)="savePassword()" class="p-6 sm:p-7 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-sm space-y-5">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="flex items-center gap-2 text-base font-bold font-display text-brand-navy dark:text-white">
+              <app-icon name="cog" size="sm" />
+              <span>Đổi mật khẩu</span>
+            </h2>
+            <label class="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 cursor-pointer select-none">
+              <input type="checkbox" name="show" [ngModel]="showPasswords()" (ngModelChange)="showPasswords.set($event)" class="w-4 h-4 rounded accent-brand-pink" />
+              Hiện mật khẩu
+            </label>
+          </div>
+
+          <!-- Tên đăng nhập ẩn giúp trình duyệt lưu đúng mật khẩu cho tài khoản -->
+          <input type="text" name="username" autocomplete="username" [value]="auth.username()" class="hidden" readonly aria-hidden="true" tabindex="-1" />
+
+          <label class="block space-y-1.5">
+            <span class="text-xs font-bold text-brand-navy dark:text-white">Mật khẩu hiện tại</span>
+            <input
+              [type]="showPasswords() ? 'text' : 'password'"
+              name="currentPassword"
+              autocomplete="current-password"
+              required
+              [ngModel]="currentPassword()"
+              (ngModelChange)="currentPassword.set($event); passwordError.set(null)"
+              class="w-full px-4 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40"
+            />
+          </label>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <label class="block space-y-1.5">
+              <span class="text-xs font-bold text-brand-navy dark:text-white">Mật khẩu mới</span>
+              <input
+                [type]="showPasswords() ? 'text' : 'password'"
+                name="newPassword"
+                autocomplete="new-password"
+                required
+                [ngModel]="newPassword()"
+                (ngModelChange)="newPassword.set($event); passwordError.set(null)"
+                class="w-full px-4 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40"
+              />
+            </label>
+            <label class="block space-y-1.5">
+              <span class="text-xs font-bold text-brand-navy dark:text-white">Nhập lại mật khẩu mới</span>
+              <input
+                [type]="showPasswords() ? 'text' : 'password'"
+                name="confirmPassword"
+                autocomplete="new-password"
+                required
+                [ngModel]="confirmPassword()"
+                (ngModelChange)="confirmPassword.set($event); passwordError.set(null)"
+                class="w-full px-4 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40"
+              />
+            </label>
+          </div>
+
+          <ul class="grid sm:grid-cols-2 gap-x-4 gap-y-1.5" aria-label="Yêu cầu mật khẩu">
+            @for (rule of rules(); track rule.label) {
+              <li class="flex items-center gap-2 text-xs" [class.text-emerald-600]="rule.ok" [class.dark:text-emerald-400]="rule.ok" [class.text-zinc-500]="!rule.ok" [class.dark:text-zinc-400]="!rule.ok">
+                <app-icon [name]="rule.ok ? 'check-circle' : 'x-circle'" size="xs" />
+                <span>{{ rule.label }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (passwordError()) {
+            <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ passwordError() }}</p>
+          }
+
+          <div class="flex justify-end">
+            <button type="submit" [disabled]="!canSubmitPassword()" class="px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-sm shadow-lg shadow-brand-pink/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+              {{ savingPassword() ? 'Đang đổi…' : 'Đổi mật khẩu' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Hướng dẫn -->
+      <aside class="lg:col-span-2 p-6 sm:p-7 rounded-3xl border shadow-sm lg:sticky lg:top-8 bg-brand-pink/5 dark:bg-brand-pink/10 border-brand-pink/15 space-y-4">
+        <h2 class="flex items-center gap-2 text-base font-bold font-display text-brand-navy dark:text-white">
+          <app-icon name="sparkles" size="sm" />
+          <span>Hướng dẫn cho thầy cô</span>
+        </h2>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-brand-pink">Cách đổi mật khẩu</h3>
+          <ol class="pl-5 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed list-decimal">
+            <li>Nhập <strong>mật khẩu hiện tại</strong> (mật khẩu trung tâm đã cấp).</li>
+            <li>Nhập <strong>mật khẩu mới</strong> hai lần giống nhau.</li>
+            <li>Khi tất cả yêu cầu bên dưới ô nhập chuyển sang <strong>màu xanh</strong>, bấm <strong>Đổi mật khẩu</strong>.</li>
+            <li>Lần đăng nhập sau, dùng tên đăng nhập <strong class="font-mono">{{ auth.username() }}</strong> và mật khẩu mới.</li>
+          </ol>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-brand-pink">Quy định mật khẩu</h3>
+          <ul class="pl-5 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed list-disc">
+            <li>Tối thiểu <strong>15 ký tự</strong>.</li>
+            <li>Có đủ <strong>chữ thường</strong>, <strong>chữ hoa</strong>, <strong>chữ số</strong> và <strong>ký tự đặc biệt</strong> (vd <span class="font-mono">! &#64; # $ % &amp; *</span>).</li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-brand-pink">Mẹo đặt mật khẩu dễ nhớ</h3>
+          <ul class="pl-5 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed list-disc">
+            <li>Ghép 3–4 từ bạn dễ nhớ, viết hoa chữ đầu, nối bằng dấu gạch và thêm số, ví dụ dạng
+              <span class="font-mono whitespace-nowrap">Meo-Hoc-Chu-Han-27!</span> (đừng dùng đúng ví dụ này).</li>
+            <li>Không dùng ngày sinh, số điện thoại hay tên mình.</li>
+            <li>Không dùng lại mật khẩu của Facebook, Gmail hay tài khoản ngân hàng.</li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-brand-pink">Giữ tài khoản an toàn</h3>
+          <ul class="pl-5 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed list-disc">
+            <li>Không chia sẻ mật khẩu, kể cả với đồng nghiệp — mỗi người dùng tài khoản riêng.</li>
+            <li>Dùng máy tính chung thì bấm <strong>Đăng xuất</strong> khi xong việc.</li>
+            <li>Quên mật khẩu: liên hệ quản trị viên (cô Mai) để được cấp lại.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>

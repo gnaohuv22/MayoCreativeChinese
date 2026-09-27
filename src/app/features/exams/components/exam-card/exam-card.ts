@@ -23,5 +23,6 @@ export class ExamCardComponent {
   duplicate = output<Exam>();
   /** Đang nhân bản đề này (khoá nút) */
   duplicating = input<boolean>(false);
+  canDelete = input<boolean>(false);
   togglePublish = output<Exam>();
 }

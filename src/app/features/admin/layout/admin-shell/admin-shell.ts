@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../../../services/auth.service';
+import { AuthService, STAFF_ROLE_LABELS } from '../../../../services/auth.service';
 import { AppIconComponent, type IconName } from '../../../../components/shared/icon/app-icon';
 import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle/theme-toggle';
 
@@ -28,7 +28,14 @@ export class AdminShellComponent {
     { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open' },
   ];
 
+  readonly accountItem: AdminNavItem = { label: 'Hồ sơ của tôi', hint: 'Họ tên, đổi mật khẩu', route: '/admin/profile', icon: 'users' };
+  readonly mobileTabs: AdminNavItem[] = [...this.navItems, { ...this.accountItem, label: 'Hồ sơ' }];
+
   readonly initial = computed(() => (this.auth.username()[0] ?? '?').toUpperCase());
+  readonly roleLabel = computed(() => {
+    const role = this.auth.role();
+    return role ? STAFF_ROLE_LABELS[role].label : '';
+  });
 
   async signOut() {
     await this.auth.signOut();

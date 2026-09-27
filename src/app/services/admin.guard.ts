@@ -8,5 +8,5 @@ export const adminGuard: CanActivateFn = async (_route, state) => {
   const { AuthService } = await import('./auth.service');
   const auth = injector.get(AuthService);
   await auth.ready;
-  return auth.isAdmin() || router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
+  return auth.isStaff() || router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
 };

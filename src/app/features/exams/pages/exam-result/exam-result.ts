@@ -122,7 +122,7 @@ export class ExamResultComponent implements OnInit {
 
         // Kết quả mẫu để preview — chỉ admin (lộ toàn bộ đáp án)
         this.auth.ready
-          .then(() => this.auth.isAdmin() ? this.examService.getExamWithDetails(examId, { withAnswers: true }) : null)
+          .then(() => this.auth.isStaff() ? this.examService.getExamWithDetails(examId, { withAnswers: true }) : null)
           .then(ex => {
           if (ex) {
             const answers: Record<string, string> = {};

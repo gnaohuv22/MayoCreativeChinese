@@ -40,7 +40,7 @@ export class AdminDockComponent {
     { initialValue: this.router.url },
   );
 
-  readonly visible = computed(() => this.auth.isAdmin() && !this.url().startsWith('/admin'));
+  readonly visible = computed(() => this.auth.isStaff() && !this.url().startsWith('/admin'));
   /** Trang khoá học có thanh "Đăng ký" cố định ở đáy trên điện thoại */
   readonly raised = computed(() => this.url().startsWith('/khoa-hoc/'));
 

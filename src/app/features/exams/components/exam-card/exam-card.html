@@ -113,14 +113,16 @@
           <app-icon [name]="duplicating() ? 'arrow-path' : 'document-duplicate'" size="xs" [customClass]="duplicating() ? 'animate-spin' : ''" />
         </button>
 
-        <button
-          type="button"
-          (click)="delete.emit(exam())"
-          class="p-1.5 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
-          title="Xoá đề thi"
-        >
-          <app-icon name="trash" size="xs" />
-        </button>
+        @if (canDelete()) {
+          <button
+            type="button"
+            (click)="delete.emit(exam())"
+            class="p-1.5 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+            title="Xoá đề thi"
+          >
+            <app-icon name="trash" size="xs" />
+          </button>
+        }
       </div>
     </div>
   }

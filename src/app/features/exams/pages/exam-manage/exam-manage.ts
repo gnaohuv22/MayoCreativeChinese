@@ -8,6 +8,7 @@ import { StatCardComponent } from '../../../../components/shared/stat-card/stat-
 import { ExamCardComponent } from '../../components/exam-card/exam-card';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-exam-manage',
@@ -27,6 +28,8 @@ import { ToastService } from '../../../../services/toast.service';
 export class ExamManageComponent implements OnInit {
   private readonly examService = inject(ExamService);
   private readonly toastService = inject(ToastService);
+  /** Chỉ owner được xoá (migration 012) */
+  protected readonly canDelete = inject(AuthService).isOwner;
 
   exams = signal<Exam[]>([]);
   isLoading = signal<boolean>(true);

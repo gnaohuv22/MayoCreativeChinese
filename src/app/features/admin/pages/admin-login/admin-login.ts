@@ -24,7 +24,7 @@ export class AdminLoginComponent {
 
   constructor() {
     this.auth.ready.then(() => {
-      if (this.auth.isAdmin()) this.router.navigateByUrl(this.returnUrl());
+      if (this.auth.isStaff()) this.router.navigateByUrl(this.returnUrl());
     });
   }
 

@@ -29,6 +29,21 @@
         </span>
       </a>
     }
+
+    <p class="px-3 pt-5 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Tài khoản</p>
+    <a
+      [routerLink]="accountItem.route"
+      routerLinkActive="is-active"
+      class="shell-nav-link group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors hover:bg-white/5"
+    >
+      <span class="shell-nav-icon w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 transition-colors">
+        <app-icon [name]="accountItem.icon" size="sm" />
+      </span>
+      <span class="flex flex-col min-w-0">
+        <span class="text-sm font-bold">{{ accountItem.label }}</span>
+        <span class="text-[11px] text-white/50 truncate">{{ accountItem.hint }}</span>
+      </span>
+    </a>
   </nav>
 
   <div class="relative p-3 space-y-2">
@@ -43,14 +58,16 @@
       <app-theme-toggle />
     </div>
 
-    <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
-      <span class="shell-avatar w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-display font-black">
-        {{ initial() }}
-      </span>
-      <span class="flex-1 min-w-0 leading-tight">
-        <span class="block text-sm font-bold truncate">{{ auth.displayName() }}</span>
-        <span class="block text-[11px] text-white/50 truncate">{{ auth.username() }}</span>
-      </span>
+    <div class="flex items-center gap-1 p-2 rounded-2xl bg-white/5 border border-white/10">
+      <a routerLink="/admin/profile" class="flex-1 min-w-0 flex items-center gap-3 p-1 rounded-xl hover:bg-white/5 transition-colors" title="Hồ sơ của tôi">
+        <span class="shell-avatar w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-display font-black">
+          {{ initial() }}
+        </span>
+        <span class="flex-1 min-w-0 leading-tight">
+          <span class="block text-sm font-bold truncate">{{ auth.displayName() }}</span>
+          <span class="block text-[11px] text-white/50 truncate">{{ auth.username() }} · {{ roleLabel() }}</span>
+        </span>
+      </a>
       <button
         type="button"
         (click)="signOut()"
@@ -78,14 +95,13 @@
         <app-icon name="home" size="sm" />
       </a>
       <app-theme-toggle />
-      <button type="button" (click)="signOut()" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/10 cursor-pointer" [title]="'Đăng xuất ' + auth.displayName()" aria-label="Đăng xuất">
-        <span class="shell-avatar w-8 h-8 rounded-full flex items-center justify-center text-sm font-display font-black">{{ initial() }}</span>
+      <button type="button" (click)="signOut()" class="p-2 rounded-xl text-white/70 hover:text-white cursor-pointer" [title]="'Đăng xuất ' + auth.displayName()" aria-label="Đăng xuất">
         <app-icon name="logout" size="sm" />
       </button>
     </div>
   </div>
   <nav class="flex gap-1 px-3 pb-2" aria-label="Quản trị">
-    @for (item of navItems; track item.route) {
+    @for (item of mobileTabs; track item.route) {
       <a
         [routerLink]="item.route"
         routerLinkActive="is-active"

@@ -351,7 +351,7 @@
               <span>Xuất JSON</span>
             </button>
 
-            @if (selectedIds().size > 0) {
+            @if (canDelete() && selectedIds().size > 0) {
               <button (click)="deleteSelected()" class="px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5">
                 <app-icon name="trash" size="xs" />
                 <span>Xóa {{ selectedIds().size }}</span>
@@ -371,7 +371,9 @@
               <table class="w-full text-left text-sm divide-y divide-brand-navy/5 dark:divide-white/10">
                 <thead class="bg-brand-navy/5 dark:bg-white/5 text-brand-navy/60 dark:text-brand-text-dark/70 font-bold text-xs uppercase tracking-wider">
                   <tr>
-                    <th class="p-3.5 w-10"></th>
+                    @if (canDelete()) {
+                      <th class="p-3.5 w-10"></th>
+                    }
                     <th class="p-3.5 w-14">ID</th>
                     <th class="p-3.5 w-32">Hán tự</th>
                     <th class="p-3.5 w-32">Pinyin</th>
@@ -384,12 +386,13 @@
                 <tbody class="divide-y divide-brand-navy/5 dark:divide-white/10 font-medium">
                   @for (card of paginatedCards(); track card.id ?? card.hanzi) {
                     <tr class="hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors" [class.bg-brand-pink/5]="editingCardId() === card.id">
-                      <!-- Checkbox -->
-                      <td class="p-3.5">
-                        @if (card.id && editingCardId() !== card.id) {
-                          <input type="checkbox" [checked]="selectedIds().has(card.id)" (change)="toggleSelection(card.id)" class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer border-brand-navy/20 dark:border-white/20">
-                        }
-                      </td>
+                      @if (canDelete()) {
+                        <td class="p-3.5">
+                          @if (card.id && editingCardId() !== card.id) {
+                            <input type="checkbox" [checked]="selectedIds().has(card.id)" (change)="toggleSelection(card.id)" class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer border-brand-navy/20 dark:border-white/20">
+                          }
+                        </td>
+                      }
 
                       <!-- ID -->
                       <td class="p-3.5 text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">#{{ card.id || '-' }}</td>
@@ -517,15 +520,16 @@
                                 <app-icon name="pencil" size="xs" />
                               </button>
 
-                              <!-- Delete Button -->
-                              <button
-                                type="button"
-                                (click)="deleteCard(card.id)"
-                                class="p-1.5 text-red-500/70 dark:text-red-400/80 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
-                                title="Xóa từ này"
-                              >
-                                <app-icon name="trash" size="xs" />
-                              </button>
+                              @if (canDelete()) {
+                                <button
+                                  type="button"
+                                  (click)="deleteCard(card.id)"
+                                  class="p-1.5 text-red-500/70 dark:text-red-400/80 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
+                                  title="Xóa từ này"
+                                >
+                                  <app-icon name="trash" size="xs" />
+                                </button>
+                              }
                             </div>
                           }
                         </td>

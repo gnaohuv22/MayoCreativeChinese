@@ -5,6 +5,7 @@ import { ImportPreviewComponent } from '../../components/import-preview/import-p
 import { DuplicateConfirmComponent, type DuplicateHanziItem } from '../../components/duplicate-confirm/duplicate-confirm';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
+import { AuthService } from '../../../../services/auth.service';
 import { VOCAB_COLLECTIONS, VOCAB_COLLECTION_KEYS, collectionLevels, vocabEntryKey } from '../../models/vocab-card.model';
 import type { ParsedImportRow, VocabCard, ValidatedImportRow, VocabCollection } from '../../models/vocab-card.model';
 import { parseFile, validateRows } from '../../utils/file-parser.util';
@@ -30,6 +31,8 @@ export class FlashcardManageComponent implements OnInit {
   protected readonly Math = Math;
   private vocabService = inject(VocabService);
   private toastService = inject(ToastService);
+  /** Chỉ owner được xoá (migration 012) */
+  protected readonly canDelete = inject(AuthService).isOwner;
 
   activeTab = signal<'add' | 'import' | 'browse'>('add');
 

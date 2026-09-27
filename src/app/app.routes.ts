@@ -44,6 +44,11 @@ export const routes: Routes = [
           import('./features/exams/pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/admin/pages/admin-profile/admin-profile').then(m => m.AdminProfileComponent),
+      },
+      {
         path: 'vocab',
         loadComponent: () =>
           import('./features/flashcards/pages/flashcard-manage/flashcard-manage').then(m => m.FlashcardManageComponent),
