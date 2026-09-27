@@ -23,6 +23,9 @@ export default async function handler(req: any, res: any) {
   let birthYear = req.body.birthYear;
   let phoneNumber = req.body.phoneNumber;
   let email = req.body.email;
+  let course = req.body.course ?? '';
+  let studyMode = req.body.studyMode ?? '';
+  let intent = req.body.intent ?? 'register';
 
   // Fallback for urlencoded data
   if (typeof req.body === 'string') {
@@ -32,6 +35,9 @@ export default async function handler(req: any, res: any) {
       birthYear = params.get('birthYear') || birthYear;
       phoneNumber = params.get('phoneNumber') || phoneNumber;
       email = params.get('email') || email;
+      course = params.get('course') || course;
+      studyMode = params.get('studyMode') || studyMode;
+      intent = params.get('intent') || intent;
     } catch (e) {}
   }
 
@@ -64,9 +70,9 @@ export default async function handler(req: any, res: any) {
       throw new Error('Failed to retrieve access token from Google Auth.');
     }
 
-    // Append row via Direct Sheets REST API (Sheet1!A:E matches the schema)
+    // Append row via Direct Sheets REST API (Sheet1!A:H — same columns as scripts/google-apps-script/register.gs)
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A:E:append?valueInputOption=USER_ENTERED`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A:H:append?valueInputOption=USER_ENTERED`,
       {
         method: 'POST',
         headers: {
@@ -78,8 +84,11 @@ export default async function handler(req: any, res: any) {
             new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }), // Vietnam local timestamp
             fullName,
             birthYear,
-            phoneNumber,
-            email
+            `'${phoneNumber}`, // keep the leading 0
+            email,
+            course,
+            studyMode,
+            intent === 'trial' ? 'Học thử miễn phí' : 'Đăng ký khóa học'
           ]],
         }),
       }
