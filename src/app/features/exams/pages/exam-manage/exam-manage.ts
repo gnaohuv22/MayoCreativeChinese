@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -28,8 +28,8 @@ import { AuthService } from '../../../../services/auth.service';
 export class ExamManageComponent implements OnInit {
   private readonly examService = inject(ExamService);
   private readonly toastService = inject(ToastService);
-  /** Chỉ owner được xoá (migration 012) */
-  protected readonly canDelete = inject(AuthService).isOwner;
+  private readonly auth = inject(AuthService);
+  protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
   exams = signal<Exam[]>([]);
   isLoading = signal<boolean>(true);

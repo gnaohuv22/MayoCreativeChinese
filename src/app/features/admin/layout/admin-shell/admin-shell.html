@@ -30,6 +30,25 @@
       </a>
     }
 
+    @if (visibleManageItems().length) {
+      <p class="px-3 pt-5 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Quản trị</p>
+      @for (item of visibleManageItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="is-active"
+          class="shell-nav-link group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors hover:bg-white/5"
+        >
+          <span class="shell-nav-icon w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 transition-colors">
+            <app-icon [name]="item.icon" size="sm" />
+          </span>
+          <span class="flex flex-col min-w-0">
+            <span class="text-sm font-bold">{{ item.label }}</span>
+            <span class="text-[11px] text-white/50 truncate">{{ item.hint }}</span>
+          </span>
+        </a>
+      }
+    }
+
     <p class="px-3 pt-5 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Tài khoản</p>
     <a
       [routerLink]="accountItem.route"
@@ -65,7 +84,7 @@
         </span>
         <span class="flex-1 min-w-0 leading-tight">
           <span class="block text-sm font-bold truncate">{{ auth.displayName() }}</span>
-          <span class="block text-[11px] text-white/50 truncate">{{ auth.username() }} · {{ roleLabel() }}</span>
+          <span class="block text-[11px] text-white/50 truncate">{{ auth.username() }} · {{ auth.roleLabel() }}</span>
         </span>
       </a>
       <button
@@ -100,12 +119,12 @@
       </button>
     </div>
   </div>
-  <nav class="flex gap-1 px-3 pb-2" aria-label="Quản trị">
-    @for (item of mobileTabs; track item.route) {
+  <nav class="flex gap-1 px-3 pb-2 overflow-x-auto" aria-label="Quản trị">
+    @for (item of mobileTabs(); track item.route) {
       <a
         [routerLink]="item.route"
         routerLinkActive="is-active"
-        class="shell-tab flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs font-bold text-white/70 transition-colors"
+        class="shell-tab flex-1 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white/70 transition-colors"
       >
         <app-icon [name]="item.icon" size="xs" />
         <span>{{ item.label }}</span>

@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+.staff-avatar {
+  background: linear-gradient(135deg, var(--color-brand-pink), var(--color-brand-gold));
+}
+
+.reset-dialog::backdrop {
+  background: rgb(30 30 69 / 0.55);
+  backdrop-filter: blur(2px);
+}

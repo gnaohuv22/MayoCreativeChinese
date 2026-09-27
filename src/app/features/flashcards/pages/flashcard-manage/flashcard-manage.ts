@@ -31,8 +31,8 @@ export class FlashcardManageComponent implements OnInit {
   protected readonly Math = Math;
   private vocabService = inject(VocabService);
   private toastService = inject(ToastService);
-  /** Chỉ owner được xoá (migration 012) */
-  protected readonly canDelete = inject(AuthService).isOwner;
+  private readonly auth = inject(AuthService);
+  protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
   activeTab = signal<'add' | 'import' | 'browse'>('add');
 

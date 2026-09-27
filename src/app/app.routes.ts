@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './services/admin.guard';
+import { permissionGuard, staffGuard } from './services/admin.guard';
 
 export const routes: Routes = [
   {
@@ -22,8 +22,8 @@ export const routes: Routes = [
   {
     // Khu quản trị: layout riêng (thanh bên), tách hẳn khỏi trang học viên
     path: 'admin',
-    canActivate: [adminGuard],
-    canActivateChild: [adminGuard],
+    canActivate: [staffGuard],
+    canActivateChild: [staffGuard],
     loadComponent: () =>
       import('./features/admin/layout/admin-shell/admin-shell').then(m => m.AdminShellComponent),
     children: [
@@ -47,6 +47,18 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () =>
           import('./features/admin/pages/admin-profile/admin-profile').then(m => m.AdminProfileComponent),
+      },
+      {
+        path: 'staff',
+        canActivate: [permissionGuard('staff.manage')],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-staff/admin-staff').then(m => m.AdminStaffComponent),
+      },
+      {
+        path: 'activity',
+        canActivate: [permissionGuard('activity.read')],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-activity/admin-activity').then(m => m.AdminActivityComponent),
       },
       {
         path: 'vocab',

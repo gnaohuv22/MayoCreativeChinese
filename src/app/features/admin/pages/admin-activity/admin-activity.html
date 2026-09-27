@@ -1,0 +1,212 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Nhật ký hoạt động</h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+          Mọi thao tác tạo, sửa, xoá nội dung, đăng nhập và thay đổi mật khẩu của nhân sự.
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="inline-flex p-1 rounded-full bg-brand-navy/5 dark:bg-white/5" role="group" aria-label="Khoảng thời gian">
+          @for (d of [7, 30]; track d) {
+            <button
+              type="button"
+              (click)="setDays($any(d))"
+              [attr.aria-pressed]="days() === d"
+              [class.bg-white]="days() === d"
+              [class.dark:bg-white/15]="days() === d"
+              [class.shadow-xs]="days() === d"
+              class="px-3.5 py-1.5 rounded-full text-xs font-bold text-brand-navy dark:text-white transition-colors cursor-pointer"
+            >{{ d }} ngày</button>
+          }
+        </div>
+        <button type="button" (click)="refresh()" class="p-2 rounded-full text-brand-navy dark:text-white hover:bg-brand-navy/5 dark:hover:bg-white/10 cursor-pointer" title="Tải lại" aria-label="Tải lại">
+          <app-icon name="arrow-path" size="sm" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Tổng quan -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <app-stat-card label="Hôm nay" [value]="summary()?.today ?? '–'" icon="clock" color="pink" />
+      <app-stat-card [label]="days() + ' ngày qua'" [value]="summary()?.total ?? '–'" icon="calendar" color="navy" />
+      <app-stat-card label="Nhân sự hoạt động" [value]="summary()?.active_staff ?? '–'" icon="users" color="indigo" />
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <!-- Thao tác theo ngày -->
+      <section class="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs" aria-labelledby="chart-title">
+        <h2 id="chart-title" class="text-sm font-bold text-brand-navy dark:text-white">Số thao tác mỗi ngày</h2>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ days() }} ngày gần nhất</p>
+
+        @let c = chart();
+        <div class="mt-5 flex gap-3" aria-hidden="true">
+          <div class="flex flex-col justify-between h-44 pb-5 text-[10px] text-zinc-500 dark:text-zinc-400 text-right tabular-nums">
+            @for (t of c.ticks; track $index) { <span class="-translate-y-1/2 first:translate-y-0 last:translate-y-0">{{ t }}</span> }
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="chart-plot relative flex items-end">
+              <div class="chart-grid" style="bottom: 50%"></div>
+              @for (bar of c.bars; track bar.day) {
+                <div class="chart-slot group relative flex-1 h-full flex items-end justify-center" tabindex="0" [attr.aria-label]="bar.fullLabel + ': ' + bar.count + ' thao tác'">
+                  @if (bar.isPeak) {
+                    <span class="absolute text-[10px] font-bold text-brand-navy dark:text-white tabular-nums" [style.bottom]="'calc(' + bar.height + '% + 4px)'">{{ bar.count }}</span>
+                  }
+                  <div class="chart-bar" [style.height.%]="bar.height"></div>
+                  <div class="chart-tip" role="tooltip">
+                    <span class="font-bold">{{ bar.fullLabel }}</span>
+                    <span>{{ bar.count }} thao tác</span>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="flex mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+              @for (bar of c.bars; track bar.day) {
+                <span class="flex-1 text-center whitespace-nowrap overflow-visible">{{ bar.axisLabel }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <details class="mt-4 text-xs text-zinc-600 dark:text-zinc-300">
+          <summary class="cursor-pointer font-semibold w-fit">Xem dạng bảng</summary>
+          <table class="mt-2 w-full max-w-xs">
+            <thead><tr class="text-left text-zinc-500"><th class="py-1 font-semibold">Ngày</th><th class="py-1 font-semibold text-right">Thao tác</th></tr></thead>
+            <tbody>
+              @for (bar of c.bars; track bar.day) {
+                <tr class="border-t border-brand-navy/5 dark:border-white/10"><td class="py-1">{{ bar.fullLabel }}</td><td class="py-1 text-right tabular-nums">{{ bar.count }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </details>
+      </section>
+
+      <!-- Ai hoạt động nhiều -->
+      <section class="p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs" aria-labelledby="actors-title">
+        <h2 id="actors-title" class="text-sm font-bold text-brand-navy dark:text-white">Hoạt động nhiều nhất</h2>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">Số thao tác trong {{ days() }} ngày</p>
+        @if (topActors().length === 0) {
+          <p class="mt-6 text-xs text-zinc-500 dark:text-zinc-400">Chưa có hoạt động.</p>
+        } @else {
+          <ul class="mt-5 space-y-3.5">
+            @for (a of topActors(); track a.username) {
+              <li>
+                <div class="flex items-baseline justify-between gap-2 text-xs">
+                  <span class="font-semibold text-brand-navy dark:text-white truncate">{{ a.full_name || a.username }}</span>
+                  <span class="tabular-nums text-zinc-600 dark:text-zinc-300">{{ a.count }}</span>
+                </div>
+                <div class="mt-1 h-1.5 rounded-full bg-brand-navy/5 dark:bg-white/10">
+                  <div class="actor-bar h-full rounded-full" [style.width.%]="a.width"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <!-- Nhật ký -->
+    <section class="space-y-4" aria-labelledby="log-title">
+      <h2 id="log-title" class="text-lg font-black font-display text-brand-navy dark:text-white">Chi tiết</h2>
+
+      <div class="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10">
+        <div class="relative flex-1 min-w-48">
+          <app-icon name="search" size="xs" customClass="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="search"
+            [(ngModel)]="filter.search"
+            (ngModelChange)="onSearch()"
+            placeholder="Tìm theo nội dung (tên đề, Hán tự…)"
+            aria-label="Tìm trong nhật ký"
+            class="w-full pl-8 pr-3 py-2 rounded-xl text-xs bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40"
+          />
+        </div>
+        <select [(ngModel)]="filter.actor" (ngModelChange)="applyFilter()" aria-label="Người thực hiện" class="log-select">
+          <option [ngValue]="undefined">Mọi người</option>
+          @for (u of actorOptions(); track u) {
+            <option [ngValue]="u === 'Hệ thống' ? '__system' : u">{{ u }}</option>
+          }
+        </select>
+        <select [(ngModel)]="filter.entityType" (ngModelChange)="applyFilter()" aria-label="Loại nội dung" class="log-select">
+          <option [ngValue]="undefined">Mọi nội dung</option>
+          @for (o of entityOptions; track o.value) { <option [ngValue]="o.value">{{ o.label }}</option> }
+        </select>
+        <select [(ngModel)]="filter.action" (ngModelChange)="applyFilter()" aria-label="Thao tác" class="log-select">
+          <option [ngValue]="undefined">Mọi thao tác</option>
+          @for (o of actionOptions; track o.value) { <option [ngValue]="o.value">{{ o.label }}</option> }
+        </select>
+        <button type="button" (click)="resetFilter()" class="px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-brand-pink cursor-pointer">Bỏ lọc</button>
+      </div>
+
+      @if (error()) {
+        <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được nhật ký: {{ error() }}</p>
+      } @else if (loading() && entries().length === 0) {
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải…</p>
+      } @else if (entries().length === 0) {
+        <p class="p-8 text-center text-sm text-zinc-500 dark:text-zinc-400 rounded-2xl border border-dashed border-brand-navy/15 dark:border-white/15">Không có hoạt động nào phù hợp.</p>
+      } @else {
+        <div class="space-y-6" [class.opacity-60]="loading()">
+          @for (group of groups(); track group.key) {
+            <div>
+              <h3 class="py-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ group.label }}</h3>
+              <ol class="rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 divide-y divide-brand-navy/5 dark:divide-white/10">
+                @for (entry of group.entries; track entry.id) {
+                  <li class="px-4 py-3">
+                    <div class="flex items-start gap-3">
+                      <span class="w-10 shrink-0 pt-1 text-[11px] font-semibold tabular-nums text-zinc-500 dark:text-zinc-400">{{ time(entry.created_at) }}</span>
+                      <span class="log-avatar w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[11px] font-black text-white" [class.log-avatar-system]="!entry.actor_username">{{ initial(entry.actor_username) }}</span>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-brand-navy dark:text-white">
+                          <strong class="font-bold">{{ entry.actor_username ?? 'Hệ thống' }}</strong>
+                          <span class="text-zinc-700 dark:text-zinc-200"> · {{ entry.summary }}</span>
+                        </p>
+                        <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ actionClass(entry.action) }}">{{ actionLabel(entry.action) }}</span>
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-navy/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300">
+                            <app-icon [name]="entity(entry.entity_type).icon" size="xs" />
+                            {{ entity(entry.entity_type).label }}
+                          </span>
+                          @if (hasItems(entry)) {
+                            <button type="button" (click)="toggle(entry.id)" [attr.aria-expanded]="expanded().has(entry.id)" class="text-[11px] font-semibold text-brand-pink hover:underline cursor-pointer">
+                              {{ expanded().has(entry.id) ? 'Ẩn chi tiết' : 'Chi tiết' }}
+                            </button>
+                          }
+                        </div>
+                        @if (expanded().has(entry.id)) {
+                          <ul class="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-300">
+                            @for (item of entry.details.items; track $index) {
+                              <li class="flex gap-1.5">
+                                <span class="text-zinc-400">–</span>
+                                <span>
+                                  {{ itemLabel(item) }}
+                                  @if (itemChanges(item); as changes) { <span class="text-zinc-500 dark:text-zinc-400"> · đổi {{ changes }}</span> }
+                                </span>
+                              </li>
+                            }
+                            @if (entry.entity_count > (entry.details.items?.length ?? 0)) {
+                              <li class="text-zinc-500 dark:text-zinc-400">… và {{ entry.entity_count - (entry.details.items?.length ?? 0) }} mục khác</li>
+                            }
+                          </ul>
+                        }
+                      </div>
+                    </div>
+                  </li>
+                }
+              </ol>
+            </div>
+          }
+        </div>
+
+        <nav class="flex items-center justify-between text-xs" aria-label="Phân trang">
+          <span class="text-zinc-500 dark:text-zinc-400">{{ total() }} hoạt động · trang {{ page() }}/{{ totalPages() }}</span>
+          <div class="flex gap-2">
+            <button type="button" (click)="goToPage(page() - 1)" [disabled]="page() <= 1" class="px-3.5 py-2 rounded-full font-bold bg-white dark:bg-white/10 border border-brand-navy/10 dark:border-white/10 disabled:opacity-40 cursor-pointer disabled:cursor-default">Mới hơn</button>
+            <button type="button" (click)="goToPage(page() + 1)" [disabled]="page() >= totalPages()" class="px-3.5 py-2 rounded-full font-bold bg-white dark:bg-white/10 border border-brand-navy/10 dark:border-white/10 disabled:opacity-40 cursor-pointer disabled:cursor-default">Cũ hơn</button>
+          </div>
+        </nav>
+      }
+    </section>
+  </div>
+</div>

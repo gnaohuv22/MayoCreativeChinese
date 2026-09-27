@@ -1,0 +1,120 @@
+:host {
+  display: block;
+  /* Màu cột đã kiểm bằng dataviz validator: #CE2D6E trên nền trắng, #E0457F trên thẻ tối */
+  --bar-color: #ce2d6e;
+}
+
+:host-context(.dark) {
+  --bar-color: #e0457f;
+}
+
+.chart-plot {
+  height: 9.75rem;
+  border-bottom: 1px solid rgb(45 45 95 / 0.15);
+}
+
+:host-context(.dark) .chart-plot {
+  border-bottom-color: rgb(255 255 255 / 0.15);
+}
+
+.chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgb(45 45 95 / 0.07);
+  pointer-events: none;
+}
+
+:host-context(.dark) .chart-grid {
+  background: rgb(255 255 255 / 0.07);
+}
+
+/* Khe 2px giữa các cột, cột tối đa 24px, bo 4px đầu cột, vuông ở đáy */
+.chart-slot {
+  padding: 0 1px;
+  outline: none;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 24px;
+  min-height: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--bar-color);
+  transition: opacity 0.15s;
+}
+
+.chart-plot:hover .chart-bar {
+  opacity: 0.55;
+}
+
+.chart-plot .chart-slot:hover .chart-bar,
+.chart-slot:focus-visible .chart-bar {
+  opacity: 1;
+}
+
+.chart-slot:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-brand-accent);
+  border-radius: 6px;
+}
+
+.chart-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 4px;
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  background: var(--color-brand-navy);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s, translate 0.12s;
+  z-index: 5;
+}
+
+.chart-slot:hover .chart-tip,
+.chart-slot:focus-visible .chart-tip {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+.actor-bar {
+  background: var(--bar-color);
+}
+
+.log-avatar {
+  background: linear-gradient(135deg, var(--color-brand-pink), var(--color-brand-gold));
+}
+
+.log-avatar-system {
+  background: var(--color-brand-navy);
+}
+
+.log-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgb(250 250 250);
+  border: 1px solid rgb(45 45 95 / 0.1);
+  color: var(--color-brand-navy);
+  cursor: pointer;
+}
+
+:host-context(.dark) .log-select {
+  background: rgb(255 255 255 / 0.05);
+  border-color: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+:host-context(.dark) .log-select option {
+  background: var(--color-brand-dark);
+}

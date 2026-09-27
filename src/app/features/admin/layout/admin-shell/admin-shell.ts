@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService, STAFF_ROLE_LABELS } from '../../../../services/auth.service';
+import { AuthService, type Permission } from '../../../../services/auth.service';
 import { AppIconComponent, type IconName } from '../../../../components/shared/icon/app-icon';
 import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle/theme-toggle';
 
@@ -9,6 +9,8 @@ interface AdminNavItem {
   hint: string;
   route: string;
   icon: IconName;
+  /** Chỉ hiện khi vai trò có quyền này */
+  permission?: Permission;
 }
 
 @Component({
@@ -28,14 +30,20 @@ export class AdminShellComponent {
     { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open' },
   ];
 
+  private readonly manageItems: AdminNavItem[] = [
+    { label: 'Nhân sự', hint: 'Tài khoản, đặt lại mật khẩu', route: '/admin/staff', icon: 'users', permission: 'staff.manage' },
+    { label: 'Nhật ký hoạt động', hint: 'Ai đã làm gì, khi nào', route: '/admin/activity', icon: 'clock', permission: 'activity.read' },
+  ];
+  readonly visibleManageItems = computed(() => this.manageItems.filter(i => !i.permission || this.auth.can(i.permission)));
+
   readonly accountItem: AdminNavItem = { label: 'Hồ sơ của tôi', hint: 'Họ tên, đổi mật khẩu', route: '/admin/profile', icon: 'users' };
-  readonly mobileTabs: AdminNavItem[] = [...this.navItems, { ...this.accountItem, label: 'Hồ sơ' }];
+  readonly mobileTabs = computed<AdminNavItem[]>(() => [
+    ...this.navItems,
+    ...this.visibleManageItems().map(i => ({ ...i, label: i.route === '/admin/activity' ? 'Nhật ký' : i.label })),
+    { ...this.accountItem, label: 'Hồ sơ' },
+  ]);
 
   readonly initial = computed(() => (this.auth.username()[0] ?? '?').toUpperCase());
-  readonly roleLabel = computed(() => {
-    const role = this.auth.role();
-    return role ? STAFF_ROLE_LABELS[role].label : '';
-  });
 
   async signOut() {
     await this.auth.signOut();

@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService, PASSWORD_RULES, STAFF_ROLE_LABELS } from '../../../../services/auth.service';
+import { AuthService, PASSWORD_RULES } from '../../../../services/auth.service';
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 
@@ -15,11 +15,6 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 export class AdminProfileComponent {
   protected readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
-
-  readonly roleInfo = computed(() => {
-    const role = this.auth.role();
-    return role ? STAFF_ROLE_LABELS[role] : null;
-  });
 
   // Thông tin cá nhân
   readonly fullName = signal(this.auth.displayName());

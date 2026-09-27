@@ -36,12 +36,12 @@
             <div class="space-y-1.5">
               <span class="text-xs font-bold text-brand-navy dark:text-white">Vai trò</span>
               <p class="px-4 py-2.5 rounded-xl text-sm bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white">
-                <span class="font-bold text-brand-pink">{{ roleInfo()?.label }}</span>
+                <span class="font-bold text-brand-pink">{{ auth.roleLabel() }}</span>
               </p>
             </div>
           </div>
-          @if (roleInfo(); as info) {
-            <p class="text-xs text-zinc-600 dark:text-zinc-300 -mt-2">{{ info.description }}</p>
+          @if (auth.roleDescription()) {
+            <p class="text-xs text-zinc-600 dark:text-zinc-300 -mt-2">{{ auth.roleDescription() }}</p>
           }
 
           <div class="flex justify-end">
@@ -168,7 +168,7 @@
           <ul class="pl-5 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed list-disc">
             <li>Không chia sẻ mật khẩu, kể cả với đồng nghiệp — mỗi người dùng tài khoản riêng.</li>
             <li>Dùng máy tính chung thì bấm <strong>Đăng xuất</strong> khi xong việc.</li>
-            <li>Quên mật khẩu: liên hệ quản trị viên (cô Mai) để được cấp lại.</li>
+            <li>Quên mật khẩu: liên hệ quản trị viên (cô Mai) để được đặt lại.</li>
           </ul>
         </div>
       </aside>
