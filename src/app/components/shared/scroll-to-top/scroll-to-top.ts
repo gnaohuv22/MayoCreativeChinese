@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 
 @Component({
   selector: 'app-scroll-to-top',
@@ -9,6 +9,8 @@ import { Component, signal } from '@angular/core';
 })
 export class ScrollToTopComponent {
   readonly isVisible = signal(false);
+  /** Nâng nút lên trên điện thoại khi trang có thanh cố định ở đáy (VD: nút "Đăng ký ngay") */
+  readonly raised = input(false);
 
   onWindowScroll(): void {
     const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;

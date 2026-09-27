@@ -8,6 +8,7 @@ import { AboutComponent } from './components/about/about';
 import { TeachersComponent } from './components/teachers/teachers';
 import { CoursesComponent } from './components/courses/courses';
 import { GalleryComponent } from './components/gallery/gallery';
+import { StudentStoriesComponent } from './components/student-stories/student-stories';
 import { FooterComponent } from './components/footer/footer';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top';
 import { RegisterModalComponent } from './components/shared/register-modal/register-modal';
@@ -23,6 +24,7 @@ import { ToastComponent } from './components/shared/toast/toast';
     TeachersComponent,
     CoursesComponent,
     GalleryComponent,
+    StudentStoriesComponent,
     FooterComponent,
     ScrollToTopComponent,
     RegisterModalComponent,

@@ -40,7 +40,10 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'cog'
-  | 'document-duplicate';
+  | 'document-duplicate'
+  | 'chevron-down'
+  | 'users'
+  | 'calendar';
 
 @Component({
   selector: 'app-icon',

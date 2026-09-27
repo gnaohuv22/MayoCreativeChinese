@@ -7,6 +7,12 @@ export interface RegistrationData {
   birthYear: string;
   phoneNumber: string;
   email: string;
+  /** Khóa quan tâm — khi đăng ký từ trang khóa học */
+  course?: string;
+  /** 'online' | 'offline' | 'undecided' */
+  studyMode?: string;
+  /** 'register' | 'trial' */
+  intent?: string;
 }
 
 @Injectable({
@@ -29,6 +35,10 @@ export class RegistrationService {
       .set('birthYear', data.birthYear)
       .set('phoneNumber', data.phoneNumber)
       .set('email', data.email)
+      // Cột mới (Apps Script cần ghi thêm các trường này): khóa quan tâm, hình thức, loại đăng ký
+      .set('course', data.course ?? '')
+      .set('studyMode', data.studyMode ?? '')
+      .set('intent', data.intent ?? 'register')
       .set('securityKey', 'mcc_secret_token_2026_xyz');
 
     const headers = new HttpHeaders({

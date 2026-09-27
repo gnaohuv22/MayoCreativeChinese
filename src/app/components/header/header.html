@@ -9,7 +9,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between">
       <!-- Logo -->
-      <a href="#home" class="flex items-center space-x-3 group">
+      <a href="/#home" class="flex items-center space-x-3 group">
         <div class="relative w-10 h-10 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
           <img ngSrc="android-chrome-192x192.png" width="36" height="36" alt="MCC Logo" class="object-contain" priority />
         </div>
@@ -26,7 +26,7 @@
       <!-- Desktop Navigation -->
       <nav class="hidden lg:flex items-center space-x-8">
         @for (item of navItems; track item.id) {
-          <a [href]="'#' + item.id"
+          <a [href]="'/#' + item.id"
              class="text-sm font-medium transition-colors duration-300 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-brand-pink after:transition-all after:duration-300 hover:after:w-full"
              [class.text-brand-pink]="activeSection() === item.id"
              [class.text-brand-navy]="activeSection() !== item.id && !theme.isDarkMode()"
@@ -137,7 +137,7 @@
        [class.py-4]="isMobileMenuOpen()">
     <div class="px-4 space-y-2">
       @for (item of navItems; track item.id) {
-        <a [href]="'#' + item.id"
+        <a [href]="'/#' + item.id"
            (click)="closeMobileMenu()"
            class="block px-3 py-2.5 rounded-lg text-base font-medium transition-colors"
            [class.bg-brand-pink/10]="activeSection() === item.id"

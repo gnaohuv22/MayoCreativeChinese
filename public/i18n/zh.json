@@ -202,5 +202,16 @@
   "course.tutor.desc": "根据学员目标（HSK考试、提升口语、课堂知识辅导等）量身定制学习路线，内容和时间灵活安排。",
   "course.tutor.duration": "每周2 - 5节课",
   "course.tutor.class_size": "1 - 2名学员",
-  "course.tutor.objective": "个性化路线，内容与时间灵活"
+  "course.tutor.objective": "个性化路线，内容与时间灵活",
+  "register.label.course": "感兴趣的课程",
+  "register.intent.trial": "免费试听报名",
+  "register.label.mode": "上课形式",
+  "register.mode.online": "线上",
+  "register.mode.offline": "线下",
+  "register.mode.undecided": "尚未确定，需要咨询",
+  "course.view_detail": "查看课程详情",
+  "stories.badge": "学员故事",
+  "stories.title": "学员故事",
+  "stories.subtitle": "MCC学员的成绩、学习历程与难忘瞬间",
+  "stories.read_more": "阅读全文"
 }

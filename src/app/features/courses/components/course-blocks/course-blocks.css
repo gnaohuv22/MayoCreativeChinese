@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+/* Bảng rộng cuộn ngang trên điện thoại — gợi ý có thể cuộn */
+.course-table {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}

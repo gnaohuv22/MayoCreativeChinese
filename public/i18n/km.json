@@ -192,5 +192,16 @@
   "course.tutor.desc": "រៀបចំផ្លូវសិក្សាផ្ទាល់ខ្លួនតាមគោលដៅរបស់សិស្ស (ប្រឡង HSK, កែលម្អការសន្ទនា, ជំនួយការសិក្សាក្នុងថ្នាក់ ។ល។) ដោយបត់បែនលើខ្លឹមសារ និងពេលវេលា។",
   "course.tutor.duration": "2 - 5 វគ្គ/សប្តាហ៍",
   "course.tutor.class_size": "សិស្ស 1 - 2 នាក់",
-  "course.tutor.objective": "ផ្លូវសិក្សាផ្ទាល់ខ្លួន បត់បែនពេលវេលា"
+  "course.tutor.objective": "ផ្លូវសិក្សាផ្ទាល់ខ្លួន បត់បែនពេលវេលា",
+  "register.label.course": "វគ្គសិក្សាដែលចាប់អារម្មណ៍",
+  "register.intent.trial": "ចុះឈ្មោះរៀនសាកល្បងឥតគិតថ្លៃ",
+  "register.label.mode": "ទម្រង់សិក្សា",
+  "register.mode.online": "អនឡាញ",
+  "register.mode.offline": "ផ្ទាល់",
+  "register.mode.undecided": "មិនទាន់ប្រាកដ / ត្រូវការប្រឹក្សា",
+  "course.view_detail": "មើលព័ត៌មានលម្អិតវគ្គ",
+  "stories.badge": "រឿងរ៉ាវ",
+  "stories.title": "រឿងរ៉ាវសិស្ស",
+  "stories.subtitle": "សមិទ្ធផល ដំណើរ និងពេលវេលាគួរឱ្យចងចាំរបស់សិស្ស MCC",
+  "stories.read_more": "អានបន្ត"
 }

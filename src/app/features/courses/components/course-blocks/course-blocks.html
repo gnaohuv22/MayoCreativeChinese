@@ -1,0 +1,102 @@
+<div class="space-y-5">
+  @for (block of blocks(); track $index; let i = $index) {
+    @switch (block.kind) {
+      @case ('heading') {
+        <h3 class="pt-4 text-lg sm:text-xl font-display font-black text-brand-navy dark:text-white">{{ block.text }}</h3>
+      }
+
+      @case ('subheading') {
+        <h4 class="pt-2 flex items-center gap-2 text-sm font-bold text-brand-pink">
+          <span class="w-1.5 h-4 rounded-full bg-brand-pink"></span>
+          {{ block.text }}
+        </h4>
+      }
+
+      @case ('paragraph') {
+        @for (line of block.lines; track $index) {
+          <p
+            [class.italic]="line.italic"
+            [class.font-semibold]="line.bold"
+            class="text-sm sm:text-[15px] leading-relaxed text-brand-navy/80 dark:text-white/80"
+          >{{ line.text }}</p>
+        }
+      }
+
+      @case ('list') {
+        <div class="space-y-2">
+          @if (block.title) {
+            <h3 class="text-base font-bold text-brand-navy dark:text-white">{{ block.title }}</h3>
+          }
+          <ul class="space-y-2">
+            @for (item of block.items; track $index) {
+              <li class="flex gap-2.5 text-sm sm:text-[15px] leading-relaxed text-brand-navy/85 dark:text-white/85">
+                <app-icon name="check-circle" size="sm" customClass="shrink-0 mt-0.5 text-brand-pink" />
+                <span>{{ item }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @case ('table') {
+        <div class="course-table overflow-x-auto rounded-2xl border border-brand-navy/10 dark:border-white/10">
+          <table class="w-full min-w-[560px] text-left text-sm">
+            <thead class="bg-brand-navy text-white dark:bg-white/10">
+              <tr>
+                @for (h of block.head; track $index) {
+                  <th scope="col" class="px-4 py-3 text-xs font-bold uppercase tracking-wider">{{ h }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-navy/5 dark:divide-white/5 bg-white dark:bg-brand-dark/40">
+              @for (row of block.rows; track $index) {
+                <tr class="align-top">
+                  @for (cell of row; track $index; let c = $index) {
+                    <td [class.whitespace-nowrap]="c === 0" class="px-4 py-3">
+                      @if (cell.length > 0 && cell[0].bullet) {
+                        <ul class="list-disc pl-4 space-y-1 marker:text-brand-pink">
+                          @for (line of cell; track $index) {
+                            <li class="text-brand-navy/80 dark:text-white/80">{{ line.text }}</li>
+                          }
+                        </ul>
+                      } @else {
+                        @for (line of cell; track $index; let first = $first) {
+                          <span class="block leading-snug {{ lineClass(line, first) }}">{{ line.text }}</span>
+                        }
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @case ('stage') {
+        <section class="rounded-2xl border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-brand-dark/60 shadow-sm overflow-hidden">
+          <h3>
+            <button
+              type="button"
+              (click)="toggle(i)"
+              [attr.aria-expanded]="isOpen(i)"
+              class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left cursor-pointer hover:bg-brand-pink/5 transition-colors"
+            >
+              <span class="font-display font-black text-base sm:text-lg text-brand-navy dark:text-white leading-snug">{{ block.title }}</span>
+              <app-icon
+                name="chevron-down"
+                size="sm"
+                [customClass]="'shrink-0 text-brand-pink transition-transform duration-300 ' + (isOpen(i) ? 'rotate-180' : '')"
+              />
+            </button>
+          </h3>
+          @if (isOpen(i)) {
+            <div class="px-5 pb-5 pt-1 border-t border-brand-navy/5 dark:border-white/5">
+              <app-course-blocks [blocks]="block.blocks" />
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+</div>

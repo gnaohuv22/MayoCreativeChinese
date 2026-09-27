@@ -205,5 +205,16 @@
   "course.tutor.desc": "Được xây dựng lộ trình học riêng theo mục tiêu của học viên (thi HSK, cải thiện giao tiếp, bổ trợ kiến thức trên lớp, v.v.), linh hoạt về nội dung và thời gian.",
   "course.tutor.duration": "2 - 5 buổi/tuần",
   "course.tutor.class_size": "1 - 2 học viên",
-  "course.tutor.objective": "Lộ trình riêng, linh hoạt nội dung & thời gian"
+  "course.tutor.objective": "Lộ trình riêng, linh hoạt nội dung & thời gian",
+  "register.label.course": "Khóa quan tâm",
+  "register.intent.trial": "Đăng ký học thử miễn phí",
+  "register.label.mode": "Hình thức học",
+  "register.mode.online": "Online",
+  "register.mode.offline": "Offline",
+  "register.mode.undecided": "Chưa chắc chắn / cần tư vấn",
+  "course.view_detail": "Xem chi tiết lộ trình",
+  "stories.badge": "Câu Chuyện",
+  "stories.title": "Câu Chuyện Học Viên",
+  "stories.subtitle": "Thành tích, hành trình và những khoảnh khắc đáng nhớ của học viên MCC",
+  "stories.read_more": "Đọc tiếp"
 }

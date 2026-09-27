@@ -21,6 +21,9 @@ export class RegisterModalComponent {
   readonly birthYear = signal('');
   readonly phoneNumber = signal('');
   readonly email = signal('');
+  /** Hình thức học — chỉ hiện khi mở từ trang khóa học */
+  readonly studyMode = signal<'online' | 'offline' | 'undecided'>('undecided');
+  readonly studyModes = ['online', 'offline', 'undecided'] as const;
 
   // Touched States
   readonly fullNameTouched = signal(false);
@@ -89,6 +92,10 @@ export class RegisterModalComponent {
     if (field === 'email') this.email.set(value);
   }
 
+  onStudyModeChange(event: Event): void {
+    this.studyMode.set((event.target as HTMLSelectElement).value as 'online' | 'offline' | 'undecided');
+  }
+
   onSelectChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.birthYear.set(value);
@@ -123,7 +130,10 @@ export class RegisterModalComponent {
       fullName: this.fullName(),
       birthYear: this.birthYear(),
       phoneNumber: this.phoneNumber(),
-      email: this.email()
+      email: this.email(),
+      course: this.modalService.context()?.course,
+      studyMode: this.modalService.context() ? this.studyMode() : undefined,
+      intent: this.modalService.context()?.trial ? 'trial' : 'register',
     }).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
@@ -151,6 +161,7 @@ export class RegisterModalComponent {
     this.birthYear.set('');
     this.phoneNumber.set('');
     this.email.set('');
+    this.studyMode.set('undecided');
     this.fullNameTouched.set(false);
     this.birthYearTouched.set(false);
     this.phoneNumberTouched.set(false);

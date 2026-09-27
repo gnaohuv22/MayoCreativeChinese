@@ -138,14 +138,22 @@
             </div>
           </div>
 
-          <!-- Enroll CTA Button -->
+          <!-- CTA: trang chi tiết lộ trình (nếu có) hoặc đăng ký qua Zalo -->
           <div class="px-8 pb-8">
-            <a href="https://zalo.me/0353149176"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="block w-full py-3.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-2xl text-center text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-              {{ i18n.translate()('nav.enroll') }}
-            </a>
+            @if (course.detailSlug) {
+              <a [routerLink]="['/khoa-hoc', course.detailSlug]"
+                 [queryParams]="course.detailQuery ?? null"
+                 class="block w-full py-3.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-2xl text-center text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                {{ i18n.translate()('course.view_detail') }}
+              </a>
+            } @else {
+              <a href="https://zalo.me/0353149176"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="block w-full py-3.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-2xl text-center text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                {{ i18n.translate()('nav.enroll') }}
+              </a>
+            }
           </div>
 
         </div>

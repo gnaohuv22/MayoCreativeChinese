@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+/* Chừa chỗ cho nút "Đăng ký ngay" cố định ở đáy trên điện thoại */
+@media (max-width: 1023px) {
+  .course-page {
+    padding-bottom: 5rem;
+  }
+}
+
+/* 3 chặng hiển thị như bậc thang trên desktop, xếp thẳng trên điện thoại */
+@media (max-width: 767px) {
+  .track-step {
+    margin-top: 0 !important;
+  }
+}
+
+/* Nút đăng ký phát sáng nhẹ để tạo điểm nhấn */
+.register-glow {
+  animation: register-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes register-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(206 45 110 / 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(206 45 110 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-glow {
+    animation: none;
+  }
+}

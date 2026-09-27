@@ -1,4 +1,5 @@
 import { Component, inject, signal, ElementRef, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
 
 interface Course {
@@ -11,10 +12,15 @@ interface Course {
   icon: string;
   /** Nhãn nổi bật trên thẻ (VD: 'Mới') */
   badgeKey?: string;
+  /** Trang chi tiết /khoa-hoc/<detailSlug> (nếu có) */
+  detailSlug?: string;
+  /** Query param khi mở trang chi tiết (VD: chọn sẵn tab Người lớn) */
+  detailQuery?: Record<string, string>;
 }
 
 @Component({
   selector: 'app-courses',
+  imports: [RouterLink],
   templateUrl: './courses.html',
   styleUrl: './courses.css'
 })
@@ -35,7 +41,8 @@ export class CoursesComponent {
       durationKey: 'course.hsk.duration',
       classSizeKey: 'course.hsk.class_size',
       objectiveKey: 'course.hsk.objective',
-      icon: 'certificate'
+      icon: 'certificate',
+      detailSlug: 'hsk-3-0'
     },
     {
       id: 'supplement',
@@ -45,7 +52,8 @@ export class CoursesComponent {
       classSizeKey: 'course.supplement.class_size',
       objectiveKey: 'course.supplement.objective',
       icon: 'certificate',
-      badgeKey: 'course.badge.new'
+      badgeKey: 'course.badge.new',
+      detailSlug: 'bo-sung-hsk-2-len-3'
     },
     {
       id: 'kids',
@@ -54,7 +62,8 @@ export class CoursesComponent {
       durationKey: 'course.kids.duration',
       classSizeKey: 'course.kids.class_size',
       objectiveKey: 'course.kids.objective',
-      icon: 'academic'
+      icon: 'academic',
+      detailSlug: 'tieng-trung-tre-em'
     },
     {
       id: 'communication',
@@ -63,7 +72,10 @@ export class CoursesComponent {
       durationKey: 'course.communication.duration',
       classSizeKey: 'course.communication.class_size',
       objectiveKey: 'course.communication.objective',
-      icon: 'chat'
+      icon: 'chat',
+      detailSlug: 'tieng-trung-tre-em',
+      // Khóa giao tiếp dùng chung lộ trình Nhập Môn – Thông Thạo – Tinh Anh, tab Người lớn
+      detailQuery: { 'doi-tuong': 'nguoi-lon' }
     },
     {
       id: 'tutor',
@@ -72,7 +84,8 @@ export class CoursesComponent {
       durationKey: 'course.tutor.duration',
       classSizeKey: 'course.tutor.class_size',
       objectiveKey: 'course.tutor.objective',
-      icon: 'tutor'
+      icon: 'tutor',
+      detailSlug: 'gia-su'
     },
     {
       id: 'business',
@@ -99,7 +112,8 @@ export class CoursesComponent {
       durationKey: 'course.hsk_old.duration',
       classSizeKey: 'course.hsk_old.class_size',
       objectiveKey: 'course.hsk_old.objective',
-      icon: 'certificate'
+      icon: 'certificate',
+      detailSlug: 'hsk-2-0'
     }
   ];
 

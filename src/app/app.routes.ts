@@ -2,6 +2,18 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    // Trang chi tiết khóa học (nội dung từ brief — scripts/course-brief-to-ts.py)
+    path: 'khoa-hoc/:slug',
+    loadComponent: () =>
+      import('./features/courses/pages/course-detail/course-detail').then(m => m.CourseDetailComponent),
+  },
+  {
+    // Bài đăng "Câu chuyện học viên"
+    path: 'bai-viet/:slug',
+    loadComponent: () =>
+      import('./features/posts/pages/story-detail/story-detail').then(m => m.StoryDetailComponent),
+  },
+  {
     path: 'flashcards',
     loadChildren: () =>
       import('./features/flashcards/flashcard.routes').then(m => m.flashcardRoutes),

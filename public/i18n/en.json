@@ -205,5 +205,16 @@
   "course.tutor.desc": "A personal learning path built around your goal (HSK exam, conversation, supporting classroom learning, etc.), with flexible content and scheduling.",
   "course.tutor.duration": "2 - 5 sessions/week",
   "course.tutor.class_size": "1 - 2 students",
-  "course.tutor.objective": "Personal path, flexible content & time"
+  "course.tutor.objective": "Personal path, flexible content & time",
+  "register.label.course": "Course of interest",
+  "register.intent.trial": "Free trial class",
+  "register.label.mode": "Study format",
+  "register.mode.online": "Online",
+  "register.mode.offline": "Offline",
+  "register.mode.undecided": "Not sure yet / need advice",
+  "course.view_detail": "View course details",
+  "stories.badge": "Stories",
+  "stories.title": "Student Stories",
+  "stories.subtitle": "Achievements, journeys and memorable moments of MCC students",
+  "stories.read_more": "Read more"
 }

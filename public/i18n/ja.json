@@ -192,5 +192,16 @@
   "course.tutor.desc": "受講生の目標（HSK受験、会話力向上、授業の補習など）に合わせた専用カリキュラムを作成。内容も時間も柔軟に調整できます。",
   "course.tutor.duration": "週2〜5回",
   "course.tutor.class_size": "1〜2名",
-  "course.tutor.objective": "個別カリキュラム、内容・時間を柔軟に"
+  "course.tutor.objective": "個別カリキュラム、内容・時間を柔軟に",
+  "register.label.course": "希望コース",
+  "register.intent.trial": "無料体験レッスンの申し込み",
+  "register.label.mode": "受講形式",
+  "register.mode.online": "オンライン",
+  "register.mode.offline": "対面",
+  "register.mode.undecided": "未定（相談したい）",
+  "course.view_detail": "コース詳細を見る",
+  "stories.badge": "ストーリー",
+  "stories.title": "受講生ストーリー",
+  "stories.subtitle": "MCC受講生の実績・学びの道のり・思い出の瞬間",
+  "stories.read_more": "続きを読む"
 }
