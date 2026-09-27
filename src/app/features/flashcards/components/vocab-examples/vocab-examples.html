@@ -1,0 +1,22 @@
+@if (examples().length > 0) {
+  <ol class="examples" [class.examples--card]="variant() === 'card'" [class.examples--numbered]="examples().length > 1">
+    @for (ex of examples(); track $index) {
+      <li class="example">
+        @if (ex.text) {
+          <div class="example__text">
+            <span>{{ ex.text }}</span>
+            <app-speak-button [text]="ex.speakText" size="xs" label="Nghe câu ví dụ" />
+          </div>
+        }
+        @if (ex.pinyin) {
+          <div class="example__pinyin">{{ ex.pinyin }}</div>
+        }
+        @if (ex.meaning) {
+          <div class="example__meaning">{{ ex.meaning }}</div>
+        }
+      </li>
+    }
+  </ol>
+} @else {
+  <span class="examples__empty">—</span>
+}

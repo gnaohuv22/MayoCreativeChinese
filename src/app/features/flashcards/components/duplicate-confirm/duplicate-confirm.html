@@ -1,0 +1,60 @@
+<div class="dup-backdrop" (click)="cancel.emit()"></div>
+
+<div class="dup-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dup-title" aria-describedby="dup-desc">
+  <div class="flex items-start gap-3">
+    <span class="shrink-0 w-10 h-10 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+      <app-icon name="question-mark" size="sm" />
+    </span>
+    <div class="min-w-0">
+      <h2 id="dup-title" class="font-display font-bold text-lg text-brand-navy dark:text-white">
+        {{ items().length }} từ đã có trong hệ thống
+      </h2>
+      <p id="dup-desc" class="text-sm text-brand-navy/70 dark:text-white/70 mt-0.5">
+        Các Hán tự dưới đây đã có trong <strong>{{ collectionLabel() }}</strong> (cùng cấp) với pinyin hoặc nghĩa khác.
+        Bạn có chắc muốn thêm nghĩa mới?
+      </p>
+    </div>
+  </div>
+
+  <ul class="dup-list">
+    @for (item of items(); track $index) {
+      <li class="dup-item">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <span class="font-sans font-bold text-2xl text-brand-navy dark:text-white">{{ item.hanzi }}</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/70 dark:text-white/70">HSK {{ item.level }}</span>
+        </div>
+
+        <div class="dup-row dup-row--new">
+          <span class="dup-tag dup-tag--new">Sắp thêm</span>
+          <span class="text-brand-pink font-semibold">{{ item.pinyin }}</span>
+          <span class="text-brand-navy dark:text-white">{{ item.meaning }}</span>
+        </div>
+
+        @for (ex of item.existing; track $index) {
+          <div class="dup-row">
+            <span class="dup-tag">Đã có</span>
+            <span class="text-brand-pink/80 font-semibold">{{ ex.pinyin }}</span>
+            <span class="text-brand-navy/80 dark:text-white/80">{{ ex.meaning }}</span>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+
+  <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+    <button type="button" (click)="cancel.emit()" [disabled]="busy()"
+            class="px-4 py-2 rounded-full text-sm font-semibold text-brand-navy/70 dark:text-white/80 hover:bg-brand-navy/5 dark:hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50">
+      Huỷ
+    </button>
+    @if (otherCount() > 0) {
+      <button type="button" (click)="skipDuplicates.emit()" [disabled]="busy()"
+              class="px-4 py-2 rounded-full text-sm font-bold border border-brand-navy/15 dark:border-white/20 text-brand-navy dark:text-white hover:border-brand-pink hover:text-brand-pink transition-colors cursor-pointer disabled:opacity-50">
+        Bỏ các từ này, thêm {{ otherCount() }} từ còn lại
+      </button>
+    }
+    <button type="button" (click)="confirmAll.emit()" [disabled]="busy()"
+            class="px-5 py-2 rounded-full text-sm font-bold bg-brand-pink text-white hover:bg-brand-pink/90 shadow-md shadow-brand-pink/20 transition-all cursor-pointer disabled:opacity-50">
+      {{ otherCount() > 0 ? 'Vẫn thêm tất cả' : 'Vẫn thêm' }}
+    </button>
+  </div>
+</div>

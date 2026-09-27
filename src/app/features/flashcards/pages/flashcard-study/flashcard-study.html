@@ -50,8 +50,14 @@
               <span class="hidden xs:inline">Xáo trộn</span>
             </button>
 
+            <!-- TRẮC NGHIỆM -->
+            <a [routerLink]="routes().quiz" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink transition-colors" title="Luyện tập trắc nghiệm">
+              <app-icon name="question-mark" size="xs" />
+              <span class="hidden sm:inline">Trắc nghiệm</span>
+            </a>
+
             <!-- SWITCH TO TABLE VIEW -->
-            <a [routerLink]="listRoute()" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink transition-colors" title="Xem dạng bảng">
+            <a [routerLink]="routes().list" [queryParams]="routes().listQuery" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink transition-colors" title="Xem dạng bảng">
               <app-icon name="document-text" size="xs" />
               <span class="hidden sm:inline">Dạng bảng</span>
             </a>
@@ -101,6 +107,8 @@
             <span><kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-mono text-[10px] shadow-sm">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-mono text-[10px] shadow-sm">→</kbd> Chuyển thẻ</span>
             <span>•</span>
             <span><kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-mono text-[10px] shadow-sm">B</kbd> Đánh dấu</span>
+            <span>•</span>
+            <span><kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-mono text-[10px] shadow-sm">P</kbd> Nghe phát âm</span>
           </p>
         </div>
 

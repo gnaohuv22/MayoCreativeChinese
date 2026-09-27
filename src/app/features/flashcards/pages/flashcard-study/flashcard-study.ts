@@ -4,9 +4,11 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
 import { VocabCardComponent } from '../../components/vocab-card/vocab-card';
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService, progressKey } from '../../services/progress.service';
+import { SpeechService } from '../../services/speech.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { parseLevelParam } from '../../models/vocab-card.model';
-import type { VocabCard, CardProgress, HskVersion, VocabCollection } from '../../models/vocab-card.model';
+import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
+import type { VocabCard, CardProgress, VocabCollection, VocabScope } from '../../models/vocab-card.model';
+import { scopeFromRoute, scopeRoutes, scopeTitle } from '../../utils/vocab-scope.util';
 
 @Component({
   selector: 'app-flashcard-study',
@@ -19,10 +21,9 @@ export class FlashcardStudyComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private vocabService = inject(VocabService);
   private progressService = inject(ProgressService);
+  private speech = inject(SpeechService);
 
-  collection = signal<VocabCollection>('hsk2');
-  level = signal<string>('1');
-  lessonNumber = signal<number | null>(null);
+  scope = signal<VocabScope>({ collection: 'hsk2', levelParam: '1' });
 
   cards = signal<VocabCard[]>([]);
   progressMap = signal<Map<string, CardProgress>>(new Map());
@@ -34,48 +35,10 @@ export class FlashcardStudyComponent implements OnInit {
   isTransitioning = signal(false);
   readonly progressKey = progressKey;
 
-  pageTitle = computed(() => {
-    const col = this.collection();
-    const lvl = this.level();
-    const les = this.lessonNumber();
-
-    if (col === 'hsk3') {
-      return les ? `NEW HSK ${lvl} — Bài ${les}` : `NEW HSK ${lvl} (Tất cả)`;
-    }
-    if (col === 'supplement') {
-      return `HSK ${lvl} (Bổ sung 2.0 → 3.0)`;
-    }
-    if (col === 'combined') {
-      return `HSK ${lvl} (Tổng hợp 1-9)`;
-    }
-    return `HSK ${lvl} (2.0)`;
-  });
-
-  backLink = computed(() => {
-    const col = this.collection();
-    const lvl = this.level();
-    if (col === 'hsk3') {
-      return `/flashcards/hsk3/${lvl}`;
-    }
-    return `/flashcards/${col}`;
-  });
-
-  backLabel = computed(() => {
-    if (this.collection() === 'hsk3') {
-      return 'Chọn bài học';
-    }
-    return 'Chọn cấp độ';
-  });
-
-  listRoute = computed<string[]>(() => {
-    const col = this.collection();
-    const lvl = this.level();
-    const les = this.lessonNumber();
-    if (col === 'hsk3') {
-      return ['/flashcards/hsk3', lvl, 'list'];
-    }
-    return ['/flashcards', col, lvl, 'list'];
-  });
+  pageTitle = computed(() => scopeTitle(this.scope()));
+  routes = computed(() => scopeRoutes(this.scope()));
+  backLink = computed(() => this.routes().back.join('/'));
+  backLabel = computed(() => this.routes().backLabel);
 
   filteredCards = computed(() => {
     const filter = this.filter();
@@ -99,75 +62,33 @@ export class FlashcardStudyComponent implements OnInit {
   });
 
   async ngOnInit() {
-    this.route.data.subscribe(data => {
-      if (data['collection']) {
-        this.collection.set(data['collection']);
-      }
-    });
-
     this.route.paramMap.subscribe(async params => {
-      const lvl = params.get('level') || '1';
-      this.level.set(lvl);
-
-      const lesParam = params.get('lesson');
-      if (lesParam) {
-        this.lessonNumber.set(Number(lesParam));
-      } else {
-        this.lessonNumber.set(null);
-      }
-
+      const collection = (this.route.snapshot.data['collection'] as VocabCollection) || 'hsk2';
+      this.scope.set(scopeFromRoute(collection, params));
       await this.loadCards();
     });
   }
 
   async loadCards() {
     this.loading.set(true);
-    const col = this.collection();
-    const lvl = Number(this.level());
-    const les = this.lessonNumber();
-
     try {
-      let vocabList: VocabCard[] = [];
-      let ver: HskVersion | undefined;
-
-      if (col === 'hsk2') {
-        ver = '2.0';
-        vocabList = await this.vocabService.getVocabByLevel(lvl, '2.0');
-      } else if (col === 'hsk3') {
-        ver = '3.0';
-        if (les != null && les > 0) {
-          vocabList = await this.vocabService.getVocabByLesson(lvl, '3.0', les);
-          // Fallback nếu lesson chưa được đánh số trong DB nhưng getLessonsForLevel chia tự động
-          if (vocabList.length === 0) {
-            const allLvl = await this.vocabService.getVocabByLevel(lvl, '3.0');
-            const WORDS_PER_LESSON = 15;
-            const start = (les - 1) * WORDS_PER_LESSON;
-            const end = start + WORDS_PER_LESSON;
-            vocabList = allLvl.slice(start, end);
-          }
-        } else {
-          vocabList = await this.vocabService.getVocabByLevel(lvl, '3.0');
-        }
-      } else if (col === 'supplement') {
-        ver = '3.0';
-        vocabList = await this.vocabService.getSupplementVocab(lvl);
-      } else {
-        // combined / hsk1_9 (cấp '7-9' được gộp)
-        ver = undefined;
-        vocabList = await this.vocabService.getVocabByLevels(parseLevelParam(this.level()));
-      }
-
-      const progress = await this.progressService.getProgressForCards(vocabList, ver);
+      const vocabList = await this.vocabService.getVocabForScope(this.scope());
+      const progress = await this.progressService.getProgressForCards(vocabList);
 
       this.cards.set(vocabList);
       this.progressMap.set(progress);
       this.currentIndex.set(0);
       this.flipped.set(false);
+      this.shuffled.set(false);
     } catch (error) {
       console.error('Error loading study cards:', error);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private get version() {
+    return VOCAB_COLLECTIONS[this.scope().collection].version;
   }
 
   flipCard() {
@@ -214,8 +135,7 @@ export class FlashcardStudyComponent implements OnInit {
 
     try {
       const hskLevel = card.hsk_level;
-      const col = this.collection();
-      const ver: HskVersion | undefined = col === 'hsk2' ? '2.0' : col === 'hsk3' ? '3.0' : undefined;
+      const ver = this.version;
       const key = progressKey(card);
 
       await this.progressService.updateConfidence(card, confidence, ver);
@@ -260,8 +180,7 @@ export class FlashcardStudyComponent implements OnInit {
     if (!card) return;
     try {
       const hskLevel = card.hsk_level;
-      const col = this.collection();
-      const ver: HskVersion | undefined = col === 'hsk2' ? '2.0' : col === 'hsk3' ? '3.0' : undefined;
+      const ver = this.version;
       const key = progressKey(card);
 
       const newBookmarked = await this.progressService.toggleBookmark(card, ver);
@@ -326,6 +245,8 @@ export class FlashcardStudyComponent implements OnInit {
       this.flipCard();
     } else if (event.key.toLowerCase() === 'b') {
       this.toggleBookmark();
+    } else if (event.key.toLowerCase() === 'p') {
+      this.speech.speak(this.currentCard()?.hanzi);
     }
   }
 }

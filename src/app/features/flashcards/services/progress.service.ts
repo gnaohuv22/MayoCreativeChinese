@@ -3,7 +3,15 @@ import { db } from '../db/progress.db';
 import type { CardProgress, LevelStats, HskVersion, VocabCard } from '../models/vocab-card.model';
 
 /** Thông tin tối thiểu của 1 thẻ để tra cứu tiến độ học */
-export type ProgressCardRef = Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level'>;
+export type ProgressCardRef = Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'>;
+
+/**
+ * Bản ghi cũ (chưa có cardId, chỉ lưu Hán tự + cấp) có từ trước khi tách 4 bộ,
+ * lúc đó chỉ bộ HSK 2.0 có dữ liệu → chỉ gán lại cho thẻ HSK 2.0.
+ */
+function acceptsLegacy(card: ProgressCardRef): boolean {
+  return !card.collection || card.collection === 'hsk2';
+}
 
 /** Key duy nhất cho 1 thẻ trong progress map (id nếu có, fallback Hán tự + level) */
 export function progressKey(card: ProgressCardRef): string {
@@ -12,15 +20,6 @@ export function progressKey(card: ProgressCardRef): string {
 
 @Injectable({ providedIn: 'root' })
 export class ProgressService {
-
-  /** Lấy tất cả progress cho 1 HSK level, có thể lọc theo version */
-  async getProgress(hskLevel: number, hskVersion?: HskVersion): Promise<CardProgress[]> {
-    let items = await db.progress.where('hskLevel').equals(hskLevel).toArray();
-    if (hskVersion) {
-      items = items.filter(p => !p.hskVersion || p.hskVersion === hskVersion);
-    }
-    return items;
-  }
 
   /**
    * Lấy progress cho 1 thẻ cụ thể.
@@ -31,6 +30,7 @@ export class ProgressService {
       const byId = await db.progress.where('cardId').equals(card.id).first();
       if (byId) return byId;
     }
+    if (!acceptsLegacy(card)) return undefined;
     const legacy = (await db.progress.where('[hanzi+hskLevel]').equals([card.hanzi, card.hsk_level]).toArray())
       .filter(p => p.cardId == null);
     if (hskVersion) {
@@ -89,16 +89,14 @@ export class ProgressService {
     }
   }
 
-  /** Thống kê progress cho 1 level (cần truyền totalCards từ Supabase) */
-  async getLevelStats(hskLevel: number, totalCards: number, hskVersion?: HskVersion): Promise<LevelStats> {
-    const progress = await this.getProgress(hskLevel, hskVersion);
+  /** Thống kê tiến độ cho 1 tập thẻ */
+  async getStatsForCards(cards: ProgressCardRef[]): Promise<LevelStats> {
+    const progress = [...(await this.getProgressForCards(cards)).values()];
     return {
-      level: hskLevel,
-      totalCards,
+      totalCards: cards.length,
       reviewed: progress.filter(p => p.reviewCount > 0).length,
       mastered: progress.filter(p => p.confidence >= 2).length,
       bookmarked: progress.filter(p => p.bookmarked).length,
-      hskVersion,
     };
   }
 
@@ -125,6 +123,7 @@ export class ProgressService {
         map.set(progressKey(card), hit);
         continue;
       }
+      if (!acceptsLegacy(card)) continue;
       const legacyKey = `${card.hanzi}_${card.hsk_level}`;
       const old = legacy.get(legacyKey);
       if (old) {
@@ -151,13 +150,6 @@ export class ProgressService {
       return rest as CardProgress;
     }));
     return data.length;
-  }
-
-  /** Reset progress cho 1 level */
-  async resetLevel(hskLevel: number, hskVersion?: HskVersion): Promise<void> {
-    const items = await this.getProgress(hskLevel, hskVersion);
-    const ids = items.map(i => i.id!).filter(Boolean);
-    await db.progress.bulkDelete(ids);
   }
 
   /** Reset tất cả progress */

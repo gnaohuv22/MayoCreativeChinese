@@ -29,9 +29,12 @@
     </div>
 
     <!-- Hanzi -->
-    <p class="text-5xl sm:text-6xl md:text-7xl font-bold text-brand-navy dark:text-white select-none my-auto font-sans">
-      {{ card().hanzi }}
-    </p>
+    <div class="my-auto flex flex-col items-center gap-4">
+      <p class="text-5xl sm:text-6xl md:text-7xl font-bold text-brand-navy dark:text-white select-none font-sans">
+        {{ card().hanzi }}
+      </p>
+      <app-speak-button [text]="card().hanzi" size="md" />
+    </div>
 
     <p class="text-xs sm:text-sm font-medium text-brand-navy/30 dark:text-brand-text-dark/40 flex items-center gap-1.5 mt-auto">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
@@ -68,22 +71,17 @@
       </button>
     </div>
 
-    <!-- Pinyin & Meaning -->
-    <div class="my-auto w-full">
-      <p class="text-2xl sm:text-3xl font-extrabold text-brand-pink tracking-wide">{{ card().pinyin }}</p>
+    <!-- Pinyin & Meaning (cuộn được khi có nhiều ví dụ) -->
+    <div class="card-back__body w-full">
+      <div class="flex items-center justify-center gap-2">
+        <p class="text-2xl sm:text-3xl font-extrabold text-brand-pink tracking-wide">{{ card().pinyin }}</p>
+        <app-speak-button [text]="card().hanzi" />
+      </div>
       <p class="mt-2 text-xl sm:text-2xl font-bold text-brand-navy dark:text-white">{{ card().meaning }}</p>
 
-      @if (card().example) {
-        <div class="mt-5 pt-4 border-t border-brand-navy/10 dark:border-white/10 text-left w-full max-w-sm mx-auto">
-          <p class="text-base sm:text-lg text-brand-navy/90 dark:text-white/90 font-medium font-sans">
-            {{ card().example }}
-          </p>
-          @if (card().example_pinyin) { 
-            <p class="text-xs sm:text-sm text-brand-pink/90 mt-1 font-medium">{{ card().example_pinyin }}</p> 
-          }
-          @if (card().example_meaning) { 
-            <p class="text-xs sm:text-sm text-brand-navy/60 dark:text-brand-text-dark/70 mt-1">{{ card().example_meaning }}</p> 
-          }
+      @if (hasExamples()) {
+        <div class="mt-5 pt-4 border-t border-brand-navy/10 dark:border-white/10 w-full max-w-sm mx-auto text-brand-navy/90 dark:text-white/90">
+          <app-vocab-examples [card]="card()" variant="card" />
         </div>
       }
     </div>

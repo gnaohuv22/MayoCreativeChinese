@@ -1,0 +1,40 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  color: var(--color-brand-pink, #e5006a);
+  background: color-mix(in srgb, var(--color-brand-pink, #e5006a) 10%, transparent);
+  cursor: pointer;
+  transition: background-color 150ms, transform 150ms;
+}
+
+.speak-btn:hover {
+  background: color-mix(in srgb, var(--color-brand-pink, #e5006a) 20%, transparent);
+}
+
+.speak-btn:active {
+  transform: scale(0.92);
+}
+
+.speak-btn--xs {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.speak-btn--md {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.speak-btn--active {
+  color: #fff;
+  background: var(--color-brand-pink, #e5006a);
+}

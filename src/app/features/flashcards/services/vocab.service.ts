@@ -1,214 +1,153 @@
 import { Injectable } from '@angular/core';
 import { getSupabase } from '../config/supabase.config';
-import { vocabEntryKey, vocabHanziKey, vocabWordKey } from '../models/vocab-card.model';
-import type { VocabCard, HskVersion, LessonInfo } from '../models/vocab-card.model';
+import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
+import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
+import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
+
+/** Supabase trả tối đa 1000 dòng / request */
+const PAGE = 1000;
+
+export type NewVocabCard = Omit<VocabCard, 'id' | 'created_at' | 'updated_at'> & { collection: VocabCollection };
 
 @Injectable({ providedIn: 'root' })
 export class VocabService {
   private readonly supabase = getSupabase();
 
-  /** Fetch tất cả từ vựng cho 1 HSK level, có thể lọc theo phiên bản (2.0 / 3.0) */
-  async getVocabByLevel(level: number, version?: HskVersion): Promise<VocabCard[]> {
-    let query = this.supabase
+  /** Query có sẵn bộ lọc theo phạm vi (bộ + cấp + bài / chủ đề) */
+  private scopedQuery(scope: VocabScope, columns = '*', options?: { count: 'exact' }) {
+    const levels = scopeLevels(scope);
+    let q = this.supabase
       .from('vocab_cards')
-      .select('*')
-      .eq('hsk_level', level);
+      .select(columns, options)
+      .eq('collection', scope.collection);
 
-    if (version) {
-      query = query.eq('hsk_version', version);
+    q = levels.length > 1 ? q.in('hsk_level', levels) : q.eq('hsk_level', levels[0]);
+
+    if (scope.lesson != null) {
+      q = scope.lesson > 0 ? q.eq('lesson_number', scope.lesson) : q.is('lesson_number', null);
     }
-
-    const { data, error } = await query.order('id', { ascending: true });
-
-    if (error) {
-      console.error(`Failed to fetch HSK ${level} (version: ${version ?? 'all'}) vocab:`, error);
-      return [];
+    if (scope.topic != null) {
+      q = scope.topic ? q.eq('topic', scope.topic) : q.is('topic', null);
     }
-    return data ?? [];
+    return q;
   }
 
-  /** Fetch từ vựng theo Level và Phiên bản */
-  async getVocabByLevelAndVersion(level: number, version: HskVersion): Promise<VocabCard[]> {
-    return this.getVocabByLevel(level, version);
-  }
-
-  /** Fetch từ vựng cho nhiều cấp cùng lúc (VD: HSK 7-9 gộp) */
-  async getVocabByLevels(levels: number[], version?: HskVersion): Promise<VocabCard[]> {
-    if (levels.length === 1) return this.getVocabByLevel(levels[0], version);
-    let query = this.supabase
-      .from('vocab_cards')
-      .select('*')
-      .in('hsk_level', levels);
-
-    if (version) {
-      query = query.eq('hsk_version', version);
-    }
-
-    const { data, error } = await query
-      .order('hsk_level', { ascending: true })
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.error(`Failed to fetch HSK ${levels.join(',')} vocab:`, error);
-      return [];
-    }
-    return data ?? [];
-  }
-
-  /** Fetch từ vựng cho 1 bài học cụ thể (HSK 3.0) */
-  async getVocabByLesson(level: number, version: HskVersion, lessonNumber: number): Promise<VocabCard[]> {
-    const { data, error } = await this.supabase
-      .from('vocab_cards')
-      .select('*')
-      .eq('hsk_level', level)
-      .eq('hsk_version', version)
-      .eq('lesson_number', lessonNumber)
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.error(`Failed to fetch HSK ${level} Lesson ${lessonNumber}:`, error);
-      return [];
-    }
-    return data ?? [];
-  }
-
-  /** Lấy danh sách các bài học (lessons) của 1 level HSK 3.0 */
-  async getLessonsForLevel(level: number, version: HskVersion = '3.0'): Promise<LessonInfo[]> {
-    const cards = await this.getVocabByLevel(level, version);
-    if (!cards || cards.length === 0) return [];
-
-    const lessonMap = new Map<number, { title: string; count: number }>();
-    let unassignedCards = 0;
-
-    for (const card of cards) {
-      if (card.lesson_number != null && card.lesson_number > 0) {
-        const existing = lessonMap.get(card.lesson_number);
-        if (existing) {
-          existing.count++;
-          if (!existing.title && card.lesson_title) {
-            existing.title = card.lesson_title;
-          }
-        } else {
-          lessonMap.set(card.lesson_number, {
-            title: card.lesson_title || `Bài ${card.lesson_number}`,
-            count: 1,
-          });
-        }
-      } else {
-        unassignedCards++;
+  /** Lấy toàn bộ dòng, tự chia trang 1000 dòng */
+  private async fetchAll<T>(build: () => any): Promise<T[]> {
+    const all: T[] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await build().range(from, from + PAGE - 1);
+      if (error) {
+        console.error('Vocab query failed:', error);
+        break;
       }
+      all.push(...(data ?? []));
+      if (!data || data.length < PAGE) break;
     }
-
-    const lessons: LessonInfo[] = [];
-    const sortedLessonNumbers = Array.from(lessonMap.keys()).sort((a, b) => a - b);
-
-    for (const num of sortedLessonNumbers) {
-      const info = lessonMap.get(num)!;
-      lessons.push({
-        lessonNumber: num,
-        lessonTitle: info.title,
-        wordCount: info.count,
-      });
-    }
-
-    // Nếu các thẻ chưa có lesson_number, tự động nhóm thành các bài mẫu (ví dụ mỗi bài 15-20 từ)
-    // để UI HSK 3.0 theo bài luôn sẵn sàng hoạt động ngay cả với dataset ban đầu
-    if (lessons.length === 0 && cards.length > 0) {
-      const WORDS_PER_LESSON = 15;
-      const totalLessons = Math.ceil(cards.length / WORDS_PER_LESSON);
-      for (let i = 1; i <= totalLessons; i++) {
-        const start = (i - 1) * WORDS_PER_LESSON;
-        const end = Math.min(start + WORDS_PER_LESSON, cards.length);
-        lessons.push({
-          lessonNumber: i,
-          lessonTitle: `Bài ${i}: Từ vựng phần ${i}`,
-          wordCount: end - start,
-        });
-      }
-    } else if (unassignedCards > 0) {
-      lessons.push({
-        lessonNumber: 0,
-        lessonTitle: 'Từ vựng bổ sung / Chưa phân bài',
-        wordCount: unassignedCards,
-      });
-    }
-
-    return lessons;
+    return all;
   }
 
-  /** Lấy từ vựng bổ sung từ HSK 2.0 lên HSK 3.0 */
-  async getSupplementVocab(level: number): Promise<VocabCard[]> {
-    const [cardsV2, cardsV3] = await Promise.all([
-      this.getVocabByLevel(level, '2.0'),
-      this.getVocabByLevel(level, '3.0'),
-    ]);
-
-    // Theo chuẩn từ điển, 1 mục từ = Hán tự + pinyin (từ đa âm 多音字 là mục riêng).
-    // Nghĩa mới của từ cũ không tính là từ bổ sung.
-    const v2Words = new Set(cardsV2.map(vocabWordKey));
-    // Những từ có trong HSK 3.0 nhưng chưa có trong HSK 2.0
-    const supplement = cardsV3.filter(c => !v2Words.has(vocabWordKey(c)));
-    return supplement;
+  /** Toàn bộ từ trong 1 phạm vi, theo thứ tự cấp → bài → nhập */
+  async getVocabForScope(scope: VocabScope): Promise<VocabCard[]> {
+    return this.fetchAll<VocabCard>(() =>
+      this.scopedQuery(scope)
+        .order('hsk_level', { ascending: true })
+        .order('lesson_number', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: true })
+    );
   }
 
-  /** Đếm số từ cho từng HSK level (tùy chọn theo version) */
-  async getLevelCounts(version?: HskVersion): Promise<Map<number, number>> {
-    const counts = new Map<number, number>();
-    const maxLevel = version === '2.0' ? 6 : 9;
+  /** Thông tin tối thiểu để tính tiến độ học (không tải cả ví dụ) */
+  async getCardRefsForScope(scope: VocabScope): Promise<Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'>[]> {
+    return this.fetchAll(() => this.scopedQuery(scope, 'id, hanzi, hsk_level, collection').order('id'));
+  }
 
-    for (let level = 1; level <= maxLevel; level++) {
-      let query = this.supabase
+  /** Số từ theo từng cấp của 1 bộ */
+  async getLevelCounts(collection: VocabCollection): Promise<Map<number, number>> {
+    const levels = collectionLevels(collection);
+    const results = await Promise.all(levels.map(level =>
+      this.supabase
         .from('vocab_cards')
-        .select('*', { count: 'exact', head: true })
-        .eq('hsk_level', level);
-
-      if (version) {
-        query = query.eq('hsk_version', version);
-      }
-
-      const { count, error } = await query;
-
-      if (!error && count !== null) {
-        counts.set(level, count);
-      } else {
-        counts.set(level, 0);
-      }
-    }
+        .select('id', { count: 'exact', head: true })
+        .eq('collection', collection)
+        .eq('hsk_level', level)
+    ));
+    const counts = new Map<number, number>();
+    results.forEach((res, i) => counts.set(levels[i], res.error ? 0 : res.count ?? 0));
     return counts;
   }
 
-  /** Truy vấn danh sách từ vựng có phân trang cho Table View */
+  /** Tổng số từ của 1 bộ */
+  async getCollectionCount(collection: VocabCollection): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('vocab_cards')
+      .select('id', { count: 'exact', head: true })
+      .eq('collection', collection);
+    return error ? 0 : count ?? 0;
+  }
+
+  /**
+   * Danh sách nhóm trong 1 cấp: bài học (HSK 3.0) hoặc chủ đề (Bổ sung).
+   * Từ chưa gán bài / chủ đề gom vào nhóm cuối cùng.
+   */
+  async getGroups(scope: VocabScope): Promise<VocabGroupInfo[]> {
+    const grouping = VOCAB_COLLECTIONS[scope.collection].grouping;
+    if (!grouping) return [];
+    const base: VocabScope = { collection: scope.collection, levelParam: scope.levelParam };
+
+    const rows = await this.fetchAll<Pick<VocabCard, 'id' | 'lesson_number' | 'lesson_title' | 'topic'>>(() =>
+      this.scopedQuery(base, 'id, lesson_number, lesson_title, topic').order('id')
+    );
+
+    const groups = new Map<string, VocabGroupInfo>();
+    let unassigned = 0;
+
+    for (const r of rows) {
+      if (grouping === 'lesson') {
+        const n = r.lesson_number;
+        if (n == null || n <= 0) { unassigned++; continue; }
+        const g = groups.get(String(n));
+        if (g) {
+          g.wordCount++;
+          if (g.title === `Bài ${n}` && r.lesson_title) g.title = r.lesson_title;
+        } else {
+          groups.set(String(n), { key: String(n), lessonNumber: n, title: r.lesson_title || `Bài ${n}`, wordCount: 1 });
+        }
+      } else {
+        const t = r.topic?.trim();
+        if (!t) { unassigned++; continue; }
+        const g = groups.get(t);
+        if (g) g.wordCount++;
+        else groups.set(t, { key: t, title: t, wordCount: 1 });
+      }
+    }
+
+    // Bài học theo số bài; chủ đề theo thứ tự nhập
+    const list = [...groups.values()];
+    if (grouping === 'lesson') list.sort((a, b) => a.lessonNumber! - b.lessonNumber!);
+
+    if (unassigned > 0) {
+      list.push(grouping === 'lesson'
+        ? { key: '0', lessonNumber: 0, title: 'Chưa phân bài', wordCount: unassigned }
+        : { key: NO_TOPIC_PARAM, title: 'Chưa phân chủ đề', wordCount: unassigned });
+    }
+    return list;
+  }
+
+  /** Bảng tra cứu có phân trang */
   async getVocabPaginated(params: {
-    level?: number;
-    levels?: number[];
-    version?: HskVersion;
-    lessonNumber?: number;
+    scope: VocabScope;
     query?: string;
     page: number;
     pageSize: number;
   }): Promise<{ data: VocabCard[]; total: number }> {
-    const { level, levels, version, lessonNumber, query, page, pageSize } = params;
+    const { scope, query, page, pageSize } = params;
     const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
 
-    let q = this.supabase
-      .from('vocab_cards')
-      .select('*', { count: 'exact' });
-
-    if (levels && levels.length > 1) {
-      q = q.in('hsk_level', levels);
-    } else if (levels?.length === 1 || (level && level > 0)) {
-      q = q.eq('hsk_level', levels?.[0] ?? level!);
-    }
-    if (version) {
-      q = q.eq('hsk_version', version);
-    }
-    if (lessonNumber != null && lessonNumber > 0) {
-      q = q.eq('lesson_number', lessonNumber);
-    }
+    let q = this.scopedQuery(scope, '*', { count: 'exact' });
     if (query && query.trim()) {
-      const clean = query.trim();
+      const clean = query.trim().replace(/[,()]/g, ' ');
       q = q.or(`hanzi.ilike.%${clean}%,pinyin.ilike.%${clean}%,meaning.ilike.%${clean}%`);
     }
 
@@ -216,36 +155,58 @@ export class VocabService {
       .order('hsk_level', { ascending: true })
       .order('lesson_number', { ascending: true, nullsFirst: false })
       .order('id', { ascending: true })
-      .range(from, to);
+      .range(from, from + pageSize - 1);
 
     if (error) {
       console.error('getVocabPaginated failed:', error);
       return { data: [], total: 0 };
     }
+    return { data: (data ?? []) as unknown as VocabCard[], total: count ?? 0 };
+  }
 
-    return {
-      data: data ?? [],
-      total: count ?? 0,
-    };
+  /** Trang quản lý: toàn bộ từ của 1 bộ (hoặc tất cả), lọc theo cấp (0 = mọi cấp) */
+  async getVocabForManage(collection: VocabCollection | 'all', level: number): Promise<VocabCard[]> {
+    return this.fetchAll<VocabCard>(() => {
+      let q = this.supabase.from('vocab_cards').select('*');
+      if (collection !== 'all') q = q.eq('collection', collection);
+      if (level > 0) q = q.eq('hsk_level', level);
+      return q.order('collection').order('hsk_level').order('id');
+    });
+  }
+
+  /** Các từ đã có cùng Hán tự trong cùng bộ + cấp (để hỏi xác nhận khi thêm nghĩa mới) */
+  async findSameHanzi(collection: VocabCollection, level: number, hanzi: string): Promise<VocabCard[]> {
+    const { data, error } = await this.supabase
+      .from('vocab_cards')
+      .select('*')
+      .eq('collection', collection)
+      .eq('hsk_level', level)
+      .eq('hanzi', hanzi.trim())
+      .order('id');
+    if (error) {
+      console.error('findSameHanzi failed:', error);
+      return [];
+    }
+    return data ?? [];
   }
 
   /** Thêm 1 từ vựng (admin/ops) */
-  async addCard(card: Omit<VocabCard, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean; error?: string }> {
+  async addCard(card: NewVocabCard): Promise<{ success: boolean; error?: string }> {
     const { error } = await this.supabase
       .from('vocab_cards')
-      .insert(card);
+      .insert(this.withVersion(card));
 
     if (error) {
       if (error.code === '23505') {
-        return { success: false, error: `Từ "${card.hanzi}" (${card.pinyin} — ${card.meaning}) đã tồn tại trong HSK ${card.hsk_level}` };
+        return { success: false, error: `Từ "${card.hanzi}" (${card.pinyin} — ${card.meaning}) đã có trong ${VOCAB_COLLECTIONS[card.collection].shortLabel} cấp ${card.hsk_level}` };
       }
       return { success: false, error: error.message };
     }
     return { success: true };
   }
 
-  /** Thêm nhiều từ vựng (batch import) */
-  async addCards(cards: Omit<VocabCard, 'id' | 'created_at' | 'updated_at'>[]): Promise<{ inserted: number; errors: string[] }> {
+  /** Thêm nhiều từ vựng (batch import). Trùng hoàn toàn → bỏ qua, không ghi đè */
+  async addCards(cards: NewVocabCard[]): Promise<{ inserted: number; errors: string[] }> {
     const errors: string[] = [];
     let inserted = 0;
 
@@ -256,18 +217,16 @@ export class VocabService {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    });
+    }).map(c => this.withVersion(c));
 
-    // Trùng hoàn toàn (Hán tự + pinyin + nghĩa + cấp + phiên bản) → bỏ qua, không ghi đè
-    const { data, error } = await this.supabase
-      .from('vocab_cards')
-      .upsert(unique, { onConflict: 'hanzi,pinyin,meaning,hsk_level,hsk_version', ignoreDuplicates: true })
-      .select();
+    for (let i = 0; i < unique.length; i += 500) {
+      const { data, error } = await this.supabase
+        .from('vocab_cards')
+        .upsert(unique.slice(i, i + 500), { onConflict: 'collection,hsk_level,hanzi,pinyin,meaning', ignoreDuplicates: true })
+        .select('id');
 
-    if (error) {
-      errors.push(error.message);
-    } else {
-      inserted = data?.length ?? 0;
+      if (error) errors.push(error.message);
+      else inserted += data?.length ?? 0;
     }
 
     return { inserted, errors };
@@ -275,12 +234,16 @@ export class VocabService {
 
   /** Cập nhật 1 từ vựng (admin/ops) */
   async updateCard(id: number, changes: Partial<VocabCard>): Promise<{ success: boolean; error?: string }> {
+    const payload = changes.collection ? this.withVersion(changes as NewVocabCard) : changes;
     const { error } = await this.supabase
       .from('vocab_cards')
-      .update(changes)
+      .update(payload)
       .eq('id', id);
 
     if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: 'Đã có từ giống hệt (Hán tự + pinyin + nghĩa) trong cùng bộ và cấp.' };
+      }
       return { success: false, error: error.message };
     }
     return { success: true };
@@ -312,62 +275,32 @@ export class VocabService {
     return { success: true };
   }
 
-  /** Tìm kiếm từ vựng */
-  async searchVocab(query: string, level?: number, version?: HskVersion): Promise<VocabCard[]> {
-    let q = this.supabase
-      .from('vocab_cards')
-      .select('*')
-      .or(`hanzi.ilike.%${query}%,pinyin.ilike.%${query}%,meaning.ilike.%${query}%`);
+  /** Các từ đã có trong 1 bộ (các cấp cho trước) để kiểm tra trùng khi import */
+  async getExistingVocabKeys(collection: VocabCollection, levels: number[]): Promise<ExistingVocabKeys> {
+    const keys: ExistingVocabKeys = { entries: new Set(), hanzi: new Map() };
+    if (levels.length === 0) return keys;
 
-    if (level) {
-      q = q.eq('hsk_level', level);
-    }
-    if (version) {
-      q = q.eq('hsk_version', version);
-    }
+    const rows = await this.fetchAll<Pick<VocabCard, 'collection' | 'hanzi' | 'pinyin' | 'meaning' | 'hsk_level'>>(() =>
+      this.supabase
+        .from('vocab_cards')
+        .select('collection, hanzi, pinyin, meaning, hsk_level')
+        .eq('collection', collection)
+        .in('hsk_level', levels)
+        .order('id')
+    );
 
-    const { data, error } = await q.order('hsk_level').order('id').limit(200);
-    if (error) {
-      console.error('Search failed:', error);
-      return [];
-    }
-    return data ?? [];
-  }
-
-  /** Lấy danh sách hanzi đã tồn tại cho 1 level và version (dùng cho duplicate check khi import) */
-  async getExistingHanzi(level: number, version?: HskVersion): Promise<Set<string>> {
-    let q = this.supabase
-      .from('vocab_cards')
-      .select('hanzi')
-      .eq('hsk_level', level);
-
-    if (version) {
-      q = q.eq('hsk_version', version);
-    }
-
-    const { data, error } = await q;
-    if (error) return new Set();
-    return new Set((data ?? []).map(r => r.hanzi));
-  }
-
-  /** Lấy các key đã tồn tại để kiểm tra trùng khi import (xem `vocabEntryKey`) */
-  async getExistingVocabKeys(level?: number): Promise<ExistingVocabKeys> {
-    let q = this.supabase
-      .from('vocab_cards')
-      .select('hanzi, pinyin, meaning, hsk_level, hsk_version');
-
-    if (level && level > 0) {
-      q = q.eq('hsk_level', level);
-    }
-
-    const keys: ExistingVocabKeys = { entries: new Set(), hanzi: new Set() };
-    const { data, error } = await q;
-    if (error) return keys;
-
-    for (const r of data ?? []) {
+    for (const r of rows) {
       keys.entries.add(vocabEntryKey(r));
-      keys.hanzi.add(vocabHanziKey(r));
+      const hk = vocabHanziKey(r);
+      const list = keys.hanzi.get(hk) ?? [];
+      list.push({ pinyin: r.pinyin, meaning: r.meaning });
+      keys.hanzi.set(hk, list);
     }
     return keys;
+  }
+
+  /** hsk_version luôn đi theo bộ (giữ cột cũ đồng bộ) */
+  private withVersion<T extends { collection: VocabCollection }>(card: T): T & { hsk_version: string } {
+    return { ...card, hsk_version: VOCAB_COLLECTIONS[card.collection].version };
   }
 }

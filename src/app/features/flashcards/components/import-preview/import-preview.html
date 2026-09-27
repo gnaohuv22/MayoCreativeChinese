@@ -10,6 +10,12 @@
         <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
         {{ duplicateCount() }} trùng lặp (bỏ qua)
       </span>
+      @if (sameHanziCount() > 0) {
+        <span class="flex items-center gap-1.5 text-sky-700 dark:text-sky-300">
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+          {{ sameHanziCount() }} cùng chữ, khác nghĩa (sẽ hỏi xác nhận)
+        </span>
+      }
       <span class="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
         {{ errorCount() }} lỗi
@@ -30,12 +36,12 @@
       </button>
       <button
         (click)="onConfirm()"
-        [disabled]="selectedCount() === 0"
+        [disabled]="selectedCount() === 0 || busy()"
         class="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-brand-pink hover:bg-brand-pink/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-full shadow-md shadow-brand-pink/20 transition-all cursor-pointer flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
-        Thêm {{ selectedCount() }} từ vào DB
+        {{ busy() ? 'Đang thêm...' : 'Thêm ' + selectedCount() + ' từ vào ' + collectionLabel() }}
       </button>
     </div>
   </div>
@@ -51,8 +57,10 @@
           <th class="p-3.5">Pinyin</th>
           <th class="p-3.5">Nghĩa</th>
           <th class="p-3.5 w-16 text-center">HSK</th>
-          <th class="p-3.5 w-24 text-center">Phiên bản</th>
-          <th class="p-3.5 w-20 text-center">Bài học</th>
+          @if (grouping()) {
+            <th class="p-3.5 w-28 text-center">{{ grouping() === 'topic' ? 'Chủ đề' : 'Bài học' }}</th>
+          }
+          <th class="p-3.5">Ví dụ</th>
           <th class="p-3.5">Trạng thái</th>
         </tr>
       </thead>
@@ -78,18 +86,16 @@
                 {{ item.row.hsk_level }}
               </span>
             </td>
-            <td class="p-3.5 text-center">
-              <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full font-bold text-[10px]"
-                    [class.bg-blue-100]="item.row.hsk_version === '2.0'"
-                    [class.text-blue-700]="item.row.hsk_version === '2.0'"
-                    [class.bg-purple-100]="item.row.hsk_version !== '2.0'"
-                    [class.text-purple-700]="item.row.hsk_version !== '2.0'">
-                {{ item.row.hsk_version === '2.0' ? 'HSK 2.0' : 'HSK 3.0' }}
-              </span>
-            </td>
-            <td class="p-3.5 text-center text-xs text-brand-navy/70 dark:text-white/70">
-              {{ item.row.lesson_number ? 'Bài ' + item.row.lesson_number : '—' }}
-            </td>
+            @if (grouping() === 'lesson') {
+              <td class="p-3.5 text-center text-xs text-brand-navy/70 dark:text-white/70">
+                {{ item.row.lesson_number ? 'Bài ' + item.row.lesson_number : '—' }}
+              </td>
+            } @else if (grouping() === 'topic') {
+              <td class="p-3.5 text-center text-xs text-brand-navy/70 dark:text-white/70">
+                {{ item.row.topic || '—' }}
+              </td>
+            }
+            <td class="p-3.5 text-xs text-brand-navy/70 dark:text-white/70 whitespace-pre-line max-w-xs">{{ item.row.example || '—' }}</td>
             <td class="p-3.5">
               @if (item.status === 'valid') {
                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
@@ -113,9 +119,12 @@
                   {{ item.errors[0] || 'Dữ liệu không hợp lệ' }}
                 </span>
               }
-              @if (item.sameHanziExists) {
-                <div class="mt-1 text-[11px] font-medium text-sky-700 dark:text-sky-300" title="Đã có từ cùng Hán tự nhưng khác pinyin / nghĩa. Vẫn được thêm — chỉ cần kiểm tra lại lỗi gõ.">
-                  Cùng chữ, khác nghĩa
+              @if (item.sameHanziMatches?.length) {
+                <div class="mt-1.5 text-[11px] font-medium text-sky-700 dark:text-sky-300">
+                  <div class="font-bold">Đã có nghĩa khác:</div>
+                  @for (m of item.sameHanziMatches; track $index) {
+                    <div>{{ m.pinyin }} — {{ m.meaning }}</div>
+                  }
                 </div>
               }
             </td>

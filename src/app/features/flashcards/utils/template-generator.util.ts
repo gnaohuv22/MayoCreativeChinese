@@ -1,29 +1,36 @@
 import type { VocabCard } from '../models/vocab-card.model';
 
+/**
+ * Mẫu import. Bộ từ vựng (HSK 2.0 / 3.0 / 1-9 / Bổ sung) chọn trên trang import, không nằm trong file.
+ * - lesson_number, lesson_title: dùng cho bộ HSK 3.0 (chia theo bài)
+ * - topic: dùng cho bộ Bổ sung 2.0 → 3.0 (chia theo chủ đề)
+ * - Nhiều ví dụ: xuống dòng trong ô (Alt+Enter trong Excel); dòng thứ N của 3 cột ví dụ là 1 ví dụ
+ */
 const TEMPLATE_HEADERS = [
   'hanzi',
   'pinyin',
   'meaning',
   'hsk_level',
-  'hsk_version',
   'lesson_number',
   'lesson_title',
+  'topic',
   'example',
   'example_pinyin',
   'example_meaning',
 ];
 
 const EXAMPLE_ROWS = [
-  ['你好', 'nǐ hǎo', 'xin chào', '1', '3.0', '1', 'Bài 1: Lời chào', '你好，我叫小明。', 'Nǐ hǎo, wǒ jiào Xiǎo Míng.', 'Xin chào, tôi tên là Tiểu Minh.'],
-  ['谢谢', 'xiè xie', 'cảm ơn', '1', '3.0', '1', 'Bài 1: Lời chào', '谢谢你的帮助。', 'Xiè xie nǐ de bāng zhù.', 'Cảm ơn sự giúp đỡ của bạn.'],
-  ['再见', 'zài jiàn', 'tạm biệt', '1', '2.0', '', '', '明天见，再见！', 'Míng tiān jiàn, zài jiàn!', 'Hẹn gặp ngày mai, tạm biệt!'],
+  ['你好', 'nǐ hǎo', 'xin chào', '1', '1', 'Bài 1: Lời chào', '', '你好，我叫小明。', 'Nǐ hǎo, wǒ jiào Xiǎo Míng.', 'Xin chào, tôi tên là Tiểu Minh.'],
+  ['对', 'duì', 'đúng', '1', '2', 'Bài 2: Trả lời', '', '你说得对。\n对，我是老师。', 'Nǐ shuō de duì.\nDuì, wǒ shì lǎoshī.', 'Bạn nói đúng.\nĐúng, tôi là giáo viên.'],
+  ['对', 'duì', 'đối với', '1', '2', 'Bài 2: Trả lời', '', '他对我很好。', 'Tā duì wǒ hěn hǎo.', 'Anh ấy đối với tôi rất tốt.'],
+  ['快递', 'kuàidì', 'chuyển phát nhanh', '3', '', '', 'Mua sắm', '我的快递到了。', 'Wǒ de kuàidì dào le.', 'Hàng chuyển phát của tôi đến rồi.'],
 ];
 
 /** Download a CSV template file */
 export function downloadCsvTemplate(): void {
   const lines = [
     TEMPLATE_HEADERS.join(','),
-    ...EXAMPLE_ROWS.map(row => row.map(cell => `"${cell}"`).join(',')),
+    ...EXAMPLE_ROWS.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')),
   ];
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   triggerDownload(blob, 'flashcard-template.csv');
@@ -40,9 +47,9 @@ export async function downloadXlsxTemplate(): Promise<void> {
     { wch: 15 }, // pinyin
     { wch: 20 }, // meaning
     { wch: 10 }, // hsk_level
-    { wch: 12 }, // hsk_version
     { wch: 14 }, // lesson_number
     { wch: 20 }, // lesson_title
+    { wch: 18 }, // topic
     { wch: 30 }, // example
     { wch: 30 }, // example_pinyin
     { wch: 30 }, // example_meaning

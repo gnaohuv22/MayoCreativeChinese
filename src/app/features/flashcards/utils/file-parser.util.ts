@@ -1,12 +1,12 @@
-import { vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
-import type { ParsedImportRow, ValidatedImportRow, VocabCard, HskVersion } from '../models/vocab-card.model';
+import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
+import type { ExistingMeaning, ParsedImportRow, ValidatedImportRow, VocabCollection } from '../models/vocab-card.model';
 
-/** Các key đã có trong DB, dùng để kiểm tra trùng khi import */
+/** Các từ đã có trong DB (1 bộ), dùng để kiểm tra trùng khi import */
 export interface ExistingVocabKeys {
-  /** vocabEntryKey — Hán tự + pinyin + nghĩa + cấp + phiên bản */
+  /** vocabEntryKey — bộ + cấp + Hán tự + pinyin + nghĩa */
   entries: Set<string>;
-  /** vocabHanziKey — Hán tự + cấp + phiên bản */
-  hanzi: Set<string>;
+  /** vocabHanziKey (bộ + cấp + Hán tự) → các nghĩa đã có */
+  hanzi: Map<string, ExistingMeaning[]>;
 }
 
 /**
@@ -31,11 +31,10 @@ export async function parseFile(file: File): Promise<ParsedImportRow[]> {
 
 /** Parse CSV text into rows */
 export function parseCsv(text: string): ParsedImportRow[] {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
+  const records = parseCsvRecords(text.replace(/^\uFEFF/, ''));
+  if (records.length < 2) return [];
 
-  const headerLine = lines[0];
-  const headers = headerLine.split(',').map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
+  const headers = records[0].map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
 
   const colMap = mapColumns(headers);
   if (!colMap) {
@@ -43,27 +42,24 @@ export function parseCsv(text: string): ParsedImportRow[] {
   }
 
   const rows: ParsedImportRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cells = parseCSVLine(lines[i]);
+  for (const cells of records.slice(1)) {
     if (cells.every(c => !c.trim())) continue; // skip empty rows
 
-    const rawVer = colMap.hsk_version !== undefined ? cells[colMap.hsk_version]?.trim() : '';
-    const ver: HskVersion | undefined = rawVer === '2.0' || rawVer === '2' ? '2.0' : rawVer === '3.0' || rawVer === '3' ? '3.0' : undefined;
-
-    const rawLesson = colMap.lesson_number !== undefined ? cells[colMap.lesson_number]?.trim() : '';
+    const cell = (idx: number | undefined) => (idx !== undefined ? cleanCell(cells[idx]) : '');
+    const rawLesson = cell(colMap.lesson_number);
     const lessonNum = rawLesson ? parseInt(rawLesson, 10) : undefined;
 
     rows.push({
-      hanzi: cells[colMap.hanzi]?.trim() ?? '',
-      pinyin: cells[colMap.pinyin]?.trim() ?? '',
-      meaning: cells[colMap.meaning]?.trim() ?? '',
-      hsk_level: parseInt(cells[colMap.hsk_level]?.trim() ?? '0', 10),
-      hsk_version: ver,
+      hanzi: cell(colMap.hanzi),
+      pinyin: cell(colMap.pinyin),
+      meaning: cell(colMap.meaning),
+      hsk_level: parseInt(cell(colMap.hsk_level) || '0', 10),
       lesson_number: isNaN(lessonNum as number) ? undefined : lessonNum,
-      lesson_title: colMap.lesson_title !== undefined ? cells[colMap.lesson_title]?.trim() : undefined,
-      example: colMap.example !== undefined ? cells[colMap.example]?.trim() : undefined,
-      example_pinyin: colMap.example_pinyin !== undefined ? cells[colMap.example_pinyin]?.trim() : undefined,
-      example_meaning: colMap.example_meaning !== undefined ? cells[colMap.example_meaning]?.trim() : undefined,
+      lesson_title: cell(colMap.lesson_title) || undefined,
+      topic: cell(colMap.topic) || undefined,
+      example: cell(colMap.example) || undefined,
+      example_pinyin: cell(colMap.example_pinyin) || undefined,
+      example_meaning: cell(colMap.example_meaning) || undefined,
     });
   }
 
@@ -93,17 +89,14 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
   const rows: ParsedImportRow[] = [];
   for (const row of jsonData) {
     const getValue = (key: string): string => {
-      if (row[key] !== undefined) return String(row[key]).trim();
+      if (row[key] !== undefined) return cleanCell(String(row[key]));
       const mapped = headerMap[key.toLowerCase()];
-      if (mapped && row[mapped] !== undefined) return String(row[mapped]).trim();
+      if (mapped && row[mapped] !== undefined) return cleanCell(String(row[mapped]));
       return '';
     };
 
     const hanzi = getValue('hanzi');
     if (!hanzi) continue; // skip rows without hanzi
-
-    const rawVer = getValue('hsk_version') || getValue('version');
-    const ver: HskVersion | undefined = rawVer === '2.0' || rawVer === '2' ? '2.0' : rawVer === '3.0' || rawVer === '3' ? '3.0' : undefined;
 
     const rawLesson = getValue('lesson_number') || getValue('lesson') || getValue('bai');
     const lessonNum = rawLesson ? parseInt(rawLesson, 10) : undefined;
@@ -113,9 +106,9 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
       pinyin: getValue('pinyin'),
       meaning: getValue('meaning'),
       hsk_level: parseInt(getValue('hsk_level') || '0', 10),
-      hsk_version: ver,
       lesson_number: isNaN(lessonNum as number) ? undefined : lessonNum,
       lesson_title: getValue('lesson_title') || getValue('ten_bai') || undefined,
+      topic: getValue('topic') || getValue('chủ đề') || getValue('chu_de') || undefined,
       example: getValue('example') || undefined,
       example_pinyin: getValue('example_pinyin') || undefined,
       example_meaning: getValue('example_meaning') || undefined,
@@ -126,15 +119,18 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
 }
 
 /**
- * Validate parsed rows against existing data.
- * Chỉ coi là trùng khi Hán tự + pinyin + nghĩa (cùng cấp, phiên bản) đều giống — xem `vocabEntryKey`.
+ * Validate parsed rows against existing data of 1 collection.
+ * - Trùng hoàn toàn (Hán tự + pinyin + nghĩa, cùng bộ & cấp) → bỏ qua.
+ * - Cùng Hán tự nhưng khác pinyin/nghĩa với từ đã có trong DB → hợp lệ, kèm `sameHanziMatches` để hỏi xác nhận.
  */
 export function validateRows(
   rows: ParsedImportRow[],
-  existing: ExistingVocabKeys
+  existing: ExistingVocabKeys,
+  collection: VocabCollection
 ): ValidatedImportRow[] {
   const seenEntries = new Set<string>();
-  const seenHanzi = new Set<string>();
+  const allowedLevels = collectionLevels(collection);
+  const config = VOCAB_COLLECTIONS[collection];
 
   return rows.map((row, index) => {
     const errors: string[] = [];
@@ -142,19 +138,16 @@ export function validateRows(
     if (!row.hanzi) errors.push('Thiếu Hán tự');
     if (!row.pinyin) errors.push('Thiếu Pinyin');
     if (!row.meaning) errors.push('Thiếu Nghĩa');
-    if (!row.hsk_level || row.hsk_level < 1 || row.hsk_level > 9) {
-      errors.push('HSK level phải từ 1 đến 9');
+    if (!allowedLevels.includes(row.hsk_level)) {
+      errors.push(`${config.shortLabel} chỉ có cấp ${allowedLevels[0]}–${allowedLevels[allowedLevels.length - 1]}`);
     }
 
-    const card = { ...row, hsk_version: row.hsk_version || '2.0' };
+    const card = { ...row, collection };
     const entryKey = vocabEntryKey(card);
-    const hanziKey = vocabHanziKey(card);
-
     const isDuplicate = existing.entries.has(entryKey) || seenEntries.has(entryKey);
-    const sameHanziExists = !isDuplicate && (existing.hanzi.has(hanziKey) || seenHanzi.has(hanziKey));
-
     seenEntries.add(entryKey);
-    seenHanzi.add(hanziKey);
+
+    const matches = isDuplicate ? [] : existing.hanzi.get(vocabHanziKey(card)) ?? [];
 
     let status: 'valid' | 'duplicate' | 'error';
     if (errors.length > 0) {
@@ -171,7 +164,7 @@ export function validateRows(
       status,
       errors,
       selected: status === 'valid',
-      sameHanziExists,
+      sameHanziMatches: matches.length > 0 ? matches : undefined,
     };
   });
 }
@@ -183,9 +176,9 @@ interface ColumnMap {
   pinyin: number;
   meaning: number;
   hsk_level: number;
-  hsk_version?: number;
   lesson_number?: number;
   lesson_title?: number;
+  topic?: number;
   example?: number;
   example_pinyin?: number;
   example_meaning?: number;
@@ -205,35 +198,46 @@ function mapColumns(headers: string[]): ColumnMap | null {
     return null;
   }
 
-  const hsk_version = find(['hsk_version', 'version', 'phiên bản', 'phien_ban', '版本']);
   const lesson_number = find(['lesson_number', 'lesson', 'bài', 'bai', 'bài số', 'bai_so', '课', '课号']);
   const lesson_title = find(['lesson_title', 'tên bài', 'ten_bai', 'tiêu đề bài', '课题']);
+  const topic = find(['topic', 'chủ đề', 'chu_de', 'chude', '主题', '话题']);
 
   return {
     hanzi,
     pinyin,
     meaning,
     hsk_level,
-    hsk_version: hsk_version !== -1 ? hsk_version : undefined,
     lesson_number: lesson_number !== -1 ? lesson_number : undefined,
     lesson_title: lesson_title !== -1 ? lesson_title : undefined,
+    topic: topic !== -1 ? topic : undefined,
     example: find(['example', 'ví dụ', 'vi_du', '例句']) !== -1 ? find(['example', 'ví dụ', 'vi_du', '例句']) : undefined,
     example_pinyin: find(['example_pinyin', 'pinyin ví dụ', '例句拼音']) !== -1 ? find(['example_pinyin', 'pinyin ví dụ', '例句拼音']) : undefined,
     example_meaning: find(['example_meaning', 'nghĩa ví dụ', '例句翻译']) !== -1 ? find(['example_meaning', 'nghĩa ví dụ', '例句翻译']) : undefined,
   };
 }
 
-/** Parse a single CSV line respecting quoted fields */
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
+/** Bỏ khoảng trắng thừa nhưng giữ xuống dòng (nhiều ví dụ trong 1 ô) */
+function cleanCell(value: string | undefined): string {
+  return (value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .join('\n')
+    .trim();
+}
+
+/** Parse toàn bộ CSV, tôn trọng ô trong ngoặc kép (có thể chứa dấu phẩy và xuống dòng) */
+function parseCsvRecords(text: string): string[][] {
+  const records: string[][] = [];
+  let row: string[] = [];
   let current = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
     if (inQuotes) {
       if (char === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
+        if (text[i + 1] === '"') {
           current += '"';
           i++;
         } else {
@@ -242,17 +246,24 @@ function parseCSVLine(line: string): string[] {
       } else {
         current += char;
       }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      row.push(current);
+      current = '';
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[i + 1] === '\n') i++;
+      row.push(current);
+      records.push(row);
+      row = [];
+      current = '';
     } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ',') {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
+      current += char;
     }
   }
-  result.push(current);
-  return result;
+  if (current || row.length > 0) {
+    row.push(current);
+    records.push(row);
+  }
+  return records;
 }

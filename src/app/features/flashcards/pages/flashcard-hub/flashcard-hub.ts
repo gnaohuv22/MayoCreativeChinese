@@ -7,7 +7,7 @@ import { exportProgressJson } from '../../utils/template-generator.util';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
 import { ADVANCED_LEVEL_PARAM } from '../../models/vocab-card.model';
-import type { VocabCollection, HskVersion } from '../../models/vocab-card.model';
+import type { VocabCollection } from '../../models/vocab-card.model';
 
 export interface CollectionCardItem {
   key: VocabCollection;
@@ -40,21 +40,11 @@ export class FlashcardHubComponent implements OnInit {
   async ngOnInit() {
     this.loading.set(true);
     try {
-      const [countsV2, countsV3, countsAll] = await Promise.all([
-        this.vocabService.getLevelCounts('2.0'),
-        this.vocabService.getLevelCounts('3.0'),
-        this.vocabService.getLevelCounts(),
-      ]);
-
-      let totalAll = 0;
-      countsAll.forEach(val => totalAll += val);
-      this.totalWordsInSystem.set(totalAll);
-
-      let totalV2 = 0;
-      countsV2.forEach(val => totalV2 += val);
-
-      let totalV3 = 0;
-      countsV3.forEach(val => totalV3 += val);
+      // 4 bộ độc lập — mỗi bộ đếm từ của riêng nó
+      const [totalV2, totalV3, totalCombined, totalSupplement] = await Promise.all(
+        (['hsk2', 'hsk3', 'combined', 'supplement'] as VocabCollection[]).map(c => this.vocabService.getCollectionCount(c))
+      );
+      this.totalWordsInSystem.set(totalV2 + totalV3 + totalCombined + totalSupplement);
 
       const items: CollectionCardItem[] = [
         {
@@ -65,7 +55,7 @@ export class FlashcardHubComponent implements OnInit {
           description: 'Hệ thống từ vựng 6 cấp độ (HSK 1 đến HSK 6) theo tiêu chuẩn đánh giá năng lực 6 cấp cũ. Phù hợp cho ôn luyện thi HSK format cũ.',
           levels: [1, 2, 3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
           route: '/flashcards/hsk2',
-          totalCards: totalV2 > 0 ? totalV2 : totalAll,
+          totalCards: totalV2,
         },
         {
           key: 'hsk3',
@@ -75,7 +65,7 @@ export class FlashcardHubComponent implements OnInit {
           description: 'Chuẩn 9 cấp độ mới phân chia theo bài học của giáo trình NEW HSK 3.0, giúp tiếp thu từ vựng theo ngữ cảnh thực tế.',
           levels: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ num: i, label: `NEW HSK ${i}` })),
           route: '/flashcards/hsk3',
-          totalCards: totalV3 > 0 ? totalV3 : totalAll,
+          totalCards: totalV3,
           highlightText: 'Chia theo bài học & giáo trình',
         },
         {
@@ -89,18 +79,18 @@ export class FlashcardHubComponent implements OnInit {
             { num: ADVANCED_LEVEL_PARAM, label: `HSK ${ADVANCED_LEVEL_PARAM}` },
           ],
           route: '/flashcards/combined',
-          totalCards: totalAll,
+          totalCards: totalCombined,
         },
         {
           key: 'supplement',
           title: 'Bổ Sung HSK 2.0 → 3.0',
           badge: 'Nâng cấp',
           badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-          description: 'Tập hợp từ vựng mới cần học thêm khi nâng cấp từ chuẩn HSK 2.0 lên chuẩn HSK 3.0 cho các cấp độ 3 đến 6.',
+          description: 'Tập hợp từ vựng mới cần học thêm khi nâng cấp từ chuẩn HSK 2.0 lên chuẩn HSK 3.0 cho các cấp độ 3 đến 6, chia theo chủ đề.',
           levels: [3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
           route: '/flashcards/supplement',
-          totalCards: Math.max(0, totalV3 - totalV2),
-          highlightText: 'Dành riêng cho HSK 3, 4, 5, 6',
+          totalCards: totalSupplement,
+          highlightText: 'Chia theo chủ đề • HSK 3, 4, 5, 6',
         },
       ];
 

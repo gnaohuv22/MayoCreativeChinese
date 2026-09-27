@@ -1,103 +1,59 @@
 import { Routes } from '@angular/router';
+import type { VocabCollection } from './models/vocab-card.model';
+
+const levelPicker = () =>
+  import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent);
+const groupPicker = () =>
+  import('./pages/vocab-lesson-picker/vocab-lesson-picker').then(m => m.VocabLessonPickerComponent);
+const study = () =>
+  import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent);
+const list = () =>
+  import('./pages/vocab-list/vocab-list').then(m => m.VocabListComponent);
+const quiz = () =>
+  import('./pages/vocab-quiz/vocab-quiz').then(m => m.VocabQuizComponent);
+
+/** Bộ không chia nhỏ: chọn cấp → flashcard / bảng / trắc nghiệm */
+function flatCollection(collection: VocabCollection): Routes {
+  const data = { collection };
+  return [
+    { path: collection, loadComponent: levelPicker, data },
+    { path: `${collection}/:level`, loadComponent: study, data },
+    { path: `${collection}/:level/list`, loadComponent: list, data },
+    { path: `${collection}/:level/quiz`, loadComponent: quiz, data },
+  ];
+}
+
+/** Bộ chia theo bài học / chủ đề: chọn cấp → chọn nhóm → flashcard / trắc nghiệm */
+function groupedCollection(collection: VocabCollection, groupSegment: 'lesson' | 'topic'): Routes {
+  const data = { collection };
+  const group = `${collection}/:level/${groupSegment}/:${groupSegment}`;
+  return [
+    { path: collection, loadComponent: levelPicker, data },
+    { path: `${collection}/:level`, loadComponent: groupPicker, data },
+    { path: `${collection}/:level/all`, loadComponent: study, data },
+    { path: `${collection}/:level/all/quiz`, loadComponent: quiz, data },
+    { path: group, loadComponent: study, data },
+    { path: `${group}/quiz`, loadComponent: quiz, data },
+    { path: `${collection}/:level/list`, loadComponent: list, data },
+  ];
+}
 
 export const flashcardRoutes: Routes = [
-  // Hub trung tâm — 4 bộ sưu tập
+  // Hub trung tâm — 4 bộ sưu tập độc lập
   {
     path: '',
     loadComponent: () =>
       import('./pages/flashcard-hub/flashcard-hub').then(m => m.FlashcardHubComponent),
   },
 
-  // 1. TỪ VỰNG HSK 2.0 (HSK 1 - 6)
-  {
-    path: 'hsk2',
-    loadComponent: () =>
-      import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent),
-    data: { collection: 'hsk2' },
-  },
-  {
-    path: 'hsk2/:level',
-    loadComponent: () =>
-      import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent),
-    data: { collection: 'hsk2' },
-  },
-  {
-    path: 'hsk2/:level/list',
-    loadComponent: () =>
-      import('./pages/vocab-list/vocab-list').then(m => m.VocabListComponent),
-    data: { collection: 'hsk2' },
-  },
-
-  // 2. TỪ VỰNG HSK 3.0 (NEW HSK 1 - 9, chia theo bài học & giáo trình)
-  {
-    path: 'hsk3',
-    loadComponent: () =>
-      import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent),
-    data: { collection: 'hsk3' },
-  },
-  {
-    path: 'hsk3/:level',
-    loadComponent: () =>
-      import('./pages/vocab-lesson-picker/vocab-lesson-picker').then(m => m.VocabLessonPickerComponent),
-  },
-  {
-    path: 'hsk3/:level/all',
-    loadComponent: () =>
-      import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent),
-    data: { collection: 'hsk3' },
-  },
-  {
-    path: 'hsk3/:level/lesson/:lesson',
-    loadComponent: () =>
-      import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent),
-    data: { collection: 'hsk3', lessonMode: true },
-  },
-  {
-    path: 'hsk3/:level/list',
-    loadComponent: () =>
-      import('./pages/vocab-list/vocab-list').then(m => m.VocabListComponent),
-    data: { collection: 'hsk3' },
-  },
-
-  // 3. TỪ VỰNG HSK 1 - 9 (Tổng hợp toàn diện)
-  {
-    path: 'combined',
-    loadComponent: () =>
-      import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent),
-    data: { collection: 'combined' },
-  },
-  {
-    path: 'combined/:level',
-    loadComponent: () =>
-      import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent),
-    data: { collection: 'combined' },
-  },
-  {
-    path: 'combined/:level/list',
-    loadComponent: () =>
-      import('./pages/vocab-list/vocab-list').then(m => m.VocabListComponent),
-    data: { collection: 'combined' },
-  },
-
-  // 4. TỪ VỰNG BỔ SUNG HSK 2.0 LÊN 3.0 (HSK 3, 4, 5, 6)
-  {
-    path: 'supplement',
-    loadComponent: () =>
-      import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent),
-    data: { collection: 'supplement' },
-  },
-  {
-    path: 'supplement/:level',
-    loadComponent: () =>
-      import('./pages/flashcard-study/flashcard-study').then(m => m.FlashcardStudyComponent),
-    data: { collection: 'supplement' },
-  },
-  {
-    path: 'supplement/:level/list',
-    loadComponent: () =>
-      import('./pages/vocab-list/vocab-list').then(m => m.VocabListComponent),
-    data: { collection: 'supplement' },
-  },
+  // 1. Từ vựng HSK 2.0 (HSK 1 - 6)
+  ...flatCollection('hsk2'),
+  // 2. Từ vựng HSK 3.0 (NEW HSK 1 - 9, chia theo bài học)
+  ...groupedCollection('hsk3', 'lesson'),
+  // 3. Từ vựng HSK 1 - 9 (7-9 gộp)
+  ...flatCollection('combined'),
+  // 4. Từ vựng bổ sung HSK 2.0 → 3.0 (HSK 3 - 6, chia theo chủ đề)
+  ...groupedCollection('supplement', 'topic'),
 
   // Legacy route redirect
   {

@@ -1,0 +1,209 @@
+<app-nav-header activeModule="flashcards" [pageTitle]="pageTitle()" [backLink]="backLink()" backLabel="Flashcard" [showBack]="true" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-6 sm:py-10">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6">
+
+    @if (loading()) {
+      <div class="h-[360px] bg-white/80 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-lg animate-pulse rounded-3xl"></div>
+    } @else if (!enoughCards()) {
+      <!-- Không đủ từ -->
+      <div class="text-center py-16 px-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10">
+        <p class="text-lg font-bold text-brand-navy dark:text-white">Cần ít nhất 4 từ để làm trắc nghiệm</p>
+        <p class="text-sm text-brand-navy/60 dark:text-white/60 mt-1">Phần này hiện có {{ cards().length }} từ.</p>
+        <a [routerLink]="routes().back" class="inline-flex items-center gap-1.5 mt-5 text-sm font-semibold text-brand-pink hover:underline">
+          <app-icon name="arrow-left" size="xs" />
+          <span>{{ routes().backLabel }}</span>
+        </a>
+      </div>
+
+    } @else if (phase() === 'setup') {
+      <!-- ============ SETUP ============ -->
+      <div class="rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 shadow-xl shadow-brand-navy/5 dark:shadow-none p-6 sm:p-8 space-y-7">
+        <div class="space-y-1">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-pink/10 text-brand-pink">
+            <app-icon name="question-mark" size="xs" />
+            <span>Luyện tập trắc nghiệm</span>
+          </span>
+          <h1 class="font-display font-black text-2xl sm:text-3xl text-brand-navy dark:text-white pt-2">{{ pageTitle() }}</h1>
+          <p class="text-sm text-brand-navy/60 dark:text-white/60">{{ cards().length }} từ • mỗi câu 4 đáp án, các dạng câu trộn ngẫu nhiên.</p>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-white/50">Dạng câu hỏi</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            @for (type of allTypes; track type) {
+              <button type="button" (click)="toggleType(type)"
+                      class="quiz-type"
+                      [class.quiz-type--on]="selectedTypes().has(type)">
+                <span class="quiz-type__check">
+                  @if (selectedTypes().has(type)) {
+                    <app-icon name="check" size="xs" />
+                  }
+                </span>
+                <span class="text-left font-bold text-sm">{{ typeLabels[type] }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-white/50">Số câu</h2>
+          <div class="flex flex-wrap gap-2">
+            @for (n of countOptions; track n) {
+              @if (n === 0 || n < cards().length) {
+                <button type="button" (click)="questionCount.set(n)"
+                        [class.bg-brand-pink]="questionCount() === n"
+                        [class.text-white]="questionCount() === n"
+                        [class.border-brand-pink]="questionCount() === n"
+                        class="px-4 py-2 rounded-full border border-brand-navy/15 dark:border-white/15 text-sm font-bold text-brand-navy dark:text-white transition-colors cursor-pointer">
+                  {{ countLabel(n) }}
+                </button>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <a [routerLink]="routes().study" class="text-sm font-semibold text-brand-navy/60 dark:text-white/60 hover:text-brand-pink">
+            Học flashcard trước
+          </a>
+          <button type="button" (click)="start()"
+                  class="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-brand-pink text-white font-bold shadow-md shadow-brand-pink/25 hover:bg-brand-pink/90 hover:-translate-y-0.5 transition-all cursor-pointer disabled:opacity-50">
+            <span>Bắt đầu</span>
+            <app-icon name="arrow-right" size="xs" />
+          </button>
+        </div>
+      </div>
+
+    } @else if (phase() === 'playing' && current(); as q) {
+      <!-- ============ PLAYING ============ -->
+      <div class="flex items-center justify-between mb-3 text-sm font-semibold text-brand-navy/70 dark:text-white/70">
+        <button type="button" (click)="backToSetup()" class="inline-flex items-center gap-1 hover:text-brand-pink cursor-pointer">
+          <app-icon name="x-mark" size="xs" />
+          <span>Dừng</span>
+        </button>
+        <span class="font-display font-extrabold text-brand-navy dark:text-white">
+          {{ index() + 1 }} <span class="font-normal opacity-50">/</span> {{ questions().length }}
+        </span>
+        <span class="text-emerald-600 dark:text-emerald-400">{{ correctCount() }} đúng</span>
+      </div>
+      <div class="w-full bg-brand-navy/10 dark:bg-white/10 rounded-full h-1.5 mb-6 overflow-hidden">
+        <div class="bg-brand-pink h-1.5 rounded-full transition-all duration-300" [style.width]="((index() + (revealed() ? 1 : 0)) / questions().length * 100) + '%'"></div>
+      </div>
+
+      <div class="rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 shadow-xl shadow-brand-navy/5 dark:shadow-none p-6 sm:p-8">
+        <p class="text-xs font-bold uppercase tracking-wider text-brand-navy/50 dark:text-white/50 text-center">{{ promptHint(q) }}</p>
+
+        <!-- Câu hỏi -->
+        <div class="min-h-[120px] flex flex-col items-center justify-center gap-3 py-5">
+          @if (q.type === 'meaning_hanzi') {
+            <p class="text-2xl sm:text-3xl font-bold text-brand-navy dark:text-white text-center">{{ promptText(q) }}</p>
+          } @else {
+            <div class="flex items-center gap-3">
+              <p class="text-5xl sm:text-6xl font-bold text-brand-navy dark:text-white font-sans">{{ promptText(q) }}</p>
+              @if (q.type === 'hanzi_meaning') {
+                <app-speak-button [text]="q.card.hanzi" size="md" />
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Đáp án -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          @for (opt of q.options; track $index; let i = $index) {
+            <button type="button" (click)="choose(i)" [disabled]="revealed()"
+                    class="quiz-option quiz-option--{{ optionState(i) }}">
+              <span class="quiz-option__key">{{ optionKeys[i] }}</span>
+              <span class="flex-1 text-left" [class.quiz-option__hanzi]="isHanziOption(q)">{{ opt }}</span>
+              @if (optionState(i) === 'correct') {
+                <app-icon name="check-circle" size="sm" />
+              } @else if (optionState(i) === 'wrong') {
+                <app-icon name="x-circle" size="sm" />
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Giải thích sau khi chọn -->
+        @if (revealed()) {
+          <div class="mt-6 pt-5 border-t border-brand-navy/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-3xl font-bold font-sans text-brand-navy dark:text-white">{{ q.card.hanzi }}</span>
+              <div class="min-w-0">
+                <div class="text-brand-pink font-bold">{{ q.card.pinyin }}</div>
+                <div class="text-sm text-brand-navy/80 dark:text-white/80">{{ q.card.meaning }}</div>
+              </div>
+              <app-speak-button [text]="q.card.hanzi" />
+            </div>
+            <button type="button" (click)="next()"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand-navy dark:bg-white text-white dark:text-brand-navy font-bold hover:opacity-90 transition-opacity cursor-pointer">
+              <span>{{ isLast() ? 'Xem kết quả' : 'Câu tiếp' }}</span>
+              <app-icon name="arrow-right" size="xs" />
+            </button>
+          </div>
+        }
+      </div>
+
+      <p class="hidden sm:block mt-5 text-center text-xs text-brand-navy/40 dark:text-white/40">
+        Phím <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark font-mono text-[10px] shadow-sm">1</kbd>–<kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark font-mono text-[10px] shadow-sm">4</kbd> chọn đáp án •
+        <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark font-mono text-[10px] shadow-sm">Enter</kbd> câu tiếp
+      </p>
+
+    } @else if (phase() === 'result') {
+      <!-- ============ RESULT ============ -->
+      <div class="rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 shadow-xl shadow-brand-navy/5 dark:shadow-none p-6 sm:p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <span class="inline-flex w-14 h-14 rounded-full items-center justify-center bg-brand-pink/10 text-brand-pink">
+            <app-icon name="trophy" size="lg" />
+          </span>
+          <p class="font-display font-black text-4xl text-brand-navy dark:text-white">{{ correctCount() }} / {{ answers().length }}</p>
+          <p class="text-sm text-brand-navy/60 dark:text-white/60">
+            Đúng {{ scorePercent() }}%
+            @if (wrongAnswers().length > 0) {
+              • {{ wrongAnswers().length }} từ sai đã được đánh dấu "Cần ôn lại" trong flashcard
+            }
+          </p>
+        </div>
+
+        @if (wrongAnswers().length > 0) {
+          <div class="space-y-2">
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-white/50">Câu sai</h2>
+            <ul class="divide-y divide-brand-navy/5 dark:divide-white/10 rounded-2xl border border-brand-navy/10 dark:border-white/10 overflow-hidden">
+              @for (a of wrongAnswers(); track $index) {
+                <li class="flex items-center gap-3 p-3 text-sm">
+                  <span class="text-2xl font-bold font-sans text-brand-navy dark:text-white w-16 shrink-0">{{ a.question.card.hanzi }}</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-brand-pink font-semibold">{{ a.question.card.pinyin }}</div>
+                    <div class="text-brand-navy/80 dark:text-white/80">{{ a.question.card.meaning }}</div>
+                    <div class="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">
+                      {{ typeLabels[a.question.type] }}: bạn chọn "{{ a.question.options[a.chosen] }}"
+                    </div>
+                  </div>
+                  <app-speak-button [text]="a.question.card.hanzi" size="xs" />
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          @if (wrongAnswers().length > 0) {
+            <button type="button" (click)="retryWrong()"
+                    class="px-5 py-2.5 rounded-full bg-brand-pink text-white font-bold shadow-md shadow-brand-pink/20 hover:bg-brand-pink/90 transition-colors cursor-pointer">
+              Làm lại {{ wrongAnswers().length }} câu sai
+            </button>
+          }
+          <button type="button" (click)="start()"
+                  class="px-5 py-2.5 rounded-full border border-brand-navy/15 dark:border-white/20 font-bold text-brand-navy dark:text-white hover:border-brand-pink hover:text-brand-pink transition-colors cursor-pointer">
+            Làm bài mới
+          </button>
+          <button type="button" (click)="backToSetup()"
+                  class="px-5 py-2.5 rounded-full font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors cursor-pointer">
+            Đổi cài đặt
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

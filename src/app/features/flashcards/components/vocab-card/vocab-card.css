@@ -39,6 +39,16 @@
   transform: rotateY(0deg);
 }
 
+/* Mặt sau: nội dung dài (nhiều ví dụ) cuộn bên trong thẻ, chừa chỗ cho huy hiệu cấp ở trên */
+.card-back__body {
+  margin: auto 0;
+  padding-top: 1.5rem;
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
 .card-back {
   transform: rotateY(180deg);
 }

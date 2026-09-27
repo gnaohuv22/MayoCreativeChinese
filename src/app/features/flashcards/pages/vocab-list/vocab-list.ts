@@ -2,17 +2,20 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { combineLatest } from 'rxjs';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
+import { SpeakButtonComponent } from '../../components/speak-button/speak-button';
+import { VocabExamplesComponent } from '../../components/vocab-examples/vocab-examples';
 import { VocabService } from '../../services/vocab.service';
-import { parseLevelParam } from '../../models/vocab-card.model';
-import type { VocabCard, HskVersion, VocabCollection, LessonInfo } from '../../models/vocab-card.model';
+import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
+import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../../models/vocab-card.model';
+import { NO_TOPIC_PARAM, scopeLevelLabel, scopeRoutes } from '../../utils/vocab-scope.util';
 
 @Component({
   selector: 'app-vocab-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, SpeakButtonComponent, VocabExamplesComponent],
   templateUrl: './vocab-list.html',
   styleUrl: './vocab-list.css',
 })
@@ -20,13 +23,20 @@ export class VocabListComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private vocabService = inject(VocabService);
 
-  collection = signal<VocabCollection>('hsk2');
-  /** Tham số route `:level` — '1'…'9' hoặc '7-9' (gộp cao cấp) */
-  level = signal<string>('1');
-  levels = computed(() => parseLevelParam(this.level()));
-  levelNum = computed(() => this.levels()[0]);
-  lessonNumber = signal<number | undefined>(undefined);
-  lessons = signal<LessonInfo[]>([]);
+  /** Phạm vi đang xem (cả cấp, hoặc 1 bài / 1 chủ đề qua query `?lesson=` / `?topic=`) */
+  scope = signal<VocabScope>({ collection: 'hsk2', levelParam: '1' });
+  groups = signal<VocabGroupInfo[]>([]);
+
+  config = computed(() => VOCAB_COLLECTIONS[this.scope().collection]);
+  levelLabel = computed(() => scopeLevelLabel(this.scope()));
+  routes = computed(() => scopeRoutes(this.scope()));
+  /** Giá trị ô chọn bài / chủ đề ('all' = cả cấp) */
+  groupValue = computed(() => {
+    const s = this.scope();
+    if (s.lesson != null) return String(s.lesson);
+    if (s.topic != null) return s.topic || NO_TOPIC_PARAM;
+    return 'all';
+  });
 
   // Search & Pagination
   searchQuery = signal<string>('');
@@ -54,44 +64,36 @@ export class VocabListComponent implements OnInit {
     return Math.min(this.currentPage() * this.pageSize(), this.totalWords());
   });
 
-  versionForQuery = computed<HskVersion | undefined>(() => {
-    const col = this.collection();
-    if (col === 'hsk2') return '2.0';
-    if (col === 'hsk3' || col === 'supplement') return '3.0';
-    return undefined;
-  });
+  ngOnInit() {
+    combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
+      const collection = (this.route.snapshot.data['collection'] as VocabCollection) || 'hsk2';
+      const levelParam = params.get('level') || VOCAB_COLLECTIONS[collection].levelParams[0];
+      const levelChanged = levelParam !== this.scope().levelParam || collection !== this.scope().collection;
 
-  async ngOnInit() {
-    this.route.data.subscribe(data => {
-      if (data['collection']) {
-        this.collection.set(data['collection']);
-      }
-    });
-
-    this.route.paramMap.subscribe(params => {
-      this.level.set(params.get('level') || '1');
-
-      this.route.queryParamMap.subscribe(qParams => {
-        const lessonParam = qParams.get('lesson');
-        if (lessonParam) {
-          this.lessonNumber.set(Number(lessonParam));
-        } else {
-          this.lessonNumber.set(undefined);
-        }
-        this.loadLessons();
-        this.loadData();
+      const lesson = query.get('lesson');
+      const topic = query.get('topic');
+      this.scope.set({
+        collection,
+        levelParam,
+        lesson: lesson != null ? Number(lesson) : null,
+        topic: topic != null ? (topic === NO_TOPIC_PARAM ? '' : topic) : null,
       });
+      this.currentPage.set(1);
+      if (levelChanged || this.groups().length === 0) this.loadGroups();
+      this.loadData();
     });
   }
 
-  async loadLessons() {
-    if (this.collection() === 'hsk3') {
-      try {
-        const list = await this.vocabService.getLessonsForLevel(this.levelNum(), '3.0');
-        this.lessons.set(list);
-      } catch (e) {
-        console.error('Failed to load lessons for list view:', e);
-      }
+  async loadGroups() {
+    if (!this.config().grouping) {
+      this.groups.set([]);
+      return;
+    }
+    try {
+      const { collection, levelParam } = this.scope();
+      this.groups.set(await this.vocabService.getGroups({ collection, levelParam }));
+    } catch (e) {
+      console.error('Failed to load groups for list view:', e);
     }
   }
 
@@ -99,9 +101,7 @@ export class VocabListComponent implements OnInit {
     this.loading.set(true);
     try {
       const res = await this.vocabService.getVocabPaginated({
-        levels: this.levels(),
-        version: this.versionForQuery(),
-        lessonNumber: this.lessonNumber(),
+        scope: this.scope(),
         query: this.searchQuery(),
         page: this.currentPage(),
         pageSize: this.pageSize(),
@@ -128,12 +128,15 @@ export class VocabListComponent implements OnInit {
     this.loadData();
   }
 
-  onLessonChange(newLesson: string) {
-    if (newLesson === 'all' || !newLesson) {
-      this.lessonNumber.set(undefined);
-    } else {
-      this.lessonNumber.set(Number(newLesson));
-    }
+  onGroupChange(value: string) {
+    const { collection, levelParam } = this.scope();
+    const grouping = this.config().grouping;
+    this.scope.set({
+      collection,
+      levelParam,
+      lesson: grouping === 'lesson' && value !== 'all' ? Number(value) : null,
+      topic: grouping === 'topic' && value !== 'all' ? (value === NO_TOPIC_PARAM ? '' : value) : null,
+    });
     this.currentPage.set(1);
     this.loadData();
   }
@@ -143,19 +146,5 @@ export class VocabListComponent implements OnInit {
     this.currentPage.set(page);
     this.loadData();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  getFlashcardRoute(): string[] {
-    const col = this.collection();
-    const lvl = String(this.level());
-    const lesson = this.lessonNumber();
-
-    if (col === 'hsk3') {
-      if (lesson != null && lesson > 0) {
-        return ['/flashcards/hsk3', lvl, 'lesson', String(lesson)];
-      }
-      return ['/flashcards/hsk3', lvl, 'all'];
-    }
-    return ['/flashcards', col, lvl];
   }
 }

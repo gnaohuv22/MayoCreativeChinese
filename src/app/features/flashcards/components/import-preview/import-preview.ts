@@ -1,5 +1,6 @@
 import { Component, computed, input, output, signal, effect } from '@angular/core';
-import { ValidatedImportRow } from '../../models/vocab-card.model';
+import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
+import type { ValidatedImportRow, VocabCollection } from '../../models/vocab-card.model';
 
 @Component({
   selector: 'app-import-preview',
@@ -9,6 +10,9 @@ import { ValidatedImportRow } from '../../models/vocab-card.model';
 })
 export class ImportPreviewComponent {
   rows = input.required<ValidatedImportRow[]>();
+  /** Bộ nhận dữ liệu (quyết định cột Bài học / Chủ đề) */
+  collection = input.required<VocabCollection>();
+  busy = input(false);
   confirm = output<ValidatedImportRow[]>();
   cancel = output<void>();
 
@@ -29,7 +33,9 @@ export class ImportPreviewComponent {
 
   validCount = computed(() => this.rows().filter(r => r.status === 'valid').length);
   duplicateCount = computed(() => this.rows().filter(r => r.status === 'duplicate').length);
-  sameHanziCount = computed(() => this.rows().filter(r => r.sameHanziExists).length);
+  sameHanziCount = computed(() => this.rows().filter(r => r.sameHanziMatches?.length).length);
+  grouping = computed(() => VOCAB_COLLECTIONS[this.collection()].grouping);
+  collectionLabel = computed(() => VOCAB_COLLECTIONS[this.collection()].shortLabel);
   errorCount = computed(() => this.rows().filter(r => r.status === 'error').length);
   selectedCount = computed(() => this.selectedIndices().size);
 

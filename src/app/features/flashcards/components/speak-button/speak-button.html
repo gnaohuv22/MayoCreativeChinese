@@ -1,0 +1,14 @@
+@if (available() && text()) {
+  <button
+    type="button"
+    class="speak-btn"
+    [class.speak-btn--active]="active()"
+    [class.speak-btn--md]="size() === 'md'"
+    [class.speak-btn--xs]="size() === 'xs'"
+    [attr.aria-label]="label()"
+    [title]="label()"
+    (click)="play($event)"
+    (keydown.space)="$event.stopPropagation()">
+    <app-icon name="speaker-wave" [size]="size() === 'md' ? 'sm' : 'xs'" />
+  </button>
+}

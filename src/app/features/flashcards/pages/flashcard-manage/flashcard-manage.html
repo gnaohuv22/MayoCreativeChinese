@@ -100,36 +100,45 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="space-y-2">
-            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Phiên bản *</label>
-            <select [ngModel]="newVersion()" (ngModelChange)="newVersion.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
-              <option value="3.0">HSK 3.0 (Mới)</option>
-              <option value="2.0">HSK 2.0 (Cũ)</option>
+            <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Bộ từ vựng *</label>
+            <select [ngModel]="newCollection()" (ngModelChange)="setNewCollection($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
+              @for (c of collections; track c.key) {
+                <option [value]="c.key">{{ c.title }}</option>
+              }
             </select>
           </div>
           <div class="space-y-2">
             <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Cấp độ HSK *</label>
-            <select [ngModel]="newLevel()" (ngModelChange)="newLevel.set($event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
-              <option [value]="1">HSK 1 (一级)</option>
-              <option [value]="2">HSK 2 (二级)</option>
-              <option [value]="3">HSK 3 (三级)</option>
-              <option [value]="4">HSK 4 (四级)</option>
-              <option [value]="5">HSK 5 (五级)</option>
-              <option [value]="6">HSK 6 (六级)</option>
-              <option [value]="7">HSK 7 (七级)</option>
-              <option [value]="8">HSK 8 (八级)</option>
-              <option [value]="9">HSK 9 (九级)</option>
+            <select [ngModel]="newLevel()" (ngModelChange)="newLevel.set(+$event)" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all cursor-pointer text-brand-navy dark:text-white font-medium">
+              @for (lvl of levelsOf(newCollection()); track lvl) {
+                <option [value]="lvl">HSK {{ lvl }}</option>
+              }
             </select>
           </div>
-          @if (newVersion() === '3.0') {
+          @if (newCollection() === 'hsk3') {
+            <div class="grid grid-cols-3 gap-3">
+              <div class="space-y-2">
+                <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Bài số</label>
+                <input type="number" min="1" [ngModel]="newLessonNumber()" (ngModelChange)="newLessonNumber.set($event)" placeholder="vd: 1" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white font-medium">
+              </div>
+              <div class="space-y-2 col-span-2">
+                <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Tên bài</label>
+                <input type="text" [ngModel]="newLessonTitle()" (ngModelChange)="newLessonTitle.set($event)" placeholder="vd: Bài 1: Lời chào" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+              </div>
+            </div>
+          } @else if (newCollection() === 'supplement') {
             <div class="space-y-2">
-              <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Bài học (HSK 3.0)</label>
-              <input type="number" [ngModel]="newLessonNumber()" (ngModelChange)="newLessonNumber.set($event)" placeholder="vd: 1" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white font-medium">
+              <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Chủ đề</label>
+              <input type="text" [ngModel]="newTopic()" (ngModelChange)="newTopic.set($event)" placeholder="vd: Mua sắm" class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
             </div>
           }
         </div>
 
         <div class="border-t border-brand-navy/10 dark:border-white/10 pt-6 space-y-6">
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-brand-text-dark/50">Ví dụ câu (Tùy chọn)</h3>
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-brand-navy/50 dark:text-brand-text-dark/50">Ví dụ câu (Tùy chọn)</h3>
+            <p class="text-xs text-brand-navy/50 dark:text-brand-text-dark/50 mt-1">Nhiều ví dụ: mỗi ví dụ một dòng. Dòng 1 của câu, pinyin và nghĩa là ví dụ 1, dòng 2 là ví dụ 2…</p>
+          </div>
           
           <div class="space-y-2">
             <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Câu ví dụ (Hán tự)</label>
@@ -139,11 +148,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-2">
               <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Pinyin ví dụ</label>
-              <input type="text" [ngModel]="newExamplePinyin()" (ngModelChange)="newExamplePinyin.set($event)" placeholder="ví dụ: Nǐ hǎo, wǒ jiào Xiǎo Míng." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+              <textarea rows="2" [ngModel]="newExamplePinyin()" (ngModelChange)="newExamplePinyin.set($event)" placeholder="ví dụ: Nǐ hǎo, wǒ jiào Xiǎo Míng." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white field-sizing-content"></textarea>
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-bold text-brand-navy/80 dark:text-brand-text-dark/90">Nghĩa ví dụ</label>
-              <input type="text" [ngModel]="newExampleMeaning()" (ngModelChange)="newExampleMeaning.set($event)" placeholder="ví dụ: Xin chào, tôi tên là Tiểu Minh." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white">
+              <textarea rows="2" [ngModel]="newExampleMeaning()" (ngModelChange)="newExampleMeaning.set($event)" placeholder="ví dụ: Xin chào, tôi tên là Tiểu Minh." class="w-full rounded-2xl border border-brand-navy/15 dark:border-white/15 bg-white/80 dark:bg-brand-dark p-3.5 focus:ring-2 focus:ring-brand-pink/30 focus:border-brand-pink outline-none transition-all text-brand-navy dark:text-white field-sizing-content"></textarea>
             </div>
           </div>
         </div>
@@ -174,7 +183,8 @@
         <div class="flex flex-wrap items-center justify-between gap-4 p-5 bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm">
           <div>
             <h3 class="font-bold text-sm text-brand-navy dark:text-white">Tải file mẫu để soạn từ vựng</h3>
-            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">Cột bắt buộc: hanzi, pinyin, meaning, hsk_level</p>
+            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">Cột bắt buộc: hanzi, pinyin, meaning, hsk_level. Bài học: lesson_number, lesson_title (HSK 3.0). Chủ đề: topic (Bổ sung).</p>
+            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">Nhiều ví dụ: xuống dòng trong ô (Alt + Enter trong Excel).</p>
           </div>
           <div class="flex flex-wrap gap-3">
             <button (click)="downloadTemplate('csv')" class="px-4 py-2 rounded-full border border-brand-navy/15 dark:border-white/15 hover:border-brand-pink hover:text-brand-pink font-semibold text-xs sm:text-sm transition-colors bg-white/80 dark:bg-brand-dark text-brand-navy dark:text-white cursor-pointer flex items-center gap-1.5 shadow-sm">
@@ -189,6 +199,27 @@
               </svg>
               Tải mẫu Excel (XLSX)
             </button>
+          </div>
+        </div>
+
+        <!-- Chọn bộ từ vựng nhận dữ liệu -->
+        <div class="p-5 bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm space-y-3">
+          <div>
+            <h3 class="font-bold text-sm text-brand-navy dark:text-white">Import vào bộ từ vựng</h3>
+            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">4 bộ độc lập với nhau. Toàn bộ từ trong file sẽ được thêm vào bộ đã chọn.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            @for (c of collections; track c.key) {
+              <button type="button" (click)="setImportCollection(c.key)" [disabled]="importing()"
+                      [class.bg-brand-pink]="importCollection() === c.key"
+                      [class.text-white]="importCollection() === c.key"
+                      [class.border-brand-pink]="importCollection() === c.key"
+                      [class.text-brand-navy]="importCollection() !== c.key"
+                      [class.dark:text-white]="importCollection() !== c.key"
+                      class="px-4 py-2 rounded-full border border-brand-navy/15 dark:border-white/15 text-xs sm:text-sm font-bold transition-colors cursor-pointer disabled:opacity-50">
+                {{ c.shortLabel }}
+              </button>
+            }
           </div>
         </div>
 
@@ -242,6 +273,8 @@
           <!-- Component Preview bảng dữ liệu -->
           <app-import-preview 
             [rows]="parsedRows()"
+            [collection]="importCollection()"
+            [busy]="importing()"
             (confirm)="onImportConfirm($event)"
             (cancel)="cancelImport()">
           </app-import-preview>
@@ -258,12 +291,13 @@
           
           <div class="flex items-center gap-3 flex-wrap">
             <select
-              [ngModel]="browseVersion()"
-              (ngModelChange)="setBrowseVersion($event)"
+              [ngModel]="browseCollection()"
+              (ngModelChange)="setBrowseCollection($event)"
               class="px-3.5 py-2 rounded-2xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-white dark:bg-brand-dark text-brand-navy dark:text-white outline-none cursor-pointer">
-              <option value="all">Tất cả phiên bản</option>
-              <option value="3.0">HSK 3.0</option>
-              <option value="2.0">HSK 2.0</option>
+              <option value="all">Tất cả bộ từ vựng</option>
+              @for (c of collections; track c.key) {
+                <option [value]="c.key">{{ c.shortLabel }}</option>
+              }
             </select>
 
             <!-- Filter HSK Level - 5 badges per row -->
@@ -281,22 +315,7 @@
             >
               Tất cả
             </button>
-            @for (level of [1,2,3,4]; track level) {
-              <button
-                (click)="setBrowseLevel(level)"
-                [class.bg-brand-pink]="browseLevel() === level"
-                [class.text-white]="browseLevel() === level"
-                [class.shadow-xs]="browseLevel() === level"
-                [class.bg-white]="browseLevel() !== level"
-                [class.dark:bg-white/5]="browseLevel() !== level"
-                [class.text-brand-navy]="browseLevel() !== level"
-                [class.dark:text-zinc-300]="browseLevel() !== level"
-                class="px-3 py-1.5 rounded-full text-xs font-bold border border-brand-navy/10 dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-center"
-              >
-                HSK {{ level }}
-              </button>
-            }
-            @for (level of [5,6,7,8,9]; track level) {
+            @for (level of levelsOf(browseCollection()); track level) {
               <button
                 (click)="setBrowseLevel(level)"
                 [class.bg-brand-pink]="browseLevel() === level"
@@ -352,7 +371,7 @@
                     <th class="p-3.5 w-32">Hán tự</th>
                     <th class="p-3.5 w-32">Pinyin</th>
                     <th class="p-3.5">Nghĩa</th>
-                    <th class="p-3.5 text-center w-24">HSK</th>
+                    <th class="p-3.5 text-center w-32">Bộ / HSK</th>
                     <th class="p-3.5 max-w-xs">Ví dụ</th>
                     <th class="p-3.5 w-24 text-center">Thao tác</th>
                   </tr>
@@ -396,23 +415,50 @@
                             placeholder="Nghĩa tiếng Việt"
                           />
                         </td>
-                        <td class="p-3.5 text-center">
+                        <td class="p-3.5 text-center space-y-1.5">
                           <select
-                            [(ngModel)]="editingForm.hsk_level"
-                            class="px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs font-bold focus:outline-none"
+                            [(ngModel)]="editingForm.collection"
+                            class="w-full px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs font-bold focus:outline-none"
                           >
-                            @for (lvl of [1,2,3,4,5,6,7,8,9]; track lvl) {
-                              <option [value]="lvl">HSK {{ lvl }}</option>
+                            @for (c of collections; track c.key) {
+                              <option [value]="c.key">{{ c.shortLabel }}</option>
                             }
                           </select>
+                          <select
+                            [(ngModel)]="editingForm.hsk_level"
+                            class="w-full px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs font-bold focus:outline-none"
+                          >
+                            @for (lvl of levelsOf(editingForm.collection); track lvl) {
+                              <option [ngValue]="lvl">HSK {{ lvl }}</option>
+                            }
+                          </select>
+                          @if (editingForm.collection === 'hsk3') {
+                            <input type="number" min="1" [(ngModel)]="editingForm.lesson_number" placeholder="Bài"
+                                   class="w-full px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none" />
+                          } @else if (editingForm.collection === 'supplement') {
+                            <input type="text" [(ngModel)]="editingForm.topic" placeholder="Chủ đề"
+                                   class="w-full px-2 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none" />
+                          }
                         </td>
-                        <td class="p-3.5">
-                          <input
-                            type="text"
+                        <td class="p-3.5 space-y-1.5">
+                          <textarea
+                            rows="2"
                             [(ngModel)]="editingForm.example"
-                            class="w-full min-w-[140px] px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-pink/30"
-                            placeholder="Ví dụ minh hoạ..."
-                          />
+                            class="w-full min-w-[180px] px-2.5 py-1.5 rounded-xl border border-brand-pink bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-pink/30 field-sizing-content"
+                            placeholder="Câu ví dụ (mỗi dòng 1 ví dụ)"
+                          ></textarea>
+                          <textarea
+                            rows="1"
+                            [(ngModel)]="editingForm.example_pinyin"
+                            class="w-full min-w-[180px] px-2.5 py-1.5 rounded-xl border border-brand-pink/60 bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none field-sizing-content"
+                            placeholder="Pinyin ví dụ"
+                          ></textarea>
+                          <textarea
+                            rows="1"
+                            [(ngModel)]="editingForm.example_meaning"
+                            class="w-full min-w-[180px] px-2.5 py-1.5 rounded-xl border border-brand-pink/60 bg-white dark:bg-brand-dark text-brand-navy dark:text-white text-xs focus:outline-none field-sizing-content"
+                            placeholder="Nghĩa ví dụ"
+                          ></textarea>
                         </td>
                         <!-- Save & Cancel Actions -->
                         <td class="p-3.5 text-center">
@@ -441,11 +487,18 @@
                         <td class="p-3.5 text-brand-pink font-semibold">{{ card.pinyin }}</td>
                         <td class="p-3.5 text-brand-navy dark:text-brand-text-dark">{{ card.meaning }}</td>
                         <td class="p-3.5 text-center">
-                          <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">{{ card.hsk_level }}</span>
+                          <div class="flex flex-col items-center gap-1">
+                            <span class="text-[10px] font-bold text-brand-navy/60 dark:text-white/60 whitespace-nowrap">{{ collectionLabel(card.collection) }}</span>
+                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">HSK {{ card.hsk_level }}</span>
+                            @if (card.lesson_number) {
+                              <span class="text-[10px] font-semibold text-brand-pink">Bài {{ card.lesson_number }}</span>
+                            }
+                            @if (card.topic) {
+                              <span class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">{{ card.topic }}</span>
+                            }
+                          </div>
                         </td>
-                        <td class="p-3.5 text-brand-navy/60 dark:text-brand-text-dark/70 truncate max-w-xs text-xs" [title]="card.example || ''">
-                          {{ card.example || '-' }}
-                        </td>
+                        <td class="p-3.5 text-brand-navy/60 dark:text-brand-text-dark/70 max-w-xs text-xs whitespace-pre-line" [title]="card.example || ''">{{ card.example || '-' }}</td>
                         <td class="p-3.5 text-center">
                           @if (card.id) {
                             <div class="flex items-center justify-center gap-1">
@@ -541,3 +594,14 @@
 
   </div>
 </div>
+
+@if (dupDialog(); as d) {
+  <app-duplicate-confirm
+    [items]="d.items"
+    [collectionLabel]="collectionLabel(d.collection)"
+    [totalCount]="d.totalCount"
+    [busy]="dupBusy()"
+    (confirmAll)="confirmDupAll()"
+    (skipDuplicates)="confirmDupSkip()"
+    (cancel)="cancelDup()" />
+}
