@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getSupabase } from '../config/supabase.config';
+import { getSupabase } from '../../../services/supabase.client';
 import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
@@ -8,6 +8,11 @@ import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
 /** Supabase trả tối đa 1000 dòng / request */
 const PAGE = 1000;
 
+const VOCAB_COLUMNS = 'id, collection, hanzi, pinyin, meaning, hsk_level, hsk_version, lesson_number, lesson_title, topic, example, example_pinyin, example_meaning';
+
+/** RLS chặn ghi thì Supabase không báo lỗi mà chỉ trả về 0 dòng */
+const NO_ROW_ERROR = 'Không tìm thấy từ hoặc bạn không có quyền thực hiện thao tác này';
+
 export type NewVocabCard = Omit<VocabCard, 'id' | 'created_at' | 'updated_at'> & { collection: VocabCollection };
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +20,7 @@ export class VocabService {
   private readonly supabase = getSupabase();
 
   /** Query có sẵn bộ lọc theo phạm vi (bộ + cấp + bài / chủ đề) */
-  private scopedQuery(scope: VocabScope, columns = '*', options?: { count: 'exact' }) {
+  private scopedQuery(scope: VocabScope, columns = VOCAB_COLUMNS, options?: { count: 'exact' }) {
     const levels = scopeLevels(scope);
     let q = this.supabase
       .from('vocab_cards')
@@ -145,7 +150,7 @@ export class VocabService {
     const { scope, query, page, pageSize } = params;
     const from = (page - 1) * pageSize;
 
-    let q = this.scopedQuery(scope, '*', { count: 'exact' });
+    let q = this.scopedQuery(scope, VOCAB_COLUMNS, { count: 'exact' });
     if (query && query.trim()) {
       const clean = query.trim().replace(/[,()]/g, ' ');
       q = q.or(`hanzi.ilike.%${clean}%,pinyin.ilike.%${clean}%,meaning.ilike.%${clean}%`);
@@ -167,7 +172,7 @@ export class VocabService {
   /** Trang quản lý: toàn bộ từ của 1 bộ (hoặc tất cả), lọc theo cấp (0 = mọi cấp) */
   async getVocabForManage(collection: VocabCollection | 'all', level: number): Promise<VocabCard[]> {
     return this.fetchAll<VocabCard>(() => {
-      let q = this.supabase.from('vocab_cards').select('*');
+      let q = this.supabase.from('vocab_cards').select(VOCAB_COLUMNS);
       if (collection !== 'all') q = q.eq('collection', collection);
       if (level > 0) q = q.eq('hsk_level', level);
       return q.order('collection').order('hsk_level').order('id');
@@ -178,7 +183,7 @@ export class VocabService {
   async findSameHanzi(collection: VocabCollection, level: number, hanzi: string): Promise<VocabCard[]> {
     const { data, error } = await this.supabase
       .from('vocab_cards')
-      .select('*')
+      .select(VOCAB_COLUMNS)
       .eq('collection', collection)
       .eq('hsk_level', level)
       .eq('hanzi', hanzi.trim())
@@ -235,10 +240,11 @@ export class VocabService {
   /** Cập nhật 1 từ vựng (admin/ops) */
   async updateCard(id: number, changes: Partial<VocabCard>): Promise<{ success: boolean; error?: string }> {
     const payload = changes.collection ? this.withVersion(changes as NewVocabCard) : changes;
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('vocab_cards')
       .update(payload)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) {
       if (error.code === '23505') {
@@ -246,32 +252,37 @@ export class VocabService {
       }
       return { success: false, error: error.message };
     }
+    if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };
   }
 
   /** Xoá 1 từ vựng (admin/ops) */
   async deleteCard(id: number): Promise<{ success: boolean; error?: string }> {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) {
       return { success: false, error: error.message };
     }
+    if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };
   }
 
   /** Xoá nhiều từ vựng (admin/ops) */
   async deleteCards(ids: number[]): Promise<{ success: boolean; error?: string }> {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
-      .in('id', ids);
+      .in('id', ids)
+      .select('id');
 
     if (error) {
       return { success: false, error: error.message };
     }
+    if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };
   }
 

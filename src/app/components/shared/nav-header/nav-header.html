@@ -107,6 +107,17 @@
         <app-icon name="academic" size="sm" />
       </a>
 
+      @if (auth.isAdmin()) {
+        <button
+          type="button"
+          (click)="signOut()"
+          [title]="'Đăng xuất ' + (auth.email() || '')"
+          class="px-3 py-1.5 rounded-full text-xs font-bold text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
+        >
+          Đăng xuất
+        </button>
+      }
+
       <!-- Reusable Circular Theme Toggle Component -->
       <app-theme-toggle />
     </div>

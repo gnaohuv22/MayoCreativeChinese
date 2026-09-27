@@ -1,0 +1,38 @@
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../../services/auth.service';
+import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
+
+@Component({
+  selector: 'app-admin-login',
+  standalone: true,
+  imports: [FormsModule, NavHeaderComponent],
+  templateUrl: './admin-login.html',
+  styleUrl: './admin-login.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminLoginComponent {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  username = '';
+  password = '';
+  isSubmitting = signal(false);
+  error = signal<string | null>(null);
+
+  async submit() {
+    if (!this.username.trim() || !this.password) return;
+    this.isSubmitting.set(true);
+    this.error.set(null);
+    const res = await this.auth.signIn(this.username, this.password);
+    this.isSubmitting.set(false);
+    if (res.error) {
+      this.error.set(res.error === 'Invalid login credentials' ? 'Tài khoản hoặc mật khẩu không đúng.' : res.error);
+      return;
+    }
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    await this.router.navigateByUrl(returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/exams/manage');
+  }
+}

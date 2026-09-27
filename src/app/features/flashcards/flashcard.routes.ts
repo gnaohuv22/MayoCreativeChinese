@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from '../../services/admin.guard';
 import type { VocabCollection } from './models/vocab-card.model';
 
 const levelPicker = () =>
@@ -65,6 +66,7 @@ export const flashcardRoutes: Routes = [
   // Quản lý từ vựng dành cho Ops/Admin
   {
     path: 'manage',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./pages/flashcard-manage/flashcard-manage').then(m => m.FlashcardManageComponent),
   },

@@ -343,12 +343,23 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   }
 
   // Nộp bài thi
-  submitExam(force = false) {
+  async submitExam(force = false) {
     const ex = this.exam();
-    if (!ex) return;
+    if (!ex || this.isSubmitting()) return;
 
     this.isSubmitting.set(true);
     this.stopTimer();
+
+    // Đáp án không được tải khi làm bài — chỉ lấy lúc nộp
+    const res = await this.examService.attachAnswers(ex);
+    if (res.error) {
+      this.isSubmitting.set(false);
+      this.saveDraft();
+      if (!force) this.startTimer();
+      alert('Không nộp được bài do lỗi kết nối. Bài làm đã được lưu, vui lòng bấm Nộp bài lại.');
+      this.cdr.markForCheck();
+      return;
+    }
 
     const timeSpent = this.initialDurationSeconds() - this.timeRemainingSeconds();
     const submission = this.examService.gradeExam(ex, this.answers(), Math.max(0, timeSpent));

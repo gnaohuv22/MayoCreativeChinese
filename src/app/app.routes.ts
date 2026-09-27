@@ -14,6 +14,11 @@ export const routes: Routes = [
       import('./features/posts/pages/story-detail/story-detail').then(m => m.StoryDetailComponent),
   },
   {
+    path: 'admin/login',
+    loadComponent: () =>
+      import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
+  },
+  {
     path: 'flashcards',
     loadChildren: () =>
       import('./features/flashcards/flashcard.routes').then(m => m.flashcardRoutes),

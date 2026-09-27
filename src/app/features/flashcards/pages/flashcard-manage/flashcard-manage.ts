@@ -409,7 +409,11 @@ export class FlashcardManageComponent implements OnInit {
     if (!confirm(`Bạn có chắc muốn xóa ${count} từ đã chọn?`)) return;
 
     try {
-      await this.vocabService.deleteCards(Array.from(this.selectedIds()));
+      const res = await this.vocabService.deleteCards(Array.from(this.selectedIds()));
+      if (!res.success) {
+        this.toastService.error(`Lỗi khi xóa từ: ${res.error}`);
+        return;
+      }
       this.selectedIds.set(new Set());
       this.toastService.success(`Đã xóa thành công ${count} từ vựng.`);
       this.loadBrowseCards();

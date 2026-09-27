@@ -73,7 +73,7 @@ export class ExamEditorComponent implements OnInit {
     const examId = this.route.snapshot.paramMap.get('id');
     if (examId) {
       this.isEditMode.set(true);
-      const data = await this.examService.getExamWithDetails(examId);
+      const data = await this.examService.getExamWithDetails(examId, { withAnswers: true });
       if (data) {
         renumberQuestions(data);
         this.exam = data;

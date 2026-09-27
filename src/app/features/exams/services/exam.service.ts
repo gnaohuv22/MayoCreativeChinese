@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getSupabase } from '../../flashcards/config/supabase.config';
+import { getSupabase } from '../../../services/supabase.client';
 import type {
   HskVersion,
   Exam,
@@ -15,6 +15,17 @@ import type {
 } from '../models/exam.model';
 import { renumberQuestions } from '../models/exam.model';
 
+const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, is_published, created_at, updated_at';
+const SECTION_COLUMNS = 'id, exam_id, section_type, title, sort_order, max_score, instructions, audio_url';
+const PART_COLUMNS = 'id, section_id, title, question_type, instructions, sort_order, example_text, stimulus_text, stimulus_image_url, stimulus_audio_url, option_labels';
+/** Cột học viên (anon) được đọc — đáp án lấy riêng qua get_exam_answers (migration 011) */
+const QUESTION_PUBLIC_COLUMNS = 'id, part_id, question_num, content, audio_url, image_url, score, sort_order';
+const QUESTION_COLUMNS = `${QUESTION_PUBLIC_COLUMNS}, correct_answer, explanation`;
+const OPTION_COLUMNS = 'id, question_id, label, content, image_url, sort_order';
+
+/** RLS chặn ghi thì Supabase không báo lỗi mà chỉ trả về 0 dòng */
+const NO_ROW_ERROR = 'Không tìm thấy đề thi hoặc bạn không có quyền thực hiện thao tác này';
+
 @Injectable({ providedIn: 'root' })
 export class ExamService {
   private readonly supabase = getSupabase();
@@ -24,7 +35,7 @@ export class ExamService {
   async getExams(filter?: ExamFilter): Promise<Exam[]> {
     let query = this.supabase
       .from('exams')
-      .select('*, sections:exam_sections(id, parts:exam_parts(id, questions:exam_questions(id)))')
+      .select(`${EXAM_COLUMNS}, sections:exam_sections(parts:exam_parts(questions:exam_questions(id)))`)
       .order('hsk_level', { ascending: true })
       .order('created_at', { ascending: false });
 
@@ -70,19 +81,23 @@ export class ExamService {
     });
   }
 
-  /** Lấy chi tiết 1 đề thi bao gồm toàn bộ Sections -> Parts -> Questions -> Options */
-  async getExamWithDetails(examId: string): Promise<Exam | null> {
+  /**
+   * Lấy chi tiết 1 đề thi bao gồm toàn bộ Sections -> Parts -> Questions -> Options.
+   * withAnswers chỉ dùng cho admin (anon không có quyền đọc cột đáp án).
+   */
+  async getExamWithDetails(examId: string, options: { withAnswers?: boolean } = {}): Promise<Exam | null> {
+    const questionColumns = options.withAnswers ? QUESTION_COLUMNS : QUESTION_PUBLIC_COLUMNS;
     const { data, error } = await this.supabase
       .from('exams')
       .select(`
-        *,
+        ${EXAM_COLUMNS},
         sections:exam_sections(
-          *,
+          ${SECTION_COLUMNS},
           parts:exam_parts(
-            *,
+            ${PART_COLUMNS},
             questions:exam_questions(
-              *,
-              options:exam_options(*)
+              ${questionColumns},
+              options:exam_options(${OPTION_COLUMNS})
             )
           )
         )
@@ -119,46 +134,56 @@ export class ExamService {
     return exam;
   }
 
-  /** Tạo một đề thi mới */
-  async createExam(exam: Omit<Exam, 'id' | 'created_at' | 'updated_at' | 'sections' | 'question_count'>): Promise<{ id?: string; error?: string }> {
-    const { data, error } = await this.supabase
-      .from('exams')
-      .insert(exam)
-      .select('id')
-      .single();
-
+  /** Nạp đáp án + giải thích vào đề (gọi khi học viên nộp bài / hết giờ) */
+  async attachAnswers(exam: Exam): Promise<{ error?: string }> {
+    const { data, error } = await this.supabase.rpc('get_exam_answers', { p_exam_id: exam.id });
     if (error) {
-      console.error('Lỗi khi tạo đề thi:', error);
+      console.error('Lỗi khi tải đáp án:', error);
       return { error: error.message };
     }
-    return { id: data.id };
+    const byId = new Map((data as { question_id: string; correct_answer: string; explanation: string | null }[])
+      .map(a => [a.question_id, a]));
+    for (const sec of exam.sections ?? []) {
+      for (const part of sec.parts ?? []) {
+        for (const q of part.questions ?? []) {
+          const a = q.id ? byId.get(q.id) : undefined;
+          q.correct_answer = a?.correct_answer ?? '';
+          q.explanation = a?.explanation ?? null;
+        }
+      }
+    }
+    return {};
   }
 
   /** Cập nhật thông tin chung của đề thi */
   async updateExam(id: string, changes: Partial<Exam>): Promise<{ error?: string }> {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('exams')
       .update(changes)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) {
       console.error(`Lỗi khi cập nhật đề thi [${id}]:`, error);
       return { error: error.message };
     }
+    if (!data?.length) return { error: NO_ROW_ERROR };
     return {};
   }
 
   /** Xoá một đề thi (sẽ tự động cascade xoá toàn bộ sections, parts, questions, options) */
   async deleteExam(id: string): Promise<{ error?: string }> {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('exams')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (error) {
       console.error(`Lỗi khi xoá đề thi [${id}]:`, error);
       return { error: error.message };
     }
+    if (!data?.length) return { error: NO_ROW_ERROR };
     return {};
   }
 
@@ -167,146 +192,18 @@ export class ExamService {
     return this.updateExam(id, { is_published: isPublished });
   }
 
-  /** Lưu toàn bộ cấu trúc đề thi (Exam + Sections + Parts + Questions + Options) */
+  /**
+   * Lưu toàn bộ cấu trúc đề thi (Exam + Sections + Parts + Questions + Options)
+   * qua RPC save_full_exam — một transaction, lỗi ở bất kỳ cấp nào sẽ rollback toàn bộ.
+   */
   async saveFullExam(exam: Exam): Promise<{ id?: string; error?: string }> {
     renumberQuestions(exam);
-    try {
-      let examId = exam.id;
-
-      // 1. Tạo hoặc Cập nhật bảng `exams`
-      const examPayload = {
-        title: exam.title,
-        hsk_level: exam.hsk_level,
-        hsk_version: exam.hsk_version,
-        duration_mins: exam.duration_mins,
-        total_score: exam.total_score,
-        passing_score: exam.passing_score,
-        description: exam.description || null,
-        is_published: exam.is_published,
-      };
-
-      if (!examId) {
-        const createRes = await this.createExam(examPayload);
-        if (createRes.error || !createRes.id) {
-          return { error: createRes.error || 'Không thể tạo đề thi' };
-        }
-        examId = createRes.id;
-      } else {
-        const updateRes = await this.updateExam(examId, examPayload);
-        if (updateRes.error) {
-          return { error: updateRes.error };
-        }
-        // Xoá các sections cũ để ghi đè cấu trúc mới sạch sẽ
-        await this.supabase.from('exam_sections').delete().eq('exam_id', examId);
-      }
-
-      // 2. Lưu từng Section -> Part -> Question -> Option
-      if (exam.sections && exam.sections.length > 0) {
-        for (let sIdx = 0; sIdx < exam.sections.length; sIdx++) {
-          const sec = exam.sections[sIdx];
-          const { data: secData, error: secErr } = await this.supabase
-            .from('exam_sections')
-            .insert({
-              exam_id: examId,
-              section_type: sec.section_type,
-              title: sec.title,
-              sort_order: sIdx + 1,
-              max_score: sec.max_score || 100,
-              instructions: sec.instructions || null,
-              audio_url: sec.audio_url || null,
-            })
-            .select('id')
-            .single();
-
-          if (secErr || !secData) {
-            console.error('Lỗi khi lưu phần thi:', secErr);
-            continue;
-          }
-
-          const sectionId = secData.id;
-
-          if (sec.parts && sec.parts.length > 0) {
-            for (let pIdx = 0; pIdx < sec.parts.length; pIdx++) {
-              const part = sec.parts[pIdx];
-              const { data: partData, error: partErr } = await this.supabase
-                .from('exam_parts')
-                .insert({
-                  section_id: sectionId,
-                  title: part.title,
-                  question_type: part.question_type,
-                  instructions: part.instructions || null,
-                  example_text: part.example_text || null,
-                  stimulus_text: part.stimulus_text || null,
-                  stimulus_image_url: part.stimulus_image_url || null,
-                  stimulus_audio_url: part.stimulus_audio_url || null,
-                  option_labels: part.option_labels || null,
-                  sort_order: pIdx + 1,
-                })
-                .select('id')
-                .single();
-
-              if (partErr || !partData) {
-                console.error('Lỗi khi lưu Part:', partErr);
-                continue;
-              }
-
-              const partId = partData.id;
-
-              if (part.questions && part.questions.length > 0) {
-                for (let qIdx = 0; qIdx < part.questions.length; qIdx++) {
-                  const q = part.questions[qIdx];
-                  const { data: qData, error: qErr } = await this.supabase
-                    .from('exam_questions')
-                    .insert({
-                      part_id: partId,
-                      question_num: q.question_num || (qIdx + 1),
-                      content: q.content || null,
-                      audio_url: q.audio_url || null,
-                      image_url: q.image_url || null,
-                      correct_answer: q.correct_answer || '',
-                      explanation: q.explanation || null,
-                      score: q.score || 2.5,
-                      sort_order: qIdx + 1,
-                    })
-                    .select('id')
-                    .single();
-
-                  if (qErr || !qData) {
-                    console.error('Lỗi khi lưu câu hỏi:', qErr);
-                    continue;
-                  }
-
-                  const questionId = qData.id;
-
-                  if (q.options && q.options.length > 0) {
-                    const optionsPayload = q.options.map((opt, oIdx) => ({
-                      question_id: questionId,
-                      label: opt.label,
-                      content: opt.content,
-                      image_url: opt.image_url || null,
-                      sort_order: oIdx + 1,
-                    }));
-
-                    const { error: optErr } = await this.supabase
-                      .from('exam_options')
-                      .insert(optionsPayload);
-
-                    if (optErr) {
-                      console.error('Lỗi khi lưu lựa chọn câu hỏi:', optErr);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      return { id: examId };
-    } catch (err: any) {
-      console.error('Lỗi ngoại lệ khi lưu đề thi:', err);
-      return { error: err.message || 'Lỗi không xác định khi lưu đề thi' };
+    const { data, error } = await this.supabase.rpc('save_full_exam', { p_exam: exam });
+    if (error) {
+      console.error('Lỗi khi lưu đề thi:', error);
+      return { error: error.message };
     }
+    return { id: data as string };
   }
 
   /**
@@ -314,7 +211,7 @@ export class ExamService {
    * Bản sao luôn ở trạng thái nháp; file ảnh/audio dùng chung URL với đề gốc.
    */
   async duplicateExam(examId: string): Promise<{ id?: string; error?: string }> {
-    const source = await this.getExamWithDetails(examId);
+    const source = await this.getExamWithDetails(examId, { withAnswers: true });
     if (!source) return { error: 'Không tìm thấy đề thi gốc' };
 
     const copy: Exam = {

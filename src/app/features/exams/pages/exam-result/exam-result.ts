@@ -10,6 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
+import { AuthService } from '../../../../services/auth.service';
 import { SECTION_TYPE_LABELS, formatAnswer } from '../../models/exam.model';
 import type { ExamSubmission, QuestionGradeResult } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
@@ -37,6 +38,7 @@ export class ExamResultComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly examService = inject(ExamService);
+  private readonly auth = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   submission = signal<ExamSubmission | null>(null);
@@ -118,8 +120,10 @@ export class ExamResultComponent implements OnInit {
           return;
         }
 
-        // Tự động nạp mẫu kết quả chuẩn từ cấu trúc đề để preview
-        this.examService.getExamWithDetails(examId).then(ex => {
+        // Kết quả mẫu để preview — chỉ admin (lộ toàn bộ đáp án)
+        this.auth.ready
+          .then(() => this.auth.isAdmin() ? this.examService.getExamWithDetails(examId, { withAnswers: true }) : null)
+          .then(ex => {
           if (ex) {
             const answers: Record<string, string> = {};
             ex.sections?.forEach(sec => {
