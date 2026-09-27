@@ -74,21 +74,6 @@
           <app-icon name="book-open" size="xs" />
           <span>Flashcard</span>
         </a>
-
-        <a
-          routerLink="/exams/manage"
-          [class.bg-brand-navy]="activeModule() === 'ops'"
-          [class.text-white]="activeModule() === 'ops'"
-          [class.shadow-xs]="activeModule() === 'ops'"
-          [class.text-brand-navy/70]="activeModule() !== 'ops'"
-          [class.dark:text-zinc-300]="activeModule() !== 'ops'"
-          [class.hover:bg-brand-navy/5]="activeModule() !== 'ops'"
-          [class.dark:hover:bg-white/5]="activeModule() !== 'ops'"
-          class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
-        >
-          <app-icon name="pencil" size="xs" />
-          <span>Quản lý đề</span>
-        </a>
       </nav>
     } @else if (pageTitle()) {
       <div class="hidden md:block font-display font-bold text-brand-navy dark:text-white text-base">
@@ -106,17 +91,6 @@
       >
         <app-icon name="academic" size="sm" />
       </a>
-
-      @if (auth.isAdmin()) {
-        <button
-          type="button"
-          (click)="signOut()"
-          [title]="'Đăng xuất ' + (auth.email() || '')"
-          class="px-3 py-1.5 rounded-full text-xs font-bold text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
-        >
-          Đăng xuất
-        </button>
-      }
 
       <!-- Reusable Circular Theme Toggle Component -->
       <app-theme-toggle />

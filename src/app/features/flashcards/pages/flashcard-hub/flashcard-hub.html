@@ -20,11 +20,6 @@
         </p>
 
         <div class="flex flex-wrap items-center gap-3 pt-2">
-          <a routerLink="/flashcards/manage" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white text-brand-navy hover:bg-white/90 shadow-md hover:scale-105 active:scale-95 transition-all">
-            <app-icon name="cog" size="xs" />
-            <span>Quản lý từ vựng (Ops)</span>
-          </a>
-
           <a routerLink="/exams" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all">
             <app-icon name="pencil" size="xs" />
             <span>Thi thử HSK</span>
@@ -120,12 +115,7 @@
     }
 
     <!-- FOOTER ACTIONS -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-brand-navy/10 dark:border-white/10 pt-6">
-      <a routerLink="/flashcards/manage" class="text-xs sm:text-sm font-bold text-brand-pink dark:text-brand-accent hover:text-brand-navy dark:hover:text-white transition-colors flex items-center gap-1.5">
-        <app-icon name="cog" size="xs" />
-        <span>Trang quản lý từ vựng dành cho Ops & Admin</span>
-      </a>
-
+    <div class="flex flex-col sm:flex-row items-center justify-end gap-4 border-t border-brand-navy/10 dark:border-white/10 pt-6">
       <button (click)="exportProgress()" class="px-4 py-2 bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 hover:bg-brand-navy/5 dark:hover:bg-white/10 rounded-full text-xs sm:text-sm font-semibold text-brand-navy dark:text-white shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
         <app-icon name="upload" size="xs" />
         <span>Sao lưu tiến độ học tập</span>

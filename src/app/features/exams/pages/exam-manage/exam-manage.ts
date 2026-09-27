@@ -7,7 +7,6 @@ import type { Exam, ExamFilter, HskVersion } from '../../models/exam.model';
 import { StatCardComponent } from '../../../../components/shared/stat-card/stat-card';
 import { ExamCardComponent } from '../../components/exam-card/exam-card';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { ToastService } from '../../../../services/toast.service';
 
 @Component({
@@ -20,7 +19,6 @@ import { ToastService } from '../../../../services/toast.service';
     StatCardComponent,
     ExamCardComponent,
     AppIconComponent,
-    NavHeaderComponent,
   ],
   templateUrl: './exam-manage.html',
   styleUrl: './exam-manage.css',

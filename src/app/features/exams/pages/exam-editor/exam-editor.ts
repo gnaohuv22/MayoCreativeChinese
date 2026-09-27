@@ -16,7 +16,6 @@ import { QuestionEditorComponent } from '../../components/question-editor/questi
 import { AudioUploaderComponent } from '../../components/audio-uploader/audio-uploader';
 import { ImageUploaderComponent } from '../../components/image-uploader/image-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
 @Component({
   selector: 'app-exam-editor',
@@ -28,7 +27,6 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
     AudioUploaderComponent,
     ImageUploaderComponent,
     AppIconComponent,
-    NavHeaderComponent,
   ],
   templateUrl: './exam-editor.html',
   styleUrl: './exam-editor.css',
@@ -235,7 +233,7 @@ export class ExamEditorComponent implements OnInit {
       this.saveStatus.set('success');
       this.saveMessage.set('Đã lưu toàn bộ đề thi HSK thành công!');
       if (!this.isEditMode() && res.id) {
-        this.router.navigate(['/exams', res.id, 'edit']);
+        this.router.navigate(['/admin/exams', res.id, 'edit']);
       }
     }
   }

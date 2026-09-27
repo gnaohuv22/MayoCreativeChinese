@@ -1,0 +1,43 @@
+@if (visible()) {
+  <div class="dock fixed bottom-8 right-8 z-50 flex flex-col items-end gap-2" [class.max-lg:bottom-24]="raised()" [class.is-open]="open()">
+    @if (open()) {
+      <div id="admin-dock-menu" class="flex flex-col items-end gap-2" role="menu" aria-label="Công cụ quản trị">
+        <div class="dock-item dock-card" style="--i: 0">
+          <span class="block text-[10px] font-bold uppercase tracking-widest text-brand-pink">Xin chào</span>
+          <span class="block text-sm font-bold text-brand-navy dark:text-white truncate max-w-52">{{ auth.displayName() }}</span>
+        </div>
+
+        @for (action of actions(); track action.route; let i = $index) {
+          <a
+            [routerLink]="action.route"
+            role="menuitem"
+            class="dock-item dock-pill"
+            [class.dock-pill-highlight]="action.highlight"
+            [style.--i]="i + 1"
+          >
+            <span>{{ action.label }}</span>
+            <span class="dock-pill-icon"><app-icon [name]="action.icon" size="xs" /></span>
+          </a>
+        }
+
+        <button type="button" role="menuitem" (click)="signOut()" class="dock-item dock-pill dock-pill-muted" [style.--i]="actions().length + 1">
+          <span>Đăng xuất</span>
+          <span class="dock-pill-icon"><app-icon name="logout" size="xs" /></span>
+        </button>
+      </div>
+    }
+
+    <button
+      type="button"
+      (click)="open.set(!open())"
+      class="dock-seal"
+      [attr.aria-expanded]="open()"
+      aria-controls="admin-dock-menu"
+      [attr.aria-label]="open() ? 'Đóng công cụ quản trị' : 'Mở công cụ quản trị'"
+      [title]="open() ? 'Đóng' : 'Công cụ quản trị'"
+    >
+      <span class="dock-seal-glyph" aria-hidden="true">管</span>
+      <span class="dock-seal-close" aria-hidden="true"><app-icon name="x-mark" size="sm" /></span>
+    </button>
+  </div>
+}

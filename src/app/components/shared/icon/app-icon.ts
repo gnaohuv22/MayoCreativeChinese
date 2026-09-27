@@ -38,6 +38,8 @@ export type IconName =
   | 'chevron-right'
   | 'arrow-uturn-left'
   | 'sun'
+  | 'logout'
+  | 'home'
   | 'moon'
   | 'cog'
   | 'document-duplicate'

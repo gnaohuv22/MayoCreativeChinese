@@ -13,6 +13,7 @@ import { FooterComponent } from './components/footer/footer';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top';
 import { RegisterModalComponent } from './components/shared/register-modal/register-modal';
 import { ToastComponent } from './components/shared/toast/toast';
+import { AdminDockComponent } from './components/shared/admin-dock/admin-dock';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +30,7 @@ import { ToastComponent } from './components/shared/toast/toast';
     ScrollToTopComponent,
     RegisterModalComponent,
     ToastComponent,
+    AdminDockComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',

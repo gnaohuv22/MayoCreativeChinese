@@ -1,17 +1,9 @@
-<app-nav-header activeModule="ops" backLink="/exams" backLabel="Danh sách đề thi" [showBack]="true" />
-
 <div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 px-4 sm:px-6 lg:px-8 transition-colors">
   <div class="max-w-6xl mx-auto space-y-8">
 
     <!-- Top Header & Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-pink/15 text-brand-pink border border-brand-pink/30">
-            Admin & Ops
-          </span>
-          <span class="text-xs text-zinc-600 dark:text-zinc-300">Quản lý kho đề thi</span>
-        </div>
         <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
           Quản lý Đề thi HSK
         </h1>
@@ -22,14 +14,7 @@
 
       <div class="flex items-center gap-3">
         <a
-          routerLink="/exams"
-          class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-all"
-        >
-          <app-icon name="eye" size="xs" />
-          <span>Xem giao diện học viên</span>
-        </a>
-        <a
-          routerLink="/exams/new"
+          routerLink="/admin/exams/new"
           class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs shadow-lg shadow-brand-pink/25 hover:scale-105 active:scale-95 transition-all"
         >
           <app-icon name="plus" size="xs" />
@@ -144,7 +129,7 @@
           Hãy bấm vào nút "Tạo đề thi mới" bên trên hoặc chạy script SQL seed data trong Supabase để nạp dữ liệu mẫu.
         </p>
         <a
-          routerLink="/exams/new"
+          routerLink="/admin/exams/new"
           class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-brand-pink text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
         >
           <app-icon name="plus" size="xs" />

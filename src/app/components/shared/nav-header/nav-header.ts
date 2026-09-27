@@ -1,7 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
+import { RouterLink } from '@angular/router';
 import { AppIconComponent } from '../icon/app-icon';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 
@@ -14,19 +13,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavHeaderComponent {
-  activeModule = input<'exams' | 'flashcards' | 'ops' | ''>('');
+  activeModule = input<'exams' | 'flashcards' | ''>('');
   pageTitle = input<string>('');
   backLink = input<string>('');
   backLabel = input<string>('');
   showBack = input<boolean>(false);
   showNavLinks = input<boolean>(true);
   showDevBadge = input<boolean>(false);
-
-  protected readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-
-  async signOut() {
-    await this.auth.signOut();
-    await this.router.navigateByUrl('/admin/login');
-  }
 }

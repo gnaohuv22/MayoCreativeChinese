@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from '../../services/admin.guard';
 
 export const examRoutes: Routes = [
   {
@@ -7,24 +6,8 @@ export const examRoutes: Routes = [
     loadComponent: () =>
       import('./pages/exam-list/exam-list').then(m => m.ExamListComponent),
   },
-  {
-    path: 'manage',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import('./pages/exam-manage/exam-manage').then(m => m.ExamManageComponent),
-  },
-  {
-    path: 'new',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import('./pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
-  },
-  {
-    path: ':id/edit',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import('./pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
-  },
+  // Địa chỉ cũ của trang quản lý
+  { path: 'manage', redirectTo: '/admin/exams', pathMatch: 'full' },
   {
     path: ':id/take',
     loadComponent: () =>

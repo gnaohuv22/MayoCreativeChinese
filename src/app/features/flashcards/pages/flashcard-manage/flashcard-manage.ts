@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VocabService, type NewVocabCard } from '../../services/vocab.service';
-import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
 import { DuplicateConfirmComponent, type DuplicateHanziItem } from '../../components/duplicate-confirm/duplicate-confirm';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
@@ -23,7 +22,7 @@ interface DupDialogState {
 @Component({
   selector: 'app-flashcard-manage',
   standalone: true,
-  imports: [FormsModule, NavHeaderComponent, ImportPreviewComponent, DuplicateConfirmComponent, AppIconComponent],
+  imports: [FormsModule, ImportPreviewComponent, DuplicateConfirmComponent, AppIconComponent],
   templateUrl: './flashcard-manage.html',
   styleUrl: './flashcard-manage.css',
 })

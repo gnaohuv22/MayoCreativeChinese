@@ -15,5 +15,10 @@
   <router-outlet />
 }
 
+<!-- Lối vào khu quản trị (chỉ hiện khi đã đăng nhập) -->
+@defer (on idle) {
+  <app-admin-dock />
+}
+
 <!-- GLOBAL TOAST NOTIFICATIONS -->
 <app-toast />

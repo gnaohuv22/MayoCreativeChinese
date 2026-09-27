@@ -22,6 +22,18 @@ export class AdminLoginComponent {
   isSubmitting = signal(false);
   error = signal<string | null>(null);
 
+  constructor() {
+    this.auth.ready.then(() => {
+      if (this.auth.isAdmin()) this.router.navigateByUrl(this.returnUrl());
+    });
+  }
+
+  /** Chỉ cho phép quay lại đường dẫn nội bộ */
+  private returnUrl(): string {
+    const url = this.route.snapshot.queryParamMap.get('returnUrl');
+    return url?.startsWith('/') && !url.startsWith('//') ? url : '/admin/exams';
+  }
+
   async submit() {
     if (!this.username.trim() || !this.password) return;
     this.isSubmitting.set(true);
@@ -32,7 +44,6 @@ export class AdminLoginComponent {
       this.error.set(res.error === 'Invalid login credentials' ? 'Tài khoản hoặc mật khẩu không đúng.' : res.error);
       return;
     }
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    await this.router.navigateByUrl(returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/exams/manage');
+    await this.router.navigateByUrl(this.returnUrl());
   }
 }

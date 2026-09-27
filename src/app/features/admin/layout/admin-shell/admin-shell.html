@@ -1,0 +1,103 @@
+<!-- Desktop: thanh bên cố định -->
+<aside class="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-brand-navy text-white overflow-hidden">
+  <span class="shell-watermark" aria-hidden="true">管</span>
+
+  <a routerLink="/admin/exams" class="relative flex items-center gap-3 px-6 h-20 shrink-0">
+    <span class="w-10 h-10 rounded-full bg-white p-0.5 shadow-md">
+      <img src="android-chrome-192x192.png" width="40" height="40" alt="" class="object-contain" />
+    </span>
+    <span class="flex flex-col leading-tight">
+      <span class="font-display font-bold">Mayo Creative</span>
+      <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-accent">Khu quản trị</span>
+    </span>
+  </a>
+
+  <nav class="relative flex-1 px-3 pt-4 space-y-1" aria-label="Quản trị">
+    <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Nội dung</p>
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="is-active"
+        class="shell-nav-link group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors hover:bg-white/5"
+      >
+        <span class="shell-nav-icon w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 transition-colors">
+          <app-icon [name]="item.icon" size="sm" />
+        </span>
+        <span class="flex flex-col min-w-0">
+          <span class="text-sm font-bold">{{ item.label }}</span>
+          <span class="text-[11px] text-white/50 truncate">{{ item.hint }}</span>
+        </span>
+      </a>
+    }
+  </nav>
+
+  <div class="relative p-3 space-y-2">
+    <div class="flex items-center gap-2">
+      <a
+        routerLink="/"
+        class="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-2xl text-xs font-bold text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+      >
+        <app-icon name="home" size="xs" />
+        <span>Xem trang học viên</span>
+      </a>
+      <app-theme-toggle />
+    </div>
+
+    <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+      <span class="shell-avatar w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-display font-black">
+        {{ initial() }}
+      </span>
+      <span class="flex-1 min-w-0 leading-tight">
+        <span class="block text-sm font-bold truncate">{{ auth.displayName() }}</span>
+        <span class="block text-[11px] text-white/50 truncate">{{ auth.username() }}</span>
+      </span>
+      <button
+        type="button"
+        (click)="signOut()"
+        class="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        title="Đăng xuất"
+        aria-label="Đăng xuất"
+      >
+        <app-icon name="logout" size="sm" />
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile / tablet: thanh trên -->
+<header class="lg:hidden sticky top-0 z-40 bg-brand-navy text-white shadow-md">
+  <div class="flex items-center justify-between gap-3 px-4 h-14">
+    <a routerLink="/admin/exams" class="flex items-center gap-2">
+      <span class="w-8 h-8 rounded-full bg-white p-0.5">
+        <img src="android-chrome-192x192.png" width="32" height="32" alt="" class="object-contain" />
+      </span>
+      <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-accent">Khu quản trị</span>
+    </a>
+    <div class="flex items-center gap-1">
+      <a routerLink="/" class="p-2 rounded-xl text-white/70 hover:text-white" title="Xem trang học viên" aria-label="Xem trang học viên">
+        <app-icon name="home" size="sm" />
+      </a>
+      <app-theme-toggle />
+      <button type="button" (click)="signOut()" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/10 cursor-pointer" [title]="'Đăng xuất ' + auth.displayName()" aria-label="Đăng xuất">
+        <span class="shell-avatar w-8 h-8 rounded-full flex items-center justify-center text-sm font-display font-black">{{ initial() }}</span>
+        <app-icon name="logout" size="sm" />
+      </button>
+    </div>
+  </div>
+  <nav class="flex gap-1 px-3 pb-2" aria-label="Quản trị">
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="is-active"
+        class="shell-tab flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-xs font-bold text-white/70 transition-colors"
+      >
+        <app-icon [name]="item.icon" size="xs" />
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</header>
+
+<main class="lg:pl-64 min-h-screen bg-brand-light dark:bg-brand-dark transition-colors">
+  <router-outlet />
+</main>
