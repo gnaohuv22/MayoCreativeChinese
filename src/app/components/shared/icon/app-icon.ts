@@ -39,7 +39,8 @@ export type IconName =
   | 'arrow-uturn-left'
   | 'sun'
   | 'moon'
-  | 'cog';
+  | 'cog'
+  | 'document-duplicate';
 
 @Component({
   selector: 'app-icon',

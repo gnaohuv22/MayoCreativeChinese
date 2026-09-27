@@ -3,8 +3,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabCardComponent } from '../../components/vocab-card/vocab-card';
 import { VocabService } from '../../services/vocab.service';
-import { ProgressService } from '../../services/progress.service';
+import { ProgressService, progressKey } from '../../services/progress.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCard, CardProgress, HskVersion, VocabCollection } from '../../models/vocab-card.model';
 
 @Component({
@@ -31,6 +32,7 @@ export class FlashcardStudyComponent implements OnInit {
   shuffled = signal(false);
   filter = signal<'all' | 'new' | 'hard' | 'bookmarked'>('all');
   isTransitioning = signal(false);
+  readonly progressKey = progressKey;
 
   pageTitle = computed(() => {
     const col = this.collection();
@@ -82,7 +84,7 @@ export class FlashcardStudyComponent implements OnInit {
 
     if (filter === 'all') return cards;
     return cards.filter(card => {
-      const p = map.get(card.hanzi);
+      const p = map.get(progressKey(card));
       if (filter === 'new') return !p || p.reviewCount === 0;
       if (filter === 'hard') return p && (p.confidence === 1 || (p.reviewCount > 0 && p.confidence === 0));
       if (filter === 'bookmarked') return p?.bookmarked === true;
@@ -150,12 +152,12 @@ export class FlashcardStudyComponent implements OnInit {
         ver = '3.0';
         vocabList = await this.vocabService.getSupplementVocab(lvl);
       } else {
-        // combined / hsk1_9
+        // combined / hsk1_9 (cấp '7-9' được gộp)
         ver = undefined;
-        vocabList = await this.vocabService.getVocabByLevel(lvl);
+        vocabList = await this.vocabService.getVocabByLevels(parseLevelParam(this.level()));
       }
 
-      const progress = await this.progressService.getProgressMap(lvl, ver);
+      const progress = await this.progressService.getProgressForCards(vocabList, ver);
 
       this.cards.set(vocabList);
       this.progressMap.set(progress);
@@ -211,13 +213,14 @@ export class FlashcardStudyComponent implements OnInit {
     if (!card) return;
 
     try {
-      const hskLevel = Number(this.level());
+      const hskLevel = card.hsk_level;
       const col = this.collection();
       const ver: HskVersion | undefined = col === 'hsk2' ? '2.0' : col === 'hsk3' ? '3.0' : undefined;
+      const key = progressKey(card);
 
-      await this.progressService.updateConfidence(card.hanzi, hskLevel, confidence, ver);
-      
-      const existing = this.progressMap().get(card.hanzi);
+      await this.progressService.updateConfidence(card, confidence, ver);
+
+      const existing = this.progressMap().get(key);
       const updated: CardProgress = existing
         ? {
             ...existing,
@@ -226,6 +229,7 @@ export class FlashcardStudyComponent implements OnInit {
             lastReviewed: Date.now(),
           }
         : {
+            cardId: card.id,
             hanzi: card.hanzi,
             hskLevel,
             hskVersion: ver,
@@ -237,7 +241,7 @@ export class FlashcardStudyComponent implements OnInit {
 
       this.progressMap.update(map => {
         const newMap = new Map(map);
-        newMap.set(card.hanzi, updated);
+        newMap.set(key, updated);
         return newMap;
       });
 
@@ -255,16 +259,18 @@ export class FlashcardStudyComponent implements OnInit {
     const card = this.currentCard();
     if (!card) return;
     try {
-      const hskLevel = Number(this.level());
+      const hskLevel = card.hsk_level;
       const col = this.collection();
       const ver: HskVersion | undefined = col === 'hsk2' ? '2.0' : col === 'hsk3' ? '3.0' : undefined;
+      const key = progressKey(card);
 
-      const newBookmarked = await this.progressService.toggleBookmark(card.hanzi, hskLevel, ver);
-      
-      const existing = this.progressMap().get(card.hanzi);
+      const newBookmarked = await this.progressService.toggleBookmark(card, ver);
+
+      const existing = this.progressMap().get(key);
       const updated: CardProgress = existing
         ? { ...existing, bookmarked: newBookmarked }
         : {
+            cardId: card.id,
             hanzi: card.hanzi,
             hskLevel,
             hskVersion: ver,
@@ -275,7 +281,7 @@ export class FlashcardStudyComponent implements OnInit {
 
       this.progressMap.update(map => {
         const newMap = new Map(map);
-        newMap.set(card.hanzi, updated);
+        newMap.set(key, updated);
         return newMap;
       });
     } catch (e) {

@@ -3,10 +3,10 @@
   <div class="flex items-center justify-between pb-3 border-b border-brand-navy/10 dark:border-white/10">
     <div class="flex items-center gap-3">
       <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-brand-pink text-white font-bold text-sm shadow-sm">
-        {{ question().question_num }}
+        {{ questionNum() }}
       </span>
       <span class="text-sm font-bold text-brand-navy dark:text-white">
-        Câu số {{ question().question_num }}
+        Câu số {{ questionNum() }}
       </span>
     </div>
 
@@ -52,7 +52,7 @@
     <div class="p-3 rounded-xl bg-zinc-50/70 dark:bg-white/5 border border-zinc-200/70 dark:border-white/5">
       <label class="flex items-center gap-1.5 text-xs font-semibold text-brand-navy dark:text-white mb-1.5">
         <app-icon name="audio" size="xs" customClass="text-brand-pink" />
-        <span>Âm thanh câu hỏi (Listening):</span>
+        <span>Âm thanh câu hỏi (phần Nghe):</span>
       </label>
       <app-audio-uploader
         [audioUrl]="question().audio_url || null"
@@ -107,12 +107,21 @@
                 {{ opt.label }}
               </button>
 
-              <!-- Nội dung option -->
+              <!-- Nội dung option (dán ảnh Ctrl+V vào đây để làm ảnh phương án) -->
               <input
                 type="text"
                 [(ngModel)]="opt.content"
-                placeholder="Nội dung phương án {{ opt.label }}..."
+                (paste)="onOptionPaste($event, optUploader)"
+                placeholder="Nội dung phương án {{ opt.label }} (hoặc dán ảnh)..."
                 class="flex-1 text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+              />
+
+              <!-- Ảnh cho option (VD: chọn tranh A, B, C) -->
+              <app-image-uploader
+                #optUploader
+                [compact]="true"
+                [imageUrl]="opt.image_url || null"
+                (imageUrlChange)="opt.image_url = $event"
               />
 
               <!-- Xoá option (chỉ khi > 2 options) -->
@@ -143,7 +152,7 @@
     @if (questionType() === 'true_false') {
       <div class="space-y-2">
         <label class="block text-xs font-semibold text-brand-navy dark:text-white">
-          Chọn đáp án chuẩn:
+          Chọn đáp án chính xác:
         </label>
         <div class="flex gap-3">
           <button
@@ -155,7 +164,7 @@
             class="flex-1 py-2 px-4 rounded-xl border-2 border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <app-icon name="check" size="xs" />
-            <span>Đúng (对 - True)</span>
+            <span>Đúng (对)</span>
           </button>
 
           <button
@@ -167,14 +176,38 @@
             class="flex-1 py-2 px-4 rounded-xl border-2 border-red-500/30 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <app-icon name="x-mark" size="xs" />
-            <span>Sai (错 - False)</span>
+            <span>Sai (错)</span>
           </button>
         </div>
       </div>
     }
 
-    <!-- 3. fill_blank / ordering / short_answer / matching / essay -->
-    @if (questionType() !== 'single_choice' && questionType() !== 'true_false') {
+    <!-- 3. matching: chọn 1 nhãn trong ngân hàng tranh / từ dùng chung của Part -->
+    @if (questionType() === 'matching') {
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-brand-navy dark:text-white">
+          Đáp án chính xác (theo tranh / từ trong "Đề bài chung" của Part):
+        </label>
+        <div class="flex flex-wrap gap-2">
+          @for (label of optionLabels(); track label) {
+            <button
+              type="button"
+              (click)="setCorrectOption(label)"
+              [class.bg-brand-pink]="question().correct_answer === label"
+              [class.text-white]="question().correct_answer === label"
+              [class.border-brand-pink]="question().correct_answer === label"
+              class="w-9 h-9 rounded-full border-2 border-zinc-300 dark:border-white/20 text-sm font-bold flex items-center justify-center transition-all shadow-sm cursor-pointer text-brand-navy dark:text-white"
+              [attr.aria-pressed]="question().correct_answer === label"
+            >
+              {{ label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- 4. fill_blank / ordering / short_answer / essay -->
+    @if (questionType() !== 'single_choice' && questionType() !== 'true_false' && questionType() !== 'matching') {
       <div>
         <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
           Đáp án chuẩn (Từ điền / Thứ tự sắp xếp / Chữ Hán):

@@ -39,7 +39,7 @@ BEGIN
     description,
     is_published
   ) VALUES (
-    'HSK 3 — Đề thi thử tiêu chuẩn số 01',
+    'HSK 3 - ĐỀ THI THỬ 01',
     3,
     '2.0',
     90,

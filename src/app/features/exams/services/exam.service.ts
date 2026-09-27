@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { getSupabase } from '../../flashcards/config/supabase.config';
 import type {
+  HskVersion,
   Exam,
   ExamFilter,
   ExamSection,
@@ -12,6 +13,7 @@ import type {
   SectionScoreResult,
   QuestionGradeResult
 } from '../models/exam.model';
+import { renumberQuestions } from '../models/exam.model';
 
 @Injectable({ providedIn: 'root' })
 export class ExamService {
@@ -167,6 +169,7 @@ export class ExamService {
 
   /** Lưu toàn bộ cấu trúc đề thi (Exam + Sections + Parts + Questions + Options) */
   async saveFullExam(exam: Exam): Promise<{ id?: string; error?: string }> {
+    renumberQuestions(exam);
     try {
       let examId = exam.id;
 
@@ -232,6 +235,11 @@ export class ExamService {
                   title: part.title,
                   question_type: part.question_type,
                   instructions: part.instructions || null,
+                  example_text: part.example_text || null,
+                  stimulus_text: part.stimulus_text || null,
+                  stimulus_image_url: part.stimulus_image_url || null,
+                  stimulus_audio_url: part.stimulus_audio_url || null,
+                  option_labels: part.option_labels || null,
                   sort_order: pIdx + 1,
                 })
                 .select('id')
@@ -299,6 +307,35 @@ export class ExamService {
       console.error('Lỗi ngoại lệ khi lưu đề thi:', err);
       return { error: err.message || 'Lỗi không xác định khi lưu đề thi' };
     }
+  }
+
+  /**
+   * Nhân bản 1 đề thi (toàn bộ Phần → Part → Câu hỏi → Lựa chọn).
+   * Bản sao luôn ở trạng thái nháp; file ảnh/audio dùng chung URL với đề gốc.
+   */
+  async duplicateExam(examId: string): Promise<{ id?: string; error?: string }> {
+    const source = await this.getExamWithDetails(examId);
+    if (!source) return { error: 'Không tìm thấy đề thi gốc' };
+
+    const copy: Exam = {
+      ...source,
+      id: undefined,
+      created_at: undefined,
+      updated_at: undefined,
+      title: `${source.title} (bản sao)`,
+      is_published: false,
+    };
+    return this.saveFullExam(copy);
+  }
+
+  /** Đếm số đề đã có theo cấp & phiên bản (để gợi ý số thứ tự đề tiếp theo) */
+  async countExams(level: number, version: HskVersion): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('exams')
+      .select('id', { count: 'exact', head: true })
+      .eq('hsk_level', level)
+      .eq('hsk_version', version);
+    return error ? 0 : count ?? 0;
   }
 
   /** Tải lên file Audio hoặc Image lên Supabase Storage bucket `exam-assets` */

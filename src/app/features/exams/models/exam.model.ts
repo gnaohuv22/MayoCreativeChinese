@@ -50,6 +50,12 @@ export interface ExamPart {
   question_type: QuestionType;   // single_choice, true_false, fill_blank...
   instructions?: string | null;         // Hướng dẫn làm bài
   sort_order: number;
+  // "Ví dụ / Đề bài chung" — dùng chung cho mọi câu hỏi trong Part
+  example_text?: string | null;         // Ví dụ mẫu (例如), audio cũng đọc phần này
+  stimulus_text?: string | null;        // Ngân hàng từ / đoạn văn chung (A 因为 B 远 ...)
+  stimulus_image_url?: string | null;   // Tranh chung (ngân hàng tranh A–F)
+  stimulus_audio_url?: string | null;   // Audio chung của Part (tuỳ chọn)
+  option_labels?: string | null;        // Nhãn đáp án dạng 'matching', VD 'A,B,C,D,E,F'
   questions?: ExamQuestion[];
 }
 
@@ -116,9 +122,9 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, { label: string; icon: I
     description: 'Sắp xếp các từ ngữ theo đúng trật tự ngữ pháp'
   },
   matching: {
-    label: 'Nối cặp tương ứng',
+    label: 'Chọn từ ngân hàng chung (tranh / từ A–F)',
     icon: 'link',
-    description: 'Nối câu hỏi với câu trả lời hoặc hình ảnh thích hợp'
+    description: 'Mọi câu trong Part chọn đáp án từ cùng 1 ngân hàng tranh hoặc từ (A, B, C, D, E, F)'
   },
   short_answer: {
     label: 'Viết ngắn / Điền chữ Hán',
@@ -131,6 +137,64 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, { label: string; icon: I
     description: 'Viết một đoạn văn ngắn dựa theo các từ khóa / hình ảnh'
   }
 };
+
+export const DEFAULT_OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+/** Nhãn đáp án dùng chung của 1 Part dạng 'matching' ('A,B,C' → ['A','B','C']) */
+export function partOptionLabels(part: Pick<ExamPart, 'option_labels'>): string[] {
+  const labels = (part.option_labels ?? '')
+    .split(/[\s,;]+/)
+    .map(l => l.trim().toUpperCase())
+    .filter(Boolean);
+  return labels.length > 0 ? [...new Set(labels)] : DEFAULT_OPTION_LABELS;
+}
+
+/** Part có khối "Ví dụ / Đề bài chung" hay không */
+export function hasPartStimulus(part: ExamPart): boolean {
+  return !!(part.example_text?.trim() || part.stimulus_text?.trim() || part.stimulus_image_url || part.stimulus_audio_url);
+}
+
+/**
+ * Đánh số lại toàn bộ câu hỏi theo đúng thứ tự hiển thị: Phần thi → Part → Câu (1, 2, 3...).
+ * Đồng thời chuẩn hoá sort_order của phần thi, Part và câu hỏi.
+ */
+export function renumberQuestions(exam: Pick<Exam, 'sections'>): void {
+  let num = 1;
+  (exam.sections ?? []).forEach((sec, sIdx) => {
+    sec.sort_order = sIdx + 1;
+    (sec.parts ?? []).forEach((part, pIdx) => {
+      part.sort_order = pIdx + 1;
+      (part.questions ?? []).forEach((q, qIdx) => {
+        q.sort_order = qIdx + 1;
+        q.question_num = num++;
+      });
+    });
+  });
+}
+
+/** Gợi ý tên đề thi theo quy ước "HSK 3 - ĐỀ THI THỬ 01" */
+export function suggestExamTitle(level: number, version: HskVersion, index: number): string {
+  const prefix = version === '3.0' ? 'NEW HSK' : 'HSK';
+  return `${prefix} ${level} - ĐỀ THI THỬ ${String(index).padStart(2, '0')}`;
+}
+
+/** Tên tiếng Việt của các phần thi */
+export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
+  listening: 'Nghe hiểu',
+  reading: 'Đọc hiểu',
+  writing: 'Viết',
+  speaking: 'Nói',
+};
+
+/** Hiển thị đáp án cho người đọc (VD: 'true' → 'Đúng (对)') */
+export function formatAnswer(value: string | null | undefined, questionType: QuestionType): string {
+  if (!value) return '';
+  if (questionType === 'true_false') {
+    if (value === 'true') return 'Đúng (对)';
+    if (value === 'false') return 'Sai (错)';
+  }
+  return value;
+}
 
 /** Danh sách câu trả lời của thí sinh: key là question_id, value là chuỗi đáp án */
 export type UserAnswers = Record<string, string>;

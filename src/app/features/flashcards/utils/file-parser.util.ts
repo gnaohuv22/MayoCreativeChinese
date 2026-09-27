@@ -1,4 +1,13 @@
+import { vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 import type { ParsedImportRow, ValidatedImportRow, VocabCard, HskVersion } from '../models/vocab-card.model';
+
+/** Các key đã có trong DB, dùng để kiểm tra trùng khi import */
+export interface ExistingVocabKeys {
+  /** vocabEntryKey — Hán tự + pinyin + nghĩa + cấp + phiên bản */
+  entries: Set<string>;
+  /** vocabHanziKey — Hán tự + cấp + phiên bản */
+  hanzi: Set<string>;
+}
 
 /**
  * Parse uploaded file (CSV or XLSX) into structured rows.
@@ -116,12 +125,16 @@ export async function parseXlsx(buffer: ArrayBuffer): Promise<ParsedImportRow[]>
   return rows;
 }
 
-/** Validate parsed rows against existing data */
+/**
+ * Validate parsed rows against existing data.
+ * Chỉ coi là trùng khi Hán tự + pinyin + nghĩa (cùng cấp, phiên bản) đều giống — xem `vocabEntryKey`.
+ */
 export function validateRows(
   rows: ParsedImportRow[],
-  existingKeys: Set<string>
+  existing: ExistingVocabKeys
 ): ValidatedImportRow[] {
-  const seenInFile = new Set<string>();
+  const seenEntries = new Set<string>();
+  const seenHanzi = new Set<string>();
 
   return rows.map((row, index) => {
     const errors: string[] = [];
@@ -133,17 +146,15 @@ export function validateRows(
       errors.push('HSK level phải từ 1 đến 9');
     }
 
-    const ver = row.hsk_version || '2.0';
-    const compoundKey = `${row.hanzi.trim()}_${row.hsk_level}_${ver}`;
-    const levelKey = `${row.hanzi.trim()}_${row.hsk_level}`;
+    const card = { ...row, hsk_version: row.hsk_version || '2.0' };
+    const entryKey = vocabEntryKey(card);
+    const hanziKey = vocabHanziKey(card);
 
-    const isDuplicate =
-      existingKeys.has(compoundKey) ||
-      existingKeys.has(levelKey) ||
-      existingKeys.has(row.hanzi.trim()) ||
-      seenInFile.has(compoundKey);
+    const isDuplicate = existing.entries.has(entryKey) || seenEntries.has(entryKey);
+    const sameHanziExists = !isDuplicate && (existing.hanzi.has(hanziKey) || seenHanzi.has(hanziKey));
 
-    seenInFile.add(compoundKey);
+    seenEntries.add(entryKey);
+    seenHanzi.add(hanziKey);
 
     let status: 'valid' | 'duplicate' | 'error';
     if (errors.length > 0) {
@@ -160,6 +171,7 @@ export function validateRows(
       status,
       errors,
       selected: status === 'valid',
+      sameHanziExists,
     };
   });
 }

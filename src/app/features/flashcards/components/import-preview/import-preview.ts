@@ -19,7 +19,7 @@ export class ImportPreviewComponent {
       const allRows = this.rows();
       const selected = new Set<number>();
       allRows.forEach((row, i) => {
-        if (row.status !== 'error') {
+        if (row.status === 'valid') {
           selected.add(i);
         }
       });
@@ -29,11 +29,12 @@ export class ImportPreviewComponent {
 
   validCount = computed(() => this.rows().filter(r => r.status === 'valid').length);
   duplicateCount = computed(() => this.rows().filter(r => r.status === 'duplicate').length);
+  sameHanziCount = computed(() => this.rows().filter(r => r.sameHanziExists).length);
   errorCount = computed(() => this.rows().filter(r => r.status === 'error').length);
   selectedCount = computed(() => this.selectedIndices().size);
 
   toggleRow(index: number, row: ValidatedImportRow): void {
-    if (row.status === 'error') return;
+    if (row.status !== 'valid') return;
     const selected = new Set(this.selectedIndices());
     if (selected.has(index)) {
       selected.delete(index);
@@ -46,7 +47,7 @@ export class ImportPreviewComponent {
   selectAll(): void {
     const selected = new Set<number>();
     this.rows().forEach((row, index) => {
-      if (row.status !== 'error') {
+      if (row.status === 'valid') {
         selected.add(index);
       }
     });

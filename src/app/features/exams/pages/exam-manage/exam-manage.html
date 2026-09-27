@@ -160,6 +160,8 @@
             mode="admin"
             (togglePublish)="togglePublish($event)"
             (delete)="deleteExam($event)"
+            (duplicate)="duplicateExam($event)"
+            [duplicating]="duplicatingId() === item.id"
           />
         }
       </div>

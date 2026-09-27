@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import { ThemeService } from '../../../../services/theme.service';
+import { hasPartStimulus, partOptionLabels } from '../../models/exam.model';
 import type { Exam, ExamSection, ExamQuestion, UserAnswers } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
@@ -29,6 +30,14 @@ import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExamTakeComponent implements OnInit, OnDestroy {
+  readonly hasPartStimulus = hasPartStimulus;
+  readonly partOptionLabels = partOptionLabels;
+
+  /** Câu trắc nghiệm có phương án dạng ảnh (hiển thị lưới 3 cột) */
+  hasOptionImages(q: ExamQuestion): boolean {
+    return (q.options ?? []).some(o => !!o.image_url);
+  }
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly examService = inject(ExamService);

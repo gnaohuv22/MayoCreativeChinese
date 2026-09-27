@@ -6,6 +6,7 @@ import { ProgressService } from '../../services/progress.service';
 import { exportProgressJson } from '../../utils/template-generator.util';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
+import { ADVANCED_LEVEL_PARAM } from '../../models/vocab-card.model';
 import type { VocabCollection, HskVersion } from '../../models/vocab-card.model';
 
 export interface CollectionCardItem {
@@ -14,7 +15,8 @@ export interface CollectionCardItem {
   badge: string;
   badgeColor: string;
   description: string;
-  levels: { num: number; label: string }[];
+  /** num = tham số route `:level` ('1'…'9' hoặc '7-9') */
+  levels: { num: number | string; label: string }[];
   route: string;
   totalCards: number;
   highlightText?: string;
@@ -58,9 +60,9 @@ export class FlashcardHubComponent implements OnInit {
         {
           key: 'hsk2',
           title: 'Từ Vựng HSK 2.0',
-          badge: 'v2.0',
+          badge: 'HSK 2.0',
           badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-          description: 'Hệ thống từ vựng 6 cấp độ tiêu chuẩn truyền thống (HSK 1 đến HSK 6). Phù hợp cho ôn luyện thi HSK format cũ.',
+          description: 'Hệ thống từ vựng 6 cấp độ (HSK 1 đến HSK 6) theo tiêu chuẩn đánh giá năng lực 6 cấp cũ. Phù hợp cho ôn luyện thi HSK format cũ.',
           levels: [1, 2, 3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
           route: '/flashcards/hsk2',
           totalCards: totalV2 > 0 ? totalV2 : totalAll,
@@ -70,7 +72,7 @@ export class FlashcardHubComponent implements OnInit {
           title: 'Từ Vựng HSK 3.0',
           badge: 'NEW HSK',
           badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-          description: 'Chuẩn 9 cấp độ mới phân chia theo bài học & giáo trình bài bản, giúp tiếp thu từ vựng theo ngữ cảnh thực tế.',
+          description: 'Chuẩn 9 cấp độ mới phân chia theo bài học của giáo trình NEW HSK 3.0, giúp tiếp thu từ vựng theo ngữ cảnh thực tế.',
           levels: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ num: i, label: `NEW HSK ${i}` })),
           route: '/flashcards/hsk3',
           totalCards: totalV3 > 0 ? totalV3 : totalAll,
@@ -81,8 +83,11 @@ export class FlashcardHubComponent implements OnInit {
           title: 'Từ Vựng HSK 1 - 9',
           badge: 'Toàn diện',
           badgeColor: 'bg-brand-pink/10 text-brand-pink border-brand-pink/20',
-          description: 'Kho từ vựng HSK tổng hợp đầy đủ từ cấp độ sơ cấp 1 đến cao cấp 9. Tra cứu và học tập toàn diện.',
-          levels: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ num: i, label: `HSK ${i}` })),
+          description: 'Kho từ vựng HSK tổng hợp đầy đủ từ cấp độ sơ cấp 1 đến cao cấp 9 theo Tiêu chuẩn phân cấp trình độ giáo dục Trung văn quốc tế.',
+          levels: [
+            ...[1, 2, 3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
+            { num: ADVANCED_LEVEL_PARAM, label: `HSK ${ADVANCED_LEVEL_PARAM}` },
+          ],
           route: '/flashcards/combined',
           totalCards: totalAll,
         },

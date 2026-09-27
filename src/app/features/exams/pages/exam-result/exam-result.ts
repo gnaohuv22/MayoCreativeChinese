@@ -10,6 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
+import { SECTION_TYPE_LABELS, formatAnswer } from '../../models/exam.model';
 import type { ExamSubmission, QuestionGradeResult } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
@@ -26,6 +27,13 @@ type FilterType = 'all' | 'correct' | 'incorrect' | 'unanswered';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExamResultComponent implements OnInit {
+  readonly sectionLabels = SECTION_TYPE_LABELS;
+  readonly formatAnswer = formatAnswer;
+
+  hasOptionImages(q: QuestionGradeResult): boolean {
+    return (q.options ?? []).some(o => !!o.image_url);
+  }
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly examService = inject(ExamService);

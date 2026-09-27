@@ -12,6 +12,10 @@ export class FlashcardDB extends Dexie {
     this.version(2).stores({
       progress: '++id, [hanzi+hskLevel], hskLevel, hskVersion, confidence, bookmarked',
     });
+    // v3: thêm cardId để tách tiến độ của các từ cùng Hán tự nhưng khác pinyin/nghĩa
+    this.version(3).stores({
+      progress: '++id, cardId, [hanzi+hskLevel], hskLevel, hskVersion, confidence, bookmarked',
+    });
   }
 }
 

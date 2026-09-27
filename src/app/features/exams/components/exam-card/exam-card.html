@@ -84,7 +84,7 @@
     </button>
   } @else {
     <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-white/5">
-      <span class="text-[11px] font-medium flex items-center gap-1"
+      <span class="text-[11px] font-medium flex items-center gap-1 whitespace-nowrap"
             [class.text-emerald-600]="exam().is_published"
             [class.dark:text-emerald-400]="exam().is_published"
             [class.text-zinc-600]="!exam().is_published"
@@ -101,6 +101,17 @@
           <app-icon name="pencil" size="xs" />
           <span>Sửa</span>
         </a>
+
+        <button
+          type="button"
+          (click)="duplicate.emit(exam())"
+          [disabled]="duplicating()"
+          class="p-1.5 rounded-xl text-brand-navy dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+          title="Nhân bản đề thi (tạo bản nháp)"
+          aria-label="Nhân bản đề thi"
+        >
+          <app-icon [name]="duplicating() ? 'arrow-path' : 'document-duplicate'" size="xs" [customClass]="duplicating() ? 'animate-spin' : ''" />
+        </button>
 
         <button
           type="button"

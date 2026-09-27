@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { ExamQuestion, QuestionType } from '../../models/exam.model';
 import { AudioUploaderComponent } from '../audio-uploader/audio-uploader';
-import { ImageUploaderComponent } from '../image-uploader/image-uploader';
+import { ImageUploaderComponent, imageFileFromClipboard } from '../image-uploader/image-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 
 @Component({
@@ -16,7 +16,11 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 })
 export class QuestionEditorComponent {
   question = input.required<ExamQuestion>();
+  /** Số câu theo vị trí trong đề (truyền riêng để OnPush cập nhật khi đánh số lại) */
+  questionNum = input.required<number>();
   questionType = input.required<QuestionType>();
+  /** Nhãn đáp án dùng chung của Part (dạng 'matching') */
+  optionLabels = input<string[]>([]);
   remove = output<void>();
 
   onAudioChange(url: string | null) {
@@ -25,6 +29,14 @@ export class QuestionEditorComponent {
 
   onImageChange(url: string | null) {
     this.question().image_url = url || undefined;
+  }
+
+  /** Dán ảnh vào ô nội dung phương án → tải lên làm ảnh của phương án đó */
+  async onOptionPaste(event: ClipboardEvent, uploader: ImageUploaderComponent) {
+    const file = imageFileFromClipboard(event);
+    if (!file) return; // dán text bình thường
+    event.preventDefault();
+    await uploader.uploadFile(file);
   }
 
   setCorrectOption(label: string) {

@@ -8,7 +8,7 @@
       </span>
       <span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
         <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-        {{ duplicateCount() }} trùng lặp
+        {{ duplicateCount() }} trùng lặp (bỏ qua)
       </span>
       <span class="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
@@ -66,7 +66,7 @@
                 type="checkbox"
                 [checked]="selectedIndices().has(item.rowIndex - 1)"
                 (change)="toggleRow(item.rowIndex - 1, item)"
-                [disabled]="item.status === 'error'"
+                [disabled]="item.status !== 'valid'"
                 class="w-4 h-4 rounded text-brand-pink focus:ring-brand-pink/50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 border-brand-navy/20 dark:border-white/20">
             </td>
             <td class="p-3.5 text-center text-brand-navy/40 dark:text-brand-text-dark/40 font-mono text-xs">{{ item.rowIndex }}</td>
@@ -84,7 +84,7 @@
                     [class.text-blue-700]="item.row.hsk_version === '2.0'"
                     [class.bg-purple-100]="item.row.hsk_version !== '2.0'"
                     [class.text-purple-700]="item.row.hsk_version !== '2.0'">
-                {{ item.row.hsk_version === '2.0' ? 'v2.0' : 'v3.0' }}
+                {{ item.row.hsk_version === '2.0' ? 'HSK 2.0' : 'HSK 3.0' }}
               </span>
             </td>
             <td class="p-3.5 text-center text-xs text-brand-navy/70 dark:text-white/70">
@@ -103,7 +103,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
-                  Trùng (ghi đè)
+                  Trùng (bỏ qua)
                 </span>
               } @else if (item.status === 'error') {
                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50" [title]="item.errors.join(', ')">
@@ -112,6 +112,11 @@
                   </svg>
                   {{ item.errors[0] || 'Dữ liệu không hợp lệ' }}
                 </span>
+              }
+              @if (item.sameHanziExists) {
+                <div class="mt-1 text-[11px] font-medium text-sky-700 dark:text-sky-300" title="Đã có từ cùng Hán tự nhưng khác pinyin / nghĩa. Vẫn được thêm — chỉ cần kiểm tra lại lỗi gõ.">
+                  Cùng chữ, khác nghĩa
+                </div>
               }
             </td>
           </tr>

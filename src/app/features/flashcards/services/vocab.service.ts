@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { getSupabase } from '../config/supabase.config';
+import { vocabEntryKey, vocabHanziKey, vocabWordKey } from '../models/vocab-card.model';
 import type { VocabCard, HskVersion, LessonInfo } from '../models/vocab-card.model';
+import type { ExistingVocabKeys } from '../utils/file-parser.util';
 
 @Injectable({ providedIn: 'root' })
 export class VocabService {
@@ -29,6 +31,29 @@ export class VocabService {
   /** Fetch từ vựng theo Level và Phiên bản */
   async getVocabByLevelAndVersion(level: number, version: HskVersion): Promise<VocabCard[]> {
     return this.getVocabByLevel(level, version);
+  }
+
+  /** Fetch từ vựng cho nhiều cấp cùng lúc (VD: HSK 7-9 gộp) */
+  async getVocabByLevels(levels: number[], version?: HskVersion): Promise<VocabCard[]> {
+    if (levels.length === 1) return this.getVocabByLevel(levels[0], version);
+    let query = this.supabase
+      .from('vocab_cards')
+      .select('*')
+      .in('hsk_level', levels);
+
+    if (version) {
+      query = query.eq('hsk_version', version);
+    }
+
+    const { data, error } = await query
+      .order('hsk_level', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error(`Failed to fetch HSK ${levels.join(',')} vocab:`, error);
+      return [];
+    }
+    return data ?? [];
   }
 
   /** Fetch từ vựng cho 1 bài học cụ thể (HSK 3.0) */
@@ -119,9 +144,11 @@ export class VocabService {
       this.getVocabByLevel(level, '3.0'),
     ]);
 
-    const v2Hanzi = new Set(cardsV2.map(c => c.hanzi.trim()));
+    // Theo chuẩn từ điển, 1 mục từ = Hán tự + pinyin (từ đa âm 多音字 là mục riêng).
+    // Nghĩa mới của từ cũ không tính là từ bổ sung.
+    const v2Words = new Set(cardsV2.map(vocabWordKey));
     // Những từ có trong HSK 3.0 nhưng chưa có trong HSK 2.0
-    const supplement = cardsV3.filter(c => !v2Hanzi.has(c.hanzi.trim()));
+    const supplement = cardsV3.filter(c => !v2Words.has(vocabWordKey(c)));
     return supplement;
   }
 
@@ -154,13 +181,14 @@ export class VocabService {
   /** Truy vấn danh sách từ vựng có phân trang cho Table View */
   async getVocabPaginated(params: {
     level?: number;
+    levels?: number[];
     version?: HskVersion;
     lessonNumber?: number;
     query?: string;
     page: number;
     pageSize: number;
   }): Promise<{ data: VocabCard[]; total: number }> {
-    const { level, version, lessonNumber, query, page, pageSize } = params;
+    const { level, levels, version, lessonNumber, query, page, pageSize } = params;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -168,8 +196,10 @@ export class VocabService {
       .from('vocab_cards')
       .select('*', { count: 'exact' });
 
-    if (level && level > 0) {
-      q = q.eq('hsk_level', level);
+    if (levels && levels.length > 1) {
+      q = q.in('hsk_level', levels);
+    } else if (levels?.length === 1 || (level && level > 0)) {
+      q = q.eq('hsk_level', levels?.[0] ?? level!);
     }
     if (version) {
       q = q.eq('hsk_version', version);
@@ -207,7 +237,7 @@ export class VocabService {
 
     if (error) {
       if (error.code === '23505') {
-        return { success: false, error: `Từ "${card.hanzi}" đã tồn tại trong HSK ${card.hsk_level}` };
+        return { success: false, error: `Từ "${card.hanzi}" (${card.pinyin} — ${card.meaning}) đã tồn tại trong HSK ${card.hsk_level}` };
       }
       return { success: false, error: error.message };
     }
@@ -219,24 +249,23 @@ export class VocabService {
     const errors: string[] = [];
     let inserted = 0;
 
-    // Use upsert to handle duplicates gracefully
+    // Bỏ các dòng trùng hoàn toàn trong cùng lô (Postgres không cho upsert 1 key 2 lần trong 1 lệnh)
+    const seen = new Set<string>();
+    const unique = cards.filter(c => {
+      const key = vocabEntryKey(c);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Trùng hoàn toàn (Hán tự + pinyin + nghĩa + cấp + phiên bản) → bỏ qua, không ghi đè
     const { data, error } = await this.supabase
       .from('vocab_cards')
-      .upsert(cards, { onConflict: 'hanzi,hsk_level,hsk_version', ignoreDuplicates: false })
+      .upsert(unique, { onConflict: 'hanzi,pinyin,meaning,hsk_level,hsk_version', ignoreDuplicates: true })
       .select();
 
     if (error) {
-      // Fallback nếu constraint chưa được cập nhật trong DB
-      const fallback = await this.supabase
-        .from('vocab_cards')
-        .upsert(cards, { onConflict: 'hanzi,hsk_level', ignoreDuplicates: false })
-        .select();
-
-      if (fallback.error) {
-        errors.push(fallback.error.message);
-      } else {
-        inserted = fallback.data?.length ?? 0;
-      }
+      errors.push(error.message);
     } else {
       inserted = data?.length ?? 0;
     }
@@ -321,21 +350,24 @@ export class VocabService {
     return new Set((data ?? []).map(r => r.hanzi));
   }
 
-  /** Lấy danh sách compound keys (hanzi_level_version) để check trùng lặp chính xác */
-  async getExistingVocabKeys(level?: number): Promise<Set<string>> {
+  /** Lấy các key đã tồn tại để kiểm tra trùng khi import (xem `vocabEntryKey`) */
+  async getExistingVocabKeys(level?: number): Promise<ExistingVocabKeys> {
     let q = this.supabase
       .from('vocab_cards')
-      .select('hanzi, hsk_level, hsk_version');
+      .select('hanzi, pinyin, meaning, hsk_level, hsk_version');
 
     if (level && level > 0) {
       q = q.eq('hsk_level', level);
     }
 
+    const keys: ExistingVocabKeys = { entries: new Set(), hanzi: new Set() };
     const { data, error } = await q;
-    if (error) return new Set();
+    if (error) return keys;
 
-    return new Set(
-      (data ?? []).map(r => `${r.hanzi.trim()}_${r.hsk_level}_${r.hsk_version || '2.0'}`)
-    );
+    for (const r of data ?? []) {
+      keys.entries.add(vocabEntryKey(r));
+      keys.hanzi.add(vocabHanziKey(r));
+    }
+    return keys;
   }
 }

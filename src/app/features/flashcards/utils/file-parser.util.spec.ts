@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseCsv, validateRows } from './file-parser.util';
+import { parseCsv, validateRows, type ExistingVocabKeys } from './file-parser.util';
+import { vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 
 describe('file-parser.util', () => {
   describe('parseCsv', () => {
@@ -49,12 +50,18 @@ describe('file-parser.util', () => {
   });
 
   describe('validateRows', () => {
+    const none = (): ExistingVocabKeys => ({ entries: new Set(), hanzi: new Set() });
+    const existingFrom = (cards: Parameters<typeof vocabEntryKey>[0][]): ExistingVocabKeys => ({
+      entries: new Set(cards.map(vocabEntryKey)),
+      hanzi: new Set(cards.map(vocabHanziKey)),
+    });
+
     it('should mark duplicate words as duplicate status', () => {
       const parsed = [
         { hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1 },
         { hanzi: '再见', pinyin: 'zài jiàn', meaning: 'tạm biệt', hsk_level: 1 },
       ];
-      const existing = new Set(['你好']);
+      const existing = existingFrom([{ hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1 }]);
 
       const validated = validateRows(parsed, existing);
       expect(validated[0].status).toBe('duplicate');
@@ -67,11 +74,25 @@ describe('file-parser.util', () => {
         { hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1, hsk_version: '2.0' as const },
       ];
       // Only version 2.0 exists in DB
-      const existingCompound = new Set(['你好_1_2.0']);
+      const existing = existingFrom([{ hanzi: '你好', pinyin: 'nǐ hǎo', meaning: 'xin chào', hsk_level: 1, hsk_version: '2.0' }]);
 
-      const validated = validateRows(parsed, existingCompound);
+      const validated = validateRows(parsed, existing);
       expect(validated[0].status).toBe('valid'); // 3.0 does not conflict with 2.0!
       expect(validated[1].status).toBe('duplicate'); // 2.0 is duplicate!
+    });
+
+    it('should keep the same hanzi when pinyin or meaning differs, and flag it', () => {
+      const parsed = [
+        { hanzi: '对', pinyin: 'duì', meaning: 'Đối với, hướng tới', hsk_level: 3 },
+        { hanzi: '对', pinyin: 'duì', meaning: 'đúng', hsk_level: 3 },
+      ];
+      const existing = existingFrom([{ hanzi: '对', pinyin: 'duì', meaning: 'Đúng', hsk_level: 3 }]);
+
+      const validated = validateRows(parsed, existing);
+      expect(validated[0].status).toBe('valid');
+      expect(validated[0].sameHanziExists).toBe(true);
+      // Same hanzi + pinyin + meaning (case/whitespace-insensitive) → duplicate
+      expect(validated[1].status).toBe('duplicate');
     });
 
     it('should detect duplicate rows within the same uploaded file', () => {
@@ -80,7 +101,7 @@ describe('file-parser.util', () => {
         { hanzi: '猫', pinyin: 'māo', meaning: 'mèo', hsk_level: 1, hsk_version: '3.0' as const },
       ];
 
-      const validated = validateRows(parsed, new Set());
+      const validated = validateRows(parsed, none());
       expect(validated[0].status).toBe('valid');
       expect(validated[1].status).toBe('duplicate');
     });
@@ -91,7 +112,7 @@ describe('file-parser.util', () => {
         { hanzi: '测试', pinyin: 'cè shì', meaning: 'thử nghiệm', hsk_level: 12 },
       ];
 
-      const validated = validateRows(parsed, new Set());
+      const validated = validateRows(parsed, none());
       expect(validated[0].status).toBe('error');
       expect(validated[0].errors).toContain('Thiếu Hán tự');
       expect(validated[1].status).toBe('error');

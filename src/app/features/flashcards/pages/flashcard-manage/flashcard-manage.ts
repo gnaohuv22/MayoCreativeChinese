@@ -6,7 +6,7 @@ import { ImportPreviewComponent } from '../../components/import-preview/import-p
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
 import type { VocabCard, ValidatedImportRow, HskVersion } from '../../models/vocab-card.model';
-import { parseFile, validateRows } from '../../utils/file-parser.util';
+import { parseFile, validateRows, type ExistingVocabKeys } from '../../utils/file-parser.util';
 import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../utils/template-generator.util';
 
 @Component({
@@ -191,12 +191,13 @@ export class FlashcardManageComponent implements OnInit {
       const rawRows = await parseFile(file);
 
       const levels = new Set(rawRows.map(r => r.hsk_level));
-      const allExisting = new Set<string>();
+      const allExisting: ExistingVocabKeys = { entries: new Set(), hanzi: new Set() };
 
       for (const level of levels) {
         if (level >= 1 && level <= 9) {
           const existingKeys = await this.vocabService.getExistingVocabKeys(level);
-          existingKeys.forEach(k => allExisting.add(k));
+          existingKeys.entries.forEach(k => allExisting.entries.add(k));
+          existingKeys.hanzi.forEach(k => allExisting.hanzi.add(k));
         }
       }
 

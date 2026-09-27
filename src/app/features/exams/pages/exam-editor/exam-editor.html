@@ -70,12 +70,23 @@
           <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
             Tên đề thi <span class="text-brand-pink">*</span>:
           </label>
-          <input
-            type="text"
-            [(ngModel)]="exam.title"
-            placeholder="VD: HSK 3 — Đề thi thử số 01"
-            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
-          />
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="exam.title"
+              placeholder="VD: HSK 3 - ĐỀ THI THỬ 01"
+              class="flex-1 min-w-0 text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+            />
+            <button
+              type="button"
+              (click)="applySuggestedTitle()"
+              class="shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-brand-pink bg-brand-pink/10 hover:bg-brand-pink/20 border border-brand-pink/30 transition-all cursor-pointer"
+              title="Đặt tên theo quy ước: HSK [cấp] - ĐỀ THI THỬ [số]"
+            >
+              <app-icon name="sparkles" size="xs" />
+              <span>Gợi ý tên</span>
+            </button>
+          </div>
         </div>
 
         <!-- Cấp độ HSK (1-9) -->
@@ -271,12 +282,12 @@
 
           <!-- Hướng dẫn phần thi -->
           <div>
-            <input
-              type="text"
+            <textarea
+              rows="1"
               [(ngModel)]="sec.instructions"
-              placeholder="Hướng dẫn chung cho phần này (VD: Gồm 40 câu hỏi, thời gian 35 phút...)"
-              class="w-full text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
-            />
+              placeholder="Hướng dẫn chung cho phần này (VD: Gồm 40 câu hỏi, thời gian 35 phút...) — Enter để xuống dòng"
+              class="field-sizing-content min-h-9 resize-y w-full text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+            ></textarea>
           </div>
 
           <!-- DANH SÁCH CÁC PART TRONG SECTION -->
@@ -300,12 +311,12 @@
                 <!-- Part Header -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-white/10">
                   <div class="flex-1 space-y-1">
-                    <input
-                      type="text"
+                    <textarea
+                      rows="1"
                       [(ngModel)]="part.title"
                       placeholder="Tiêu đề Part (VD: Phần I: Câu 1-10)"
-                      class="w-full text-sm font-bold text-brand-navy dark:text-white bg-transparent border-b border-transparent hover:border-brand-pink/50 focus:border-brand-pink focus:outline-none"
-                    />
+                      class="field-sizing-content resize-none w-full text-sm font-bold text-brand-navy dark:text-white bg-transparent border-b border-transparent hover:border-brand-pink/50 focus:border-brand-pink focus:outline-none"
+                    ></textarea>
                   </div>
 
                   <div class="flex items-center gap-2">
@@ -333,12 +344,79 @@
                 </div>
 
                 <!-- Hướng dẫn cho Part -->
-                <input
-                  type="text"
+                <textarea
+                  rows="1"
                   [(ngModel)]="part.instructions"
-                  placeholder="Hướng dẫn làm bài cho Part này..."
-                  class="w-full text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
-                />
+                  placeholder="Hướng dẫn làm bài cho Part này (VD: GHI SỐ ĐIỂM 1 CÂU / TỪ CÂU 1-10)..."
+                  class="field-sizing-content min-h-8 resize-y w-full text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                ></textarea>
+
+                <!-- VÍ DỤ / ĐỀ BÀI CHUNG CỦA CẢ PART -->
+                <details class="group rounded-xl border border-dashed border-brand-pink/40 bg-brand-pink/5" [open]="hasPartStimulus(part) || part.question_type === 'matching'">
+                  <summary class="flex items-center justify-between gap-2 px-3 py-2 cursor-pointer select-none text-xs font-bold text-brand-pink">
+                    <span class="flex items-center gap-1.5">
+                      <app-icon name="book-open" size="xs" />
+                      <span>Ví dụ / Đề bài chung của cả Part (tranh, ngân hàng từ, ví dụ mẫu)</span>
+                    </span>
+                    <span class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 group-open:hidden">Bấm để mở</span>
+                  </summary>
+
+                  <div class="px-3 pb-3 space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-semibold text-brand-navy dark:text-white mb-1">Ví dụ mẫu (例如):</label>
+                        <textarea
+                          rows="3"
+                          [(ngModel)]="part.example_text"
+                          placeholder="VD: 例如：这儿的羊肉很好吃，但是也很（ E ）。"
+                          class="w-full text-sm p-2.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-semibold text-brand-navy dark:text-white mb-1">Ngân hàng từ / Đoạn văn chung:</label>
+                        <textarea
+                          rows="3"
+                          [(ngModel)]="part.stimulus_text"
+                          placeholder="VD: A 因为 yīnwèi   B 远 yuǎn   C 事情 shìqing ..."
+                          class="w-full text-sm p-2.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                        ></textarea>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-semibold text-brand-navy dark:text-white mb-1">Tranh chung (VD: ngân hàng tranh A–F):</label>
+                        <app-image-uploader
+                          [imageUrl]="part.stimulus_image_url || null"
+                          (imageUrlChange)="part.stimulus_image_url = $event"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-semibold text-brand-navy dark:text-white mb-1">Audio chung của Part (tuỳ chọn):</label>
+                        <app-audio-uploader
+                          [audioUrl]="part.stimulus_audio_url || null"
+                          (audioUrlChange)="part.stimulus_audio_url = $event"
+                        />
+                      </div>
+                    </div>
+
+                    @if (part.question_type === 'matching') {
+                      <div>
+                        <label class="block text-[11px] font-semibold text-brand-navy dark:text-white mb-1">Các nhãn đáp án dùng chung (cách nhau bởi dấu phẩy):</label>
+                        <input
+                          type="text"
+                          [(ngModel)]="part.option_labels"
+                          placeholder="A,B,C,D,E,F"
+                          class="w-48 text-xs font-mono px-3 py-1.5 rounded-lg bg-white dark:bg-brand-dark/80 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+                        />
+                      </div>
+                    }
+
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Khối này hiển thị phía trên các câu hỏi của Part và được ghim lại khi học viên cuộn xuống (nếu Part có từ 2 câu trở lên).
+                    </p>
+                  </div>
+                </details>
 
                 <!-- DANH SÁCH CÂU HỎI TRONG PART -->
                 <div class="space-y-3 pt-2">
@@ -356,10 +434,12 @@
                     </button>
                   </div>
 
-                  @for (q of part.questions; track q.question_num; let qIdx = $index) {
+                  @for (q of part.questions; track q; let qIdx = $index) {
                     <app-question-editor
                       [question]="q"
+                      [questionNum]="q.question_num"
                       [questionType]="part.question_type"
+                      [optionLabels]="optionLabelsFor(part)"
                       (remove)="removeQuestion(part, qIdx)"
                     />
                   }

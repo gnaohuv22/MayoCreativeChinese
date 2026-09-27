@@ -35,7 +35,7 @@
             Danh sách từ vựng {{ collection() === 'hsk3' ? 'NEW HSK ' + level() : 'HSK ' + level() }}
           </h1>
           @if (versionForQuery()) {
-            <app-hsk-badge [level]="level()" [version]="versionForQuery()!" />
+            <app-hsk-badge [level]="levelNum()" [version]="versionForQuery()!" />
           }
         </div>
         <p class="text-xs sm:text-sm text-brand-navy/60 dark:text-white/60">

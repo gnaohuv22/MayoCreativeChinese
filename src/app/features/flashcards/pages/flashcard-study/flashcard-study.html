@@ -77,7 +77,7 @@
             @if (currentCard(); as card) {
               <app-vocab-card 
                 [card]="card" 
-                [progress]="progressMap().get(card.hanzi) || null"
+                [progress]="progressMap().get(progressKey(card)) || null"
                 [flipped]="flipped()"
                 (flipChange)="flipCard()"
                 (bookmarkChange)="toggleBookmark()">

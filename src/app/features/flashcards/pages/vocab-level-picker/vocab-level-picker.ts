@@ -5,10 +5,12 @@ import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
+import { ADVANCED_LEVEL_PARAM, ADVANCED_LEVELS } from '../../models/vocab-card.model';
 import type { HskVersion, VocabCollection } from '../../models/vocab-card.model';
 
 export interface CollectionLevelCard {
-  level: number;
+  /** Tham số route & nhãn cấp: '1'…'9' hoặc '7-9' */
+  level: string;
   name: string;
   totalCards: number;
   reviewed: number;
@@ -59,7 +61,7 @@ export class VocabLevelPickerComponent implements OnInit {
     switch (col) {
       case 'hsk2':
         this.title.set('Từ Vựng HSK 2.0');
-        this.subtitle.set('Chuẩn 6 cấp độ truyền thống (HSK 1 - HSK 6)');
+        this.subtitle.set('Theo tiêu chuẩn đánh giá năng lực 6 cấp cũ (HSK 1 - HSK 6)');
         this.hskVersion.set('2.0');
         ver = '2.0';
         levelNumbers = [1, 2, 3, 4, 5, 6];
@@ -67,7 +69,7 @@ export class VocabLevelPickerComponent implements OnInit {
 
       case 'hsk3':
         this.title.set('Từ Vựng HSK 3.0');
-        this.subtitle.set('Chuẩn 9 cấp độ mới theo bài học & giáo trình (HSK 1 - HSK 9)');
+        this.subtitle.set('Chuẩn 9 cấp độ theo bài học của giáo trình NEW HSK 3.0');
         this.hskVersion.set('3.0');
         ver = '3.0';
         levelNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -75,7 +77,7 @@ export class VocabLevelPickerComponent implements OnInit {
 
       case 'combined':
         this.title.set('Từ Vựng HSK 1 - 9');
-        this.subtitle.set('Kho từ vựng tổng hợp toàn diện các cấp độ từ cơ bản đến cao cấp');
+        this.subtitle.set('Từ sơ cấp 1 đến cao cấp 9 theo Tiêu chuẩn phân cấp trình độ giáo dục Trung văn quốc tế');
         this.hskVersion.set(undefined);
         ver = undefined;
         levelNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -94,22 +96,33 @@ export class VocabLevelPickerComponent implements OnInit {
       const counts = await this.vocabService.getLevelCounts(ver);
       const list: CollectionLevelCard[] = [];
 
-      for (const lvl of levelNumbers) {
-        let count = counts.get(lvl) || 0;
+      // Bộ "HSK 1 - 9": gộp 7, 8, 9 thành một mục "HSK 7-9"
+      const groups: number[][] = col === 'combined'
+        ? [...levelNumbers.filter(l => !ADVANCED_LEVELS.includes(l)).map(l => [l]), ADVANCED_LEVELS]
+        : levelNumbers.map(l => [l]);
 
-        // Cho trường hợp supplement, nếu count từ db v3 chưa có cờ, tính từ supplementVocab
-        if (col === 'supplement') {
-          const supp = await this.vocabService.getSupplementVocab(lvl);
-          count = supp.length > 0 ? supp.length : (counts.get(lvl) || 0);
-        }
-
+      for (const group of groups) {
+        const isMerged = group.length > 1;
+        const param = isMerged ? ADVANCED_LEVEL_PARAM : String(group[0]);
+        let count = 0;
         let reviewed = 0;
         let mastered = 0;
 
-        if (count > 0) {
-          const stats = await this.progressService.getLevelStats(lvl, count, ver);
-          reviewed = stats.reviewed;
-          mastered = stats.mastered;
+        for (const lvl of group) {
+          let lvlCount = counts.get(lvl) || 0;
+
+          // Cho trường hợp supplement, nếu count từ db v3 chưa có cờ, tính từ supplementVocab
+          if (col === 'supplement') {
+            const supp = await this.vocabService.getSupplementVocab(lvl);
+            lvlCount = supp.length > 0 ? supp.length : (counts.get(lvl) || 0);
+          }
+
+          if (lvlCount > 0) {
+            const stats = await this.progressService.getLevelStats(lvl, lvlCount, ver);
+            reviewed += stats.reviewed;
+            mastered += stats.mastered;
+          }
+          count += lvlCount;
         }
 
         // Định tuyến phù hợp
@@ -118,16 +131,16 @@ export class VocabLevelPickerComponent implements OnInit {
 
         if (col === 'hsk3') {
           // HSK 3.0 dẫn vào danh sách bài học (lesson picker)
-          studyRoute = ['/flashcards/hsk3', String(lvl)];
-          listRoute = ['/flashcards/hsk3', String(lvl), 'list'];
+          studyRoute = ['/flashcards/hsk3', param];
+          listRoute = ['/flashcards/hsk3', param, 'list'];
         } else {
-          studyRoute = ['/flashcards', col, String(lvl)];
-          listRoute = ['/flashcards', col, String(lvl), 'list'];
+          studyRoute = ['/flashcards', col, param];
+          listRoute = ['/flashcards', col, param, 'list'];
         }
 
         list.push({
-          level: lvl,
-          name: this.HSK_NAMES[lvl] || `HSK ${lvl}`,
+          level: param,
+          name: isMerged ? '高等 (七—九级)' : (this.HSK_NAMES[group[0]] || `HSK ${group[0]}`),
           totalCards: count,
           reviewed,
           mastered,

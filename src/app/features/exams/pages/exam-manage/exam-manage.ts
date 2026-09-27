@@ -86,6 +86,24 @@ export class ExamManageComponent implements OnInit {
     }
   }
 
+  /** id của đề đang được nhân bản */
+  duplicatingId = signal<string | null>(null);
+
+  async duplicateExam(item: Exam) {
+    if (!item.id || this.duplicatingId()) return;
+    this.duplicatingId.set(item.id);
+
+    const res = await this.examService.duplicateExam(item.id);
+    this.duplicatingId.set(null);
+
+    if (res.error) {
+      this.toastService.error(`Nhân bản đề thi thất bại: ${res.error}`);
+      return;
+    }
+    this.toastService.success(`Đã tạo bản sao của "${item.title}" (bản nháp).`);
+    await this.loadExams();
+  }
+
   async deleteExam(item: Exam) {
     if (!item.id) return;
     const confirmed = confirm(`Bạn có chắc muốn xoá đề thi "${item.title}"? Tất cả câu hỏi và dữ liệu liên quan sẽ bị xoá vĩnh viễn.`);

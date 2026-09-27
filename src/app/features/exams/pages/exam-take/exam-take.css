@@ -25,3 +25,33 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(150, 150, 150, 0.4);
 }
+
+/* ==============================================================================
+   "Đề bài chung" của Part — ghim dưới header (+ thanh audio phần Nghe) khi cuộn
+   ============================================================================== */
+.part-stimulus--sticky {
+  position: sticky;
+  top: 4rem; /* header h-14 + khoảng cách */
+}
+
+.has-audio-bar .part-stimulus--sticky {
+  top: 7.25rem; /* header + thanh audio */
+}
+
+.part-stimulus__body {
+  max-height: 32vh;
+}
+
+@media (min-width: 640px) {
+  .part-stimulus--sticky {
+    top: 4.5rem; /* header sm:h-16 */
+  }
+
+  .has-audio-bar .part-stimulus--sticky {
+    top: 8rem;
+  }
+
+  .part-stimulus__body {
+    max-height: 42vh;
+  }
+}

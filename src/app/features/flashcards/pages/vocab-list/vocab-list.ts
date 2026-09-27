@@ -6,6 +6,7 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
 import { VocabService } from '../../services/vocab.service';
+import { parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCard, HskVersion, VocabCollection, LessonInfo } from '../../models/vocab-card.model';
 
 @Component({
@@ -20,7 +21,10 @@ export class VocabListComponent implements OnInit {
   private vocabService = inject(VocabService);
 
   collection = signal<VocabCollection>('hsk2');
-  level = signal<number>(1);
+  /** Tham số route `:level` — '1'…'9' hoặc '7-9' (gộp cao cấp) */
+  level = signal<string>('1');
+  levels = computed(() => parseLevelParam(this.level()));
+  levelNum = computed(() => this.levels()[0]);
   lessonNumber = signal<number | undefined>(undefined);
   lessons = signal<LessonInfo[]>([]);
 
@@ -65,8 +69,7 @@ export class VocabListComponent implements OnInit {
     });
 
     this.route.paramMap.subscribe(params => {
-      const lvl = Number(params.get('level') || '1');
-      this.level.set(lvl);
+      this.level.set(params.get('level') || '1');
 
       this.route.queryParamMap.subscribe(qParams => {
         const lessonParam = qParams.get('lesson');
@@ -84,7 +87,7 @@ export class VocabListComponent implements OnInit {
   async loadLessons() {
     if (this.collection() === 'hsk3') {
       try {
-        const list = await this.vocabService.getLessonsForLevel(this.level(), '3.0');
+        const list = await this.vocabService.getLessonsForLevel(this.levelNum(), '3.0');
         this.lessons.set(list);
       } catch (e) {
         console.error('Failed to load lessons for list view:', e);
@@ -96,7 +99,7 @@ export class VocabListComponent implements OnInit {
     this.loading.set(true);
     try {
       const res = await this.vocabService.getVocabPaginated({
-        level: this.level(),
+        levels: this.levels(),
         version: this.versionForQuery(),
         lessonNumber: this.lessonNumber(),
         query: this.searchQuery(),

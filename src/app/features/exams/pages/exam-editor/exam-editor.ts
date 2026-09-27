@@ -11,9 +11,10 @@ import type {
   QuestionType,
   SectionType
 } from '../../models/exam.model';
-import { QUESTION_TYPE_LABELS } from '../../models/exam.model';
+import { QUESTION_TYPE_LABELS, hasPartStimulus, partOptionLabels, renumberQuestions, suggestExamTitle } from '../../models/exam.model';
 import { QuestionEditorComponent } from '../../components/question-editor/question-editor';
 import { AudioUploaderComponent } from '../../components/audio-uploader/audio-uploader';
+import { ImageUploaderComponent } from '../../components/image-uploader/image-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
@@ -25,6 +26,7 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
     FormsModule,
     QuestionEditorComponent,
     AudioUploaderComponent,
+    ImageUploaderComponent,
     AppIconComponent,
     NavHeaderComponent,
   ],
@@ -44,6 +46,7 @@ export class ExamEditorComponent implements OnInit {
   saveMessage = signal<string | null>(null);
 
   questionTypeLabels = QUESTION_TYPE_LABELS;
+  readonly hasPartStimulus = hasPartStimulus;
   questionTypeKeys: QuestionType[] = [
     'single_choice',
     'true_false',
@@ -72,6 +75,7 @@ export class ExamEditorComponent implements OnInit {
       this.isEditMode.set(true);
       const data = await this.examService.getExamWithDetails(examId);
       if (data) {
+        renumberQuestions(data);
         this.exam = data;
         this.cdr.markForCheck();
       }
@@ -149,6 +153,7 @@ export class ExamEditorComponent implements OnInit {
   removeSection(index: number) {
     this.exam.sections?.splice(index, 1);
     this.exam.sections?.forEach((s, idx) => s.sort_order = idx + 1);
+    renumberQuestions(this.exam);
   }
 
   addPart(sec: ExamSection) {
@@ -164,24 +169,18 @@ export class ExamEditorComponent implements OnInit {
   removePart(sec: ExamSection, index: number) {
     sec.parts?.splice(index, 1);
     sec.parts?.forEach((p, idx) => p.sort_order = idx + 1);
+    renumberQuestions(this.exam);
   }
 
   addQuestion(part: ExamPart) {
     if (!part.questions) part.questions = [];
-    let totalQuestions = 0;
-    for (const s of this.exam.sections || []) {
-      for (const p of s.parts || []) {
-        totalQuestions += p.questions?.length || 0;
-      }
-    }
-
-    const nextNum = totalQuestions + 1;
     const isSingleChoice = part.question_type === 'single_choice';
+    const isMatching = part.question_type === 'matching';
 
     part.questions.push({
-      question_num: nextNum,
+      question_num: 0, // gán lại bởi renumberQuestions theo vị trí trong đề
       content: '',
-      correct_answer: isSingleChoice ? 'A' : '',
+      correct_answer: isSingleChoice || isMatching ? 'A' : '',
       score: 2.5,
       sort_order: part.questions.length + 1,
       options: isSingleChoice ? [
@@ -190,11 +189,29 @@ export class ExamEditorComponent implements OnInit {
         { label: 'C', content: '', sort_order: 3 },
       ] : undefined
     });
+    renumberQuestions(this.exam);
   }
 
   removeQuestion(part: ExamPart, index: number) {
     part.questions?.splice(index, 1);
     part.questions?.forEach((q, idx) => q.sort_order = idx + 1);
+    renumberQuestions(this.exam);
+  }
+
+  /** Nhãn đáp án dùng chung của Part dạng 'matching' (A–F mặc định) */
+  optionLabelsFor(part: ExamPart): string[] {
+    return partOptionLabels(part);
+  }
+
+  /** Đặt tên đề theo quy ước "HSK 3 - ĐỀ THI THỬ 01" (số thứ tự = số đề cùng cấp hiện có + 1) */
+  async applySuggestedTitle() {
+    const level = Number(this.exam.hsk_level);
+    const version = this.exam.hsk_version;
+    const existing = await this.examService.countExams(level, version);
+    // Khi sửa đề đã có, bản thân đề này đã nằm trong số đếm
+    const index = this.isEditMode() ? Math.max(1, existing) : existing + 1;
+    this.exam.title = suggestExamTitle(level, version, index);
+    this.cdr.markForCheck();
   }
 
   async saveExam() {
