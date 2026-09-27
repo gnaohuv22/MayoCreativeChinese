@@ -5,6 +5,8 @@ import { I18nService } from '../../services/i18n.service';
 interface Teacher {
   id: string;
   image?: string;
+  /** Chữ cái hiển thị trên avatar mặc định khi chưa có ảnh */
+  initial?: string;
   nameKey: string;
   roleKey: string;
   bioKey: string;
@@ -45,6 +47,7 @@ export class TeachersComponent {
       bioKey: 'teacher.thao.bio',
       credentials: [
         'teacher.thao.cred1',
+        'teacher.thao.cred5',
         'teacher.thao.cred2',
         'teacher.thao.cred3',
         'teacher.thao.cred4'
@@ -59,6 +62,7 @@ export class TeachersComponent {
       credentials: [
         'teacher.ly.cred1',
         'teacher.ly.cred2',
+        'teacher.ly.cred5',
         'teacher.ly.cred3',
         'teacher.ly.cred4'
       ]
@@ -100,6 +104,32 @@ export class TeachersComponent {
         'teacher.hong.cred2',
         'teacher.hong.cred3',
         'teacher.hong.cred4'
+      ]
+    },
+    {
+      id: 'lelinh',
+      initial: 'L',
+      nameKey: 'teacher.lelinh.name',
+      roleKey: 'teachers.role.teacher',
+      bioKey: 'teacher.lelinh.bio',
+      credentials: [
+        'teacher.lelinh.cred1',
+        'teacher.lelinh.cred2',
+        'teacher.lelinh.cred3',
+        'teacher.lelinh.cred4'
+      ]
+    },
+    {
+      id: 'thuymai',
+      initial: 'M',
+      nameKey: 'teacher.thuymai.name',
+      roleKey: 'teachers.role.teacher',
+      bioKey: 'teacher.thuymai.bio',
+      credentials: [
+        'teacher.thuymai.cred1',
+        'teacher.thuymai.cred2',
+        'teacher.thuymai.cred3',
+        'teacher.thuymai.cred4'
       ]
     },
     {

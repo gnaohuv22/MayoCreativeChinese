@@ -67,6 +67,11 @@
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-purple-600">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .552-.448 1-1 1H4.75c-.552 0-1-.448-1-1v-4.25m16.5 0a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25m16.5 0V7.5a2.25 2.25 0 0 0-2.25-2.25h-2.25V4.5A2.25 2.25 0 0 0 11.25 2.25h-1.5A2.25 2.25 0 0 0 7.5 4.5v.75H5.25A2.25 2.25 0 0 0 3 7.5v6.65" />
                   </svg>
+                } @else if (course.icon === 'tutor') {
+                  <!-- Users icon (1:1 / 1:2) -->
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-emerald-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                  </svg>
                 } @else if (course.icon === 'logistics') {
                   <!-- Truck icon -->
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-cyan-600">
@@ -80,10 +85,17 @@
                 }
               </div>
 
-              <!-- Title -->
-              <h3 class="text-base sm:text-lg lg:text-xl font-display font-black text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300 leading-snug">
-                {{ i18n.translate()(course.titleKey) }}
-              </h3>
+              <!-- Title (+ nhãn nổi bật nếu có) -->
+              <div class="min-w-0">
+                @if (course.badgeKey) {
+                  <span class="inline-block mb-1.5 px-2.5 py-0.5 rounded-full bg-brand-pink text-white text-[11px] font-black uppercase tracking-wider shadow-sm">
+                    {{ i18n.translate()(course.badgeKey) }}
+                  </span>
+                }
+                <h3 class="text-base sm:text-lg lg:text-xl font-display font-black text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300 leading-snug">
+                  {{ i18n.translate()(course.titleKey) }}
+                </h3>
+              </div>
             </div>
 
             <!-- Description -->

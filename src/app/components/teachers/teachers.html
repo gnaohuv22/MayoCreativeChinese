@@ -67,7 +67,7 @@
               <div
                 class="w-20 h-20 rounded-full bg-brand-pink/20 border-2 border-brand-pink flex items-center justify-center mb-4">
                 <span class="text-3xl font-display font-black text-brand-pink">
-                  {{ teacher.id.charAt(0).toUpperCase() }}
+                  {{ teacher.initial ?? teacher.id.charAt(0).toUpperCase() }}
                 </span>
               </div>
               <span class="text-xs font-bold uppercase tracking-widest text-brand-pink">Mayo Faculty</span>

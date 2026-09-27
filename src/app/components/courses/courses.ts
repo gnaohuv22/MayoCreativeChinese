@@ -9,6 +9,8 @@ interface Course {
   classSizeKey: string;
   objectiveKey: string;
   icon: string;
+  /** Nhãn nổi bật trên thẻ (VD: 'Mới') */
+  badgeKey?: string;
 }
 
 @Component({
@@ -24,7 +26,27 @@ export class CoursesComponent {
   readonly canScrollRight = signal(true);
   readonly activeCardIndex = signal(0);
 
+  // Thứ tự theo brief: HSK 3.0 là khóa chủ lực, HSK 2.0 không đặt ở vị trí nổi bật
   readonly courses: Course[] = [
+    {
+      id: 'hsk',
+      titleKey: 'course.hsk.title',
+      descKey: 'course.hsk.desc',
+      durationKey: 'course.hsk.duration',
+      classSizeKey: 'course.hsk.class_size',
+      objectiveKey: 'course.hsk.objective',
+      icon: 'certificate'
+    },
+    {
+      id: 'supplement',
+      titleKey: 'course.supplement.title',
+      descKey: 'course.supplement.desc',
+      durationKey: 'course.supplement.duration',
+      classSizeKey: 'course.supplement.class_size',
+      objectiveKey: 'course.supplement.objective',
+      icon: 'certificate',
+      badgeKey: 'course.badge.new'
+    },
     {
       id: 'kids',
       titleKey: 'course.kids.title',
@@ -44,22 +66,13 @@ export class CoursesComponent {
       icon: 'chat'
     },
     {
-      id: 'hsk',
-      titleKey: 'course.hsk.title',
-      descKey: 'course.hsk.desc',
-      durationKey: 'course.hsk.duration',
-      classSizeKey: 'course.hsk.class_size',
-      objectiveKey: 'course.hsk.objective',
-      icon: 'certificate'
-    },
-    {
-      id: 'hsk_old',
-      titleKey: 'course.hsk_old.title',
-      descKey: 'course.hsk_old.desc',
-      durationKey: 'course.hsk_old.duration',
-      classSizeKey: 'course.hsk_old.class_size',
-      objectiveKey: 'course.hsk_old.objective',
-      icon: 'certificate'
+      id: 'tutor',
+      titleKey: 'course.tutor.title',
+      descKey: 'course.tutor.desc',
+      durationKey: 'course.tutor.duration',
+      classSizeKey: 'course.tutor.class_size',
+      objectiveKey: 'course.tutor.objective',
+      icon: 'tutor'
     },
     {
       id: 'business',
@@ -78,6 +91,15 @@ export class CoursesComponent {
       classSizeKey: 'course.logistics.class_size',
       objectiveKey: 'course.logistics.objective',
       icon: 'logistics'
+    },
+    {
+      id: 'hsk_old',
+      titleKey: 'course.hsk_old.title',
+      descKey: 'course.hsk_old.desc',
+      durationKey: 'course.hsk_old.duration',
+      classSizeKey: 'course.hsk_old.class_size',
+      objectiveKey: 'course.hsk_old.objective',
+      icon: 'certificate'
     }
   ];
 
