@@ -52,79 +52,85 @@
     } @else {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (item of levels(); track item.level) {
-          <div class="group relative bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-none transition-all duration-200 flex flex-col justify-between hover:border-brand-pink/50">
-            <div>
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="flex items-center gap-2.5">
-                    <h2 class="font-display font-black text-2xl text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
-                      {{ levelLabel(item.level) }}
-                    </h2>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/60 dark:text-brand-text-dark/70">
-                      {{ item.name }}
-                    </span>
+          @if (item.hasData) {
+            <div class="group relative bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-2xl p-6 shadow-md shadow-brand-navy/5 dark:shadow-none transition-all duration-200 flex flex-col justify-between hover:border-brand-pink/50">
+              <div>
+                <div class="flex justify-between items-start">
+                  <div>
+                    <div class="flex items-center gap-2.5">
+                      <h2 class="font-display font-black text-2xl text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
+                        {{ levelLabel(item.level) }}
+                      </h2>
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/60 dark:text-brand-text-dark/70">
+                        {{ item.name }}
+                      </span>
+                    </div>
+
+                    <p class="text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/70 mt-2">
+                      <span class="text-brand-navy dark:text-white font-bold">{{ item.totalCards }}</span> từ •
+                      <span class="text-brand-pink font-semibold">{{ item.mastered }}</span> đã thuộc
+                    </p>
                   </div>
 
-                  <p class="text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/70 mt-2">
-                    @if (item.hasData) {
-                      <span class="text-brand-navy dark:text-white font-bold">{{ item.totalCards }}</span> từ • 
-                      <span class="text-brand-pink font-semibold">{{ item.mastered }}</span> đã thuộc
-                    } @else {
-                      <span class="text-brand-navy/50 dark:text-white/40">Chưa có từ vựng</span>
-                    }
-                  </p>
-                </div>
-
-                <!-- Progress Ring -->
-                <div class="relative w-12 h-12 flex-shrink-0">
-                  <svg viewBox="0 0 48 48" class="w-full h-full transform -rotate-90">
-                    <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-navy/10 dark:stroke-white/10" />
-                    <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-pink"
-                            stroke-linecap="round"
-                            [style.stroke-dasharray]="'125.6'"
-                            [style.stroke-dashoffset]="getDashOffset(item.mastered, item.totalCards)" />
-                  </svg>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-[11px] font-extrabold text-brand-navy dark:text-white font-display">
-                      {{ getPercent(item.mastered, item.totalCards) }}%
-                    </span>
+                  <!-- Progress Ring -->
+                  <div class="relative w-12 h-12 flex-shrink-0">
+                    <svg viewBox="0 0 48 48" class="w-full h-full transform -rotate-90">
+                      <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-navy/10 dark:stroke-white/10" />
+                      <circle cx="24" cy="24" r="20" stroke-width="4.5" fill="none" class="stroke-brand-pink"
+                              stroke-linecap="round"
+                              [style.stroke-dasharray]="'125.6'"
+                              [style.stroke-dashoffset]="getDashOffset(item.mastered, item.totalCards)" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="text-[11px] font-extrabold text-brand-navy dark:text-white font-display">
+                        {{ getPercent(item.mastered, item.totalCards) }}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- ACTION BUTTONS: FLASHCARD & LIST -->
-            <div class="mt-6 pt-4 border-t border-brand-navy/10 dark:border-white/10 flex items-center gap-2">
-              <a [routerLink]="item.hasData ? item.studyRoute : null"
-                 [class.opacity-40]="!item.hasData"
-                 [class.pointer-events-none]="!item.hasData"
-                 class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 active:scale-95 transition-all shadow-xs">
-                <app-icon name="book-open" size="xs" />
-                <span>{{ studyLabel() }}</span>
-              </a>
-
-              @if (collection() === 'hsk2' || collection() === 'combined') {
-                <a [routerLink]="item.hasData ? item.quizRoute : null"
-                   [class.opacity-40]="!item.hasData"
-                   [class.pointer-events-none]="!item.hasData"
-                   class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white hover:border-brand-pink/40 hover:text-brand-pink transition-all"
-                   title="Luyện tập trắc nghiệm">
-                  <app-icon name="question-mark" size="xs" />
-                  <span>Trắc nghiệm</span>
+              <!-- ACTION BUTTONS: FLASHCARD & LIST -->
+              <div class="mt-6 pt-4 border-t border-brand-navy/10 dark:border-white/10 flex items-center gap-2">
+                <a [routerLink]="item.studyRoute"
+                   class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 active:scale-95 transition-all shadow-xs">
+                  <app-icon name="book-open" size="xs" />
+                  <span>{{ studyLabel() }}</span>
                 </a>
-              }
 
-              <a [routerLink]="item.hasData ? item.listRoute : null"
-                 [class.opacity-40]="!item.hasData"
-                 [class.pointer-events-none]="!item.hasData"
-                 class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white hover:border-brand-pink/40 hover:text-brand-pink transition-all"
-                 title="Xem danh sách bảng">
-                <app-icon name="document-text" size="xs" />
-                <span>Dạng bảng</span>
-              </a>
+                @if (collection() === 'hsk2' || collection() === 'combined') {
+                  <a [routerLink]="item.quizRoute"
+                     class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white hover:border-brand-pink/40 hover:text-brand-pink transition-all"
+                     title="Luyện tập trắc nghiệm">
+                    <app-icon name="question-mark" size="xs" />
+                    <span>Trắc nghiệm</span>
+                  </a>
+                }
+
+                <a [routerLink]="item.listRoute"
+                   class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-brand-navy/5 dark:bg-white/5 text-brand-navy dark:text-white hover:border-brand-pink/40 hover:text-brand-pink transition-all"
+                   title="Xem danh sách bảng">
+                  <app-icon name="document-text" size="xs" />
+                  <span>Dạng bảng</span>
+                </a>
+              </div>
+
             </div>
-
-          </div>
+          } @else {
+            <!-- Cấp chưa có từ: làm mờ, không có nút -->
+            <div class="relative bg-white/50 dark:bg-white/[0.02] border border-dashed border-brand-navy/15 dark:border-white/15 rounded-2xl p-6 flex flex-col justify-between gap-4">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <h2 class="font-display font-black text-2xl text-brand-navy/40 dark:text-white/35">
+                  {{ levelLabel(item.level) }}
+                </h2>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/5 text-brand-navy/40 dark:text-white/35">
+                  {{ item.name }}
+                </span>
+                <app-coming-soon-badge />
+              </div>
+              <p class="text-sm text-brand-navy/50 dark:text-white/40">Từ vựng cấp này đang được biên soạn.</p>
+            </div>
+          }
         }
       </div>
     }

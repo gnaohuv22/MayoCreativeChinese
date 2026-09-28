@@ -8,7 +8,7 @@
       <div class="relative z-10 max-w-2xl space-y-4">
         <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-white/20 backdrop-blur-md border border-white/20">
           <app-icon name="academic" size="xs" />
-          <span>HSK Mock Exams</span>
+          <span>Đề thi thử HSK</span>
           <span class="w-1.5 h-1.5 rounded-full bg-brand-pink"></span>
           <span>Chuẩn quốc tế</span>
         </div>
@@ -64,6 +64,9 @@
               <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
                 Thi Thử HSK 2.0
               </h3>
+              @if (!isLoading() && versionCount()['2.0'] === 0) {
+                <app-coming-soon-badge />
+              }
             </div>
             <p class="text-xs text-brand-navy/60 dark:text-white/60">
               Hệ thống 6 cấp độ truyền thống: HSK 1 → HSK 6
@@ -100,6 +103,9 @@
               <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
                 Thi Thử HSK 3.0
               </h3>
+              @if (!isLoading() && versionCount()['3.0'] === 0) {
+                <app-coming-soon-badge />
+              }
             </div>
             <p class="text-xs text-brand-navy/60 dark:text-white/60">
               Chuẩn 9 cấp độ mới: NEW HSK 1 → NEW HSK 9
@@ -138,6 +144,14 @@
           </button>
 
           @for (lvl of availableLevels(); track lvl.level) {
+            @if (!isLoading() && lvl.count === 0) {
+              <span
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border border-dashed border-brand-navy/15 dark:border-white/15 text-brand-navy/35 dark:text-white/30 cursor-not-allowed"
+                title="Sắp ra mắt"
+              >
+                {{ lvl.label }}
+              </span>
+            } @else {
             <button
               type="button"
               (click)="setLevel(lvl.level)"
@@ -152,11 +166,13 @@
             >
               {{ lvl.label }}
             </button>
+            }
           }
         </div>
 
         <div class="text-xs text-brand-navy/70 dark:text-white/70 font-semibold whitespace-nowrap">
           Tìm thấy <strong class="text-brand-pink">{{ exams().length }}</strong> đề thi
+          <span class="hidden sm:inline text-brand-navy/40 dark:text-white/40 font-medium"> · Cấp viền nét đứt: sắp ra mắt</span>
         </div>
       </div>
 
@@ -174,14 +190,22 @@
           <app-icon name="book-open" size="lg" />
         </div>
         <h3 class="text-base font-bold text-brand-navy dark:text-white">
-          Chưa có đề thi nào cho {{ selectedVersion() === '2.0' ? 'HSK 2.0' : 'HSK 3.0' }}
-          @if (selectedLevel() !== 'all') {
-            - Cấp {{ selectedLevel() }}
-          }
+          Đề thi HSK {{ selectedVersion() }} sắp ra mắt
         </h3>
         <p class="text-xs text-zinc-600 dark:text-zinc-300 max-w-sm mx-auto">
-          Các đề thi đang được ban chuyên môn biên soạn. Bạn có thể chọn phiên bản hoặc cấp độ khác để trải nghiệm.
+          Các đề thi đang được ban chuyên môn biên soạn.
+          @if (versionCount()[otherVersion()] > 0) {
+            Trong lúc chờ, bạn có thể thử đề HSK {{ otherVersion() }}.
+          }
         </p>
+        @if (versionCount()[otherVersion()] > 0) {
+          <button type="button"
+                  (click)="setVersion(otherVersion())"
+                  class="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 transition-all cursor-pointer">
+            <span>Xem đề HSK {{ otherVersion() }}</span>
+            <app-icon name="arrow-right" size="xs" />
+          </button>
+        }
       </div>
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

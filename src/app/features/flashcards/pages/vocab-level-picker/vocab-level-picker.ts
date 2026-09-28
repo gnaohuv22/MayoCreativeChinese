@@ -4,6 +4,7 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection, VocabScope } from '../../models/vocab-card.model';
 import { scopeLevelLabel, scopeRoutes } from '../../utils/vocab-scope.util';
@@ -24,7 +25,7 @@ export interface CollectionLevelCard {
 @Component({
   selector: 'app-vocab-level-picker',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent],
   templateUrl: './vocab-level-picker.html',
   styleUrl: './vocab-level-picker.css',
 })

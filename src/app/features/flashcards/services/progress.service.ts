@@ -140,20 +140,46 @@ export class ProgressService {
     return JSON.stringify(all, null, 2);
   }
 
-  /** Import progress từ JSON backup */
+  /**
+   * Khôi phục progress từ file sao lưu (thay thế toàn bộ tiến độ hiện tại).
+   * Kiểm tra file trước, và xoá + ghi trong 1 transaction — file lỗi không làm mất tiến độ cũ.
+   * Tạm thời: khi có tài khoản học viên, tiến độ sẽ lưu theo tài khoản thay cho file.
+   */
   async importProgress(json: string): Promise<number> {
-    const data: CardProgress[] = JSON.parse(json);
-    // Clear existing and replace
-    await db.progress.clear();
-    await db.progress.bulkAdd(data.map(d => {
-      const { id, ...rest } = d;
-      return rest as CardProgress;
-    }));
-    return data.length;
+    const records = parseProgressBackup(json);
+    await db.transaction('rw', db.progress, async () => {
+      await db.progress.clear();
+      await db.progress.bulkAdd(records);
+    });
+    return records.length;
   }
 
   /** Reset tất cả progress */
   async resetAll(): Promise<void> {
     await db.progress.clear();
   }
+}
+
+/** Đọc file sao lưu tiến độ; ném lỗi (tiếng Việt, hiện cho học viên) nếu file không hợp lệ. Bỏ `id` để Dexie cấp mới. */
+export function parseProgressBackup(json: string): CardProgress[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(json);
+  } catch {
+    throw new Error('File không đúng định dạng JSON.');
+  }
+  if (!Array.isArray(data) || !data.every(isCardProgress)) {
+    throw new Error('File không phải bản sao lưu tiến độ Flashcard.');
+  }
+  return data.map(({ id, ...rest }) => rest);
+}
+
+function isCardProgress(x: unknown): x is CardProgress {
+  const p = x as CardProgress;
+  return !!p && typeof p === 'object'
+    && typeof p.hanzi === 'string'
+    && typeof p.hskLevel === 'number'
+    && [0, 1, 2, 3].includes(p.confidence)
+    && typeof p.reviewCount === 'number'
+    && typeof p.bookmarked === 'boolean';
 }

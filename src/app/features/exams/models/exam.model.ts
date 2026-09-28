@@ -87,6 +87,8 @@ export interface Exam {
   updated_at?: string;
   sections?: ExamSection[];  // Cấu trúc lồng nhau khi fetch full đề
   question_count?: number;   // Số lượng câu hỏi tính toán được
+  /** Số câu theo từng phần thi (đếm từ dữ liệu thật, theo thứ tự phần) — chỉ có ở danh sách đề */
+  section_counts?: { section_type: SectionType; count: number }[];
 }
 
 /** Bộ lọc danh sách đề thi */

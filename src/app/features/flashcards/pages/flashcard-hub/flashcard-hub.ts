@@ -4,9 +4,10 @@ import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { exportProgressJson } from '../../utils/template-generator.util';
+import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
-import { ADVANCED_LEVEL_PARAM } from '../../models/vocab-card.model';
+import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
+import { ADVANCED_LEVEL_PARAM, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection } from '../../models/vocab-card.model';
 
 export interface CollectionCardItem {
@@ -15,23 +16,27 @@ export interface CollectionCardItem {
   badge: string;
   badgeColor: string;
   description: string;
-  /** num = tham số route `:level` ('1'…'9' hoặc '7-9') */
-  levels: { num: number | string; label: string }[];
+  /** num = tham số route `:level` ('1'…'9' hoặc '7-9'); count = số từ của cấp */
+  levels: { num: number | string; label: string; count: number }[];
   route: string;
   totalCards: number;
+  /** Cấp đầu tiên có từ — đích của "Xem dạng bảng" */
+  listLevel: number | string | null;
+  hasEmptyLevel: boolean;
   highlightText?: string;
 }
 
 @Component({
   selector: 'app-flashcard-hub',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent],
   templateUrl: './flashcard-hub.html',
   styleUrl: './flashcard-hub.css',
 })
 export class FlashcardHubComponent implements OnInit {
   private vocabService = inject(VocabService);
   private progressService = inject(ProgressService);
+  private toast = inject(ToastService);
 
   loading = signal(true);
   collections = signal<CollectionCardItem[]>([]);
@@ -40,20 +45,31 @@ export class FlashcardHubComponent implements OnInit {
   async ngOnInit() {
     this.loading.set(true);
     try {
-      // 4 bộ độc lập — mỗi bộ đếm từ của riêng nó
-      const [totalV2, totalV3, totalCombined, totalSupplement] = await Promise.all(
-        (['hsk2', 'hsk3', 'combined', 'supplement'] as VocabCollection[]).map(c => this.vocabService.getCollectionCount(c))
+      // 4 bộ độc lập — đếm theo từng cấp để làm mờ cấp chưa có từ
+      const [countsV2, countsV3, countsCombined, countsSupplement] = await Promise.all(
+        (['hsk2', 'hsk3', 'combined', 'supplement'] as VocabCollection[]).map(c => this.vocabService.getLevelCounts(c))
       );
+      const levelsOf = (counts: Map<number, number>, params: (number | string)[], label: (p: number | string) => string) =>
+        params.map(num => ({
+          num,
+          label: label(num),
+          count: parseLevelParam(String(num)).reduce((sum, l) => sum + (counts.get(l) ?? 0), 0),
+        }));
+      const sumOf = (counts: Map<number, number>) => [...counts.values()].reduce((a, b) => a + b, 0);
+      const totalV2 = sumOf(countsV2);
+      const totalV3 = sumOf(countsV3);
+      const totalCombined = sumOf(countsCombined);
+      const totalSupplement = sumOf(countsSupplement);
       this.totalWordsInSystem.set(totalV2 + totalV3 + totalCombined + totalSupplement);
 
-      const items: CollectionCardItem[] = [
+      const items: Omit<CollectionCardItem, 'listLevel' | 'hasEmptyLevel'>[] = [
         {
           key: 'hsk2',
           title: 'Từ Vựng HSK 2.0',
           badge: 'HSK 2.0',
           badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
           description: 'Hệ thống từ vựng 6 cấp độ (HSK 1 đến HSK 6) theo tiêu chuẩn đánh giá năng lực 6 cấp cũ. Phù hợp cho ôn luyện thi HSK format cũ.',
-          levels: [1, 2, 3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
+          levels: levelsOf(countsV2, [1, 2, 3, 4, 5, 6], i => `HSK ${i}`),
           route: '/flashcards/hsk2',
           totalCards: totalV2,
         },
@@ -63,7 +79,7 @@ export class FlashcardHubComponent implements OnInit {
           badge: 'NEW HSK',
           badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
           description: 'Chuẩn 9 cấp độ mới phân chia theo bài học của giáo trình NEW HSK 3.0, giúp tiếp thu từ vựng theo ngữ cảnh thực tế.',
-          levels: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ num: i, label: `NEW HSK ${i}` })),
+          levels: levelsOf(countsV3, [1, 2, 3, 4, 5, 6, 7, 8, 9], i => `NEW HSK ${i}`),
           route: '/flashcards/hsk3',
           totalCards: totalV3,
           highlightText: 'Chia theo bài học & giáo trình',
@@ -74,10 +90,7 @@ export class FlashcardHubComponent implements OnInit {
           badge: 'Toàn diện',
           badgeColor: 'bg-brand-pink/10 text-brand-pink border-brand-pink/20',
           description: 'Kho từ vựng HSK tổng hợp đầy đủ từ cấp độ sơ cấp 1 đến cao cấp 9 theo Tiêu chuẩn phân cấp trình độ giáo dục Trung văn quốc tế.',
-          levels: [
-            ...[1, 2, 3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
-            { num: ADVANCED_LEVEL_PARAM, label: `HSK ${ADVANCED_LEVEL_PARAM}` },
-          ],
+          levels: levelsOf(countsCombined, [1, 2, 3, 4, 5, 6, ADVANCED_LEVEL_PARAM], i => `HSK ${i}`),
           route: '/flashcards/combined',
           totalCards: totalCombined,
         },
@@ -87,14 +100,18 @@ export class FlashcardHubComponent implements OnInit {
           badge: 'Nâng cấp',
           badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
           description: 'Tập hợp từ vựng mới cần học thêm khi nâng cấp từ chuẩn HSK 2.0 lên chuẩn HSK 3.0 cho các cấp độ 3 đến 6, chia theo chủ đề.',
-          levels: [3, 4, 5, 6].map(i => ({ num: i, label: `HSK ${i}` })),
+          levels: levelsOf(countsSupplement, [3, 4, 5, 6], i => `HSK ${i}`),
           route: '/flashcards/supplement',
           totalCards: totalSupplement,
           highlightText: 'Chia theo chủ đề • HSK 3, 4, 5, 6',
         },
       ];
 
-      this.collections.set(items);
+      this.collections.set(items.map(item => ({
+        ...item,
+        listLevel: item.levels.find(l => l.count > 0)?.num ?? null,
+        hasEmptyLevel: item.levels.some(l => l.count === 0),
+      })));
     } catch (err) {
       console.error('Error loading collections in hub', err);
     } finally {
@@ -108,6 +125,22 @@ export class FlashcardHubComponent implements OnInit {
       exportProgressJson(data);
     } catch (err) {
       console.error('Error exporting progress', err);
+      this.toast.error('Không sao lưu được tiến độ học tập.');
+    }
+  }
+
+  /** Khôi phục từ file sao lưu — tạm thời, tới khi có tài khoản học viên */
+  async importProgress(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // cho phép chọn lại cùng file
+    if (!file) return;
+    if (!confirm('Khôi phục sẽ thay thế toàn bộ tiến độ học hiện tại trên trình duyệt này. Tiếp tục?')) return;
+    try {
+      const count = await this.progressService.importProgress(await file.text());
+      this.toast.success(`Đã khôi phục tiến độ của ${count} từ.`);
+    } catch (err) {
+      this.toast.error(err instanceof Error ? err.message : 'Không khôi phục được tiến độ.');
     }
   }
 }

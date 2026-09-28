@@ -35,7 +35,7 @@ export class ExamService {
   async getExams(filter?: ExamFilter): Promise<Exam[]> {
     let query = this.supabase
       .from('exams')
-      .select(`${EXAM_COLUMNS}, sections:exam_sections(parts:exam_parts(questions:exam_questions(id)))`)
+      .select(`${EXAM_COLUMNS}, sections:exam_sections(section_type, sort_order, parts:exam_parts(questions:exam_questions(id)))`)
       .order('hsk_level', { ascending: true })
       .order('created_at', { ascending: false });
 
@@ -60,23 +60,18 @@ export class ExamService {
       return [];
     }
 
-    // Đếm tổng số câu hỏi từ các quan hệ lồng nhau
-    return (data ?? []).map((exam: any) => {
-      let qCount = 0;
-      if (exam.sections && Array.isArray(exam.sections)) {
-        for (const sec of exam.sections) {
-          if (sec.parts && Array.isArray(sec.parts)) {
-            for (const part of sec.parts) {
-              if (part.questions && Array.isArray(part.questions)) {
-                qCount += part.questions.length;
-              }
-            }
-          }
-        }
-      }
+    // Đếm số câu từ dữ liệu thật (tổng + từng phần) — người soạn không cần ghi số câu vào mô tả
+    return (data ?? []).map(({ sections, ...exam }: any) => {
+      const section_counts = [...(sections ?? [])]
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((sec: any) => ({
+          section_type: sec.section_type,
+          count: (sec.parts ?? []).reduce((sum: number, part: any) => sum + (part.questions?.length ?? 0), 0),
+        }));
       return {
         ...exam,
-        question_count: qCount
+        question_count: section_counts.reduce((sum, s) => sum + s.count, 0),
+        section_counts,
       } as Exam;
     });
   }

@@ -83,15 +83,6 @@ export class VocabService {
     return counts;
   }
 
-  /** Tổng số từ của 1 bộ */
-  async getCollectionCount(collection: VocabCollection): Promise<number> {
-    const { count, error } = await this.supabase
-      .from('vocab_cards')
-      .select('id', { count: 'exact', head: true })
-      .eq('collection', collection);
-    return error ? 0 : count ?? 0;
-  }
-
   /**
    * Danh sách nhóm trong 1 cấp: bài học (HSK 3.0) hoặc chủ đề (Bổ sung).
    * Từ chưa gán bài / chủ đề gom vào nhóm cuối cùng.
