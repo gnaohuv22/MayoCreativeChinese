@@ -10,7 +10,7 @@ import { AdminPresence } from '../../../services/admin-presence';
 })
 export class ScrollToTopComponent {
   readonly isVisible = signal(false);
-  /** Nâng nút lên trên điện thoại khi trang có thanh cố định ở đáy (VD: nút "Đăng ký ngay") */
+  /** Nâng nút lên khi trang có thanh cố định ở đáy (VD: nút "Đăng ký ngay") */
   readonly raised = input(false);
   /** Nhường góc phải cho nút quản trị (app-admin-dock) khi đã đăng nhập */
   protected readonly adminPresence = inject(AdminPresence);

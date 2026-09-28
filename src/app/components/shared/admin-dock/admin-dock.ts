@@ -41,7 +41,7 @@ export class AdminDockComponent {
   );
 
   readonly visible = computed(() => this.auth.isStaff() && !this.url().startsWith('/admin'));
-  /** Trang khoá học có thanh "Đăng ký" cố định ở đáy trên điện thoại */
+  /** Trang khoá học có thanh "Đăng ký" cố định ở đáy màn hình */
   readonly raised = computed(() => this.url().startsWith('/khoa-hoc/'));
 
   readonly actions = computed<DockAction[]>(() => {

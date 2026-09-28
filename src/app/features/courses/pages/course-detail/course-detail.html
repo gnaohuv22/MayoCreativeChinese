@@ -1,4 +1,4 @@
-<app-header />
+<app-header [overDarkHero]="true" />
 
 @if (course(); as c) {
   <main class="course-page bg-brand-light dark:bg-brand-dark transition-colors duration-300">
@@ -158,13 +158,6 @@
           </dl>
           <button
             type="button"
-            (click)="register()"
-            class="hidden lg:flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl bg-brand-pink hover:bg-brand-pink/90 text-white text-sm font-bold shadow-md transition-all cursor-pointer"
-          >
-            Đăng ký ngay
-          </button>
-          <button
-            type="button"
             (click)="register(true)"
             class="hidden lg:flex w-full items-center justify-center py-3 rounded-2xl border border-brand-navy/15 dark:border-white/15 text-brand-navy dark:text-white text-sm font-bold hover:border-brand-pink hover:text-brand-pink transition-colors cursor-pointer"
           >
@@ -245,12 +238,12 @@
       </div>
     </section>
 
-    <!-- Mobile: nút "Đăng ký ngay" cố định ở đáy màn hình -->
-    <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 bg-gradient-to-t from-brand-light via-brand-light/95 dark:from-brand-dark dark:via-brand-dark/95 to-transparent">
+    <!-- Nút "Đăng ký ngay" cố định ở đáy màn hình -->
+    <div class="fixed inset-x-0 bottom-0 z-40 p-3 bg-gradient-to-t from-brand-light via-brand-light/95 dark:from-brand-dark dark:via-brand-dark/95 to-transparent">
       <button
         type="button"
         (click)="register()"
-        class="register-glow w-full py-3.5 rounded-2xl bg-brand-pink text-white text-sm font-black shadow-lg cursor-pointer"
+        class="register-glow block w-full lg:max-w-md mx-auto py-3.5 rounded-2xl bg-brand-pink text-white text-sm font-black shadow-lg cursor-pointer"
       >
         Đăng ký ngay
       </button>

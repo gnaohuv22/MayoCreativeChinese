@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { I18nService, Lang } from '../../services/i18n.service';
 import { ThemeService } from '../../services/theme.service';
@@ -21,6 +21,12 @@ export class HeaderComponent {
   readonly isMobileMenuOpen = signal(false);
   readonly isLangDropdownOpen = signal(false);
   readonly activeSection = signal('home');
+
+  /** Trang có phần đầu nền tối (VD: trang khoá học) — header trong suốt cần chữ sáng */
+  readonly overDarkHero = input(false);
+  /** Header còn trong suốt nằm trên nền tối: phần tử con dùng màu của chế độ tối */
+  readonly onDarkHero = computed(() => this.overDarkHero() && !this.isScrolled());
+  readonly lightText = computed(() => this.theme.isDarkMode() || this.onDarkHero());
 
   openRegisterModal(): void {
     this.registerModal.open();
