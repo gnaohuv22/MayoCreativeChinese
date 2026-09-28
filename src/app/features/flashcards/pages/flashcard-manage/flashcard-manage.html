@@ -211,7 +211,6 @@
         <div class="p-5 bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm space-y-3">
           <div>
             <h3 class="font-bold text-sm text-brand-navy dark:text-white">Import vào bộ từ vựng</h3>
-            <p class="text-xs text-brand-navy/60 dark:text-brand-text-dark/70 mt-0.5">4 bộ độc lập với nhau. Toàn bộ từ trong file sẽ được thêm vào bộ đã chọn.</p>
           </div>
           <div class="flex flex-wrap gap-2">
             @for (c of collections; track c.key) {
@@ -263,9 +262,6 @@
             <h4 class="font-display font-bold text-lg text-brand-navy dark:text-white mb-1">
               Kéo thả file CSV hoặc Excel vào đây
             </h4>
-            <p class="text-xs sm:text-sm text-brand-navy/60 dark:text-brand-text-dark/70 mb-6 max-w-sm">
-              Hỗ trợ định dạng .csv, .xlsx dung lượng tối đa 5MB. Đảm bảo cấu trúc cột theo đúng mẫu tải về.
-            </p>
 
             <label class="cursor-pointer">
               <input type="file" (change)="onFileSelected($event)" accept=".csv, .xlsx, .xls" class="hidden">
