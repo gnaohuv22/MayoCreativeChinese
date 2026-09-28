@@ -1,0 +1,78 @@
+<div class="space-y-3">
+  <!-- Dòng câu đang ghép -->
+  <div class="flex items-start gap-2">
+    <div
+      cdkDropList
+      #sentenceList="cdkDropList"
+      cdkDropListOrientation="mixed"
+      [cdkDropListData]="placed()"
+      [cdkDropListConnectedTo]="[bankList]"
+      (cdkDropListDropped)="dropOnSentence($event)"
+      aria-label="Câu đang ghép"
+      class="flex-1 min-h-[60px] p-2.5 rounded-2xl border-2 border-dashed border-brand-pink/40 bg-brand-pink/5 flex flex-wrap items-center gap-2"
+    >
+      @for (token of placed(); track token.mark) {
+        <button
+          type="button"
+          cdkDrag
+          [cdkDragData]="token"
+          [cdkDragStartDelay]="{ touch: 120, mouse: 0 }"
+          (click)="remove(token)"
+          class="px-3.5 py-2 rounded-xl text-lg sm:text-xl font-medium font-sans leading-none select-none touch-manipulation cursor-grab active:cursor-grabbing transition-colors bg-white dark:bg-brand-dark border border-brand-pink/40 text-brand-navy dark:text-white shadow-sm hover:border-brand-pink"
+        >
+          {{ token.text }}
+          <span
+            *cdkDragPlaceholder
+            class="chip-placeholder inline-block rounded-xl border-2 border-dashed border-brand-pink/50 bg-brand-pink/10"
+          ></span>
+        </button>
+      } @empty {
+        <span class="px-2 text-sm text-brand-navy/40 dark:text-white/40 select-none"
+          >Ghép câu tại đây</span
+        >
+      }
+    </div>
+
+    @if (placed().length) {
+      <button
+        type="button"
+        (click)="reset()"
+        title="Làm lại"
+        aria-label="Làm lại"
+        class="shrink-0 mt-2.5 p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+      >
+        <app-icon name="arrow-uturn-left" size="sm" />
+      </button>
+    }
+  </div>
+
+  <!-- Kho từ còn lại -->
+  <div
+    cdkDropList
+    #bankList="cdkDropList"
+    cdkDropListOrientation="mixed"
+    cdkDropListSortingDisabled
+    [cdkDropListData]="bank()"
+    [cdkDropListConnectedTo]="[sentenceList]"
+    (cdkDropListDropped)="dropOnBank($event)"
+    aria-label="Các từ cần sắp xếp"
+    class="min-h-[52px] flex flex-wrap items-center gap-2"
+  >
+    @for (token of bank(); track token.mark) {
+      <button
+        type="button"
+        cdkDrag
+        [cdkDragData]="token"
+        [cdkDragStartDelay]="{ touch: 120, mouse: 0 }"
+        (click)="add(token)"
+        class="px-3.5 py-2 rounded-xl text-lg sm:text-xl font-medium font-sans leading-none select-none touch-manipulation cursor-grab active:cursor-grabbing transition-colors bg-zinc-100 dark:bg-white/10 border border-transparent text-brand-navy dark:text-white hover:bg-zinc-200 dark:hover:bg-white/20"
+      >
+        {{ token.text }}
+        <span
+          *cdkDragPlaceholder
+          class="chip-placeholder inline-block rounded-xl border-2 border-dashed border-brand-pink/50 bg-brand-pink/10"
+        ></span>
+      </button>
+    }
+  </div>
+</div>

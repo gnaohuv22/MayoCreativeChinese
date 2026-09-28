@@ -399,8 +399,11 @@
                     </div>
                   }
 
+                  <!-- Dạng sắp xếp: các từ hiện thành thẻ kéo thả nên không cần in lại danh sách ① … ② … -->
+                  @let orderingWords = part.question_type === 'ordering' ? (orderingTokens().get(q.id || '') ?? []) : [];
+
                   <!-- Question Content (Chinese text / sentence) -->
-                  @if (q.content) {
+                  @if (q.content && orderingWords.length < 2) {
                     <div class="text-base sm:text-lg font-medium text-brand-navy dark:text-white whitespace-pre-line leading-relaxed font-sans">
                       {{ q.content }}
                     </div>
@@ -532,51 +535,24 @@
                       </div>
                     }
 
-                    <!-- 4. ORDERING (Sắp xếp câu) -->
+                    <!-- 4. ORDERING (Sắp xếp câu): kéo thả / chạm từ để ghép câu -->
                     @else if (part.question_type === 'ordering') {
-                      <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                            Thứ tự sắp xếp hiện tại:
-                          </span>
-                          @if (answers()[q.id || '']) {
-                            <button
-                              type="button"
-                              (click)="resetOrder(q.id || '')"
-                              class="text-xs text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
-                            >
-                              <app-icon name="arrow-uturn-left" size="xs" />
-                              <span>Làm lại</span>
-                            </button>
-                          }
-                        </div>
-
-                        <!-- Current assembled display -->
-                        <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 min-h-[48px] flex items-center">
-                          @if (answers()[q.id || '']) {
-                            <span class="font-mono font-bold text-base text-brand-pink">
-                              {{ answers()[q.id || ''] }}
-                            </span>
-                          } @else {
-                            <span class="text-xs text-zinc-500 dark:text-zinc-400 italic">
-                              Bấm các nút bên dưới hoặc nhập trực tiếp thứ tự (VD: ①④②③)...
-                            </span>
-                          }
-                        </div>
-
-                        <!-- Quick token buttons -->
-                        <div class="flex flex-wrap gap-2">
-                          @for (token of ['①', '②', '③', '④', '⑤']; track token) {
-                            <button
-                              type="button"
-                              (click)="appendOrderToken(q.id || '', token)"
-                              class="px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 text-xs font-bold text-brand-navy dark:text-white transition-colors cursor-pointer"
-                            >
-                              + {{ token }}
-                            </button>
-                          }
-                        </div>
-                      </div>
+                      @if (orderingWords.length > 1) {
+                        <app-ordering-answer
+                          [tokens]="orderingWords"
+                          [value]="answers()[q.id || ''] || ''"
+                          (valueChange)="selectAnswer(q.id || '', $event)"
+                        />
+                      } @else {
+                        <!-- Nội dung câu không theo dạng ① … ② …: nhập thứ tự bằng tay -->
+                        <input
+                          type="text"
+                          [ngModel]="answers()[q.id || ''] || ''"
+                          (ngModelChange)="selectAnswer(q.id || '', $event)"
+                          placeholder="VD: ①④②③"
+                          class="w-full px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 focus:border-brand-pink focus:outline-none text-sm font-medium text-brand-navy dark:text-white"
+                        />
+                      }
                     }
 
                     <!-- 5. SHORT ANSWER / ESSAY -->

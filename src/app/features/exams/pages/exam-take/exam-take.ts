@@ -16,6 +16,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import { ThemeService } from '../../../../services/theme.service';
 import { hasPartStimulus, partOptionLabels } from '../../models/exam.model';
+import { parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
+import { OrderingAnswerComponent } from '../../components/ordering-answer/ordering-answer';
 import type { Exam, ExamSection, ExamQuestion, UserAnswers } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
@@ -24,7 +26,7 @@ import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle
 @Component({
   selector: 'app-exam-take',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, HskBadgeComponent, ThemeToggleComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, HskBadgeComponent, ThemeToggleComponent, OrderingAnswerComponent],
   templateUrl: './exam-take.html',
   styleUrl: './exam-take.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,6 +87,20 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
       });
     });
     return list;
+  });
+
+  /** Từ cần sắp xếp của mỗi câu dạng 'ordering' (theo question id) — tách 1 lần khi tải đề */
+  orderingTokens = computed(() => {
+    const map = new Map<string, OrderingToken[]>();
+    for (const sec of this.exam()?.sections ?? []) {
+      for (const part of sec.parts ?? []) {
+        if (part.question_type !== 'ordering') continue;
+        for (const q of part.questions ?? []) {
+          if (q.id) map.set(q.id, parseOrderingTokens(q.content));
+        }
+      }
+    }
+    return map;
   });
 
   // Computed: Thống kê số câu đã làm
@@ -217,18 +233,6 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     this.answers.set(current);
     this.saveDraft();
     this.cdr.markForCheck();
-  }
-
-  // Sắp xếp câu (Ordering question helper)
-  appendOrderToken(questionId: string, token: string) {
-    const current = this.answers()[questionId] || '';
-    if (!current.includes(token)) {
-      this.selectAnswer(questionId, current + token);
-    }
-  }
-
-  resetOrder(questionId: string) {
-    this.selectAnswer(questionId, '');
   }
 
   // Đánh dấu cờ (Flag) câu hỏi để xem lại sau

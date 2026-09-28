@@ -2,6 +2,8 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { ExamQuestion, QuestionType } from '../../models/exam.model';
+import { parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
+import { OrderingAnswerComponent } from '../ordering-answer/ordering-answer';
 import { AudioUploaderComponent } from '../audio-uploader/audio-uploader';
 import { ImageUploaderComponent, imageFileFromClipboard } from '../image-uploader/image-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
@@ -9,7 +11,7 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 @Component({
   selector: 'app-question-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, AudioUploaderComponent, ImageUploaderComponent, AppIconComponent],
+  imports: [CommonModule, FormsModule, AudioUploaderComponent, ImageUploaderComponent, AppIconComponent, OrderingAnswerComponent],
   templateUrl: './question-editor.html',
   styleUrl: './question-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +24,22 @@ export class QuestionEditorComponent {
   /** Nhãn đáp án dùng chung của Part (dạng 'matching') */
   optionLabels = input<string[]>([]);
   remove = output<void>();
+
+  /** Từ của câu 'ordering', tách lại chỉ khi nội dung đổi (giữ nguyên mảng để không làm gián đoạn kéo thả) */
+  private orderingCache: { content: string; tokens: OrderingToken[] } = { content: '', tokens: [] };
+
+  orderingTokens(): OrderingToken[] {
+    const content = this.question().content ?? '';
+    if (content !== this.orderingCache.content) {
+      this.orderingCache = { content, tokens: parseOrderingTokens(content) };
+    }
+    return this.orderingCache.tokens;
+  }
+
+  /** Chọn đáp án bằng thẻ từ, trừ khi đáp án có nhiều cách xếp ("①④②③ / ②④①③") — khi đó sửa bằng ô chữ */
+  useOrderingChips(): boolean {
+    return this.orderingTokens().length > 1 && !/[/|,]/.test(this.question().correct_answer ?? '');
+  }
 
   onAudioChange(url: string | null) {
     this.question().audio_url = url || undefined;

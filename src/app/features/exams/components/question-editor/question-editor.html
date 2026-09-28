@@ -42,7 +42,7 @@
     <textarea
       rows="3"
       [(ngModel)]="question().content"
-      placeholder="Nhập đề bài, câu văn hoặc hội thoại tiếng Trung..."
+      [placeholder]="questionType() === 'ordering' ? 'VD: ① 那只猫  ② 桌子下面  ③ 睡觉  ④ 在' : 'Nhập đề bài, câu văn hoặc hội thoại tiếng Trung...'"
       class="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink transition-all font-sans"
     ></textarea>
   </div>
@@ -212,12 +212,20 @@
         <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
           Đáp án chuẩn (Từ điền / Thứ tự sắp xếp / Chữ Hán):
         </label>
-        <input
-          type="text"
-          [(ngModel)]="question().correct_answer"
-          [placeholder]="getAnswerPlaceholder()"
-          class="w-full text-xs p-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-mono focus:outline-none focus:border-brand-pink"
-        />
+        @if (questionType() === 'ordering' && useOrderingChips()) {
+          <app-ordering-answer
+            [tokens]="orderingTokens()"
+            [value]="question().correct_answer"
+            (valueChange)="question().correct_answer = $event"
+          />
+        } @else {
+          <input
+            type="text"
+            [(ngModel)]="question().correct_answer"
+            [placeholder]="getAnswerPlaceholder()"
+            class="w-full text-xs p-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-mono focus:outline-none focus:border-brand-pink"
+          />
+        }
       </div>
     }
   </div>

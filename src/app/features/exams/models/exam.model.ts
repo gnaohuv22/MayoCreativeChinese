@@ -4,6 +4,8 @@
  * Các kiểu dữ liệu TypeScript biểu diễn Đề thi HSK, các phần thi, dạng bài và câu hỏi.
  */
 
+import { orderingSentence, parseOrderingTokens } from './exam-ordering';
+
 export type HskVersion = '2.0' | '3.0';
 
 export type SectionType = 'listening' | 'reading' | 'writing' | 'speaking';
@@ -188,13 +190,17 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   speaking: 'Nói',
 };
 
-/** Hiển thị đáp án cho người đọc (VD: 'true' → 'Đúng (对)') */
-export function formatAnswer(value: string | null | undefined, questionType: QuestionType): string {
+/**
+ * Hiển thị đáp án cho người đọc (VD: 'true' → 'Đúng (对)', '①④②③' → câu đã ghép).
+ * `content` là nội dung câu hỏi — cần cho dạng 'ordering' để đổi số thành từ.
+ */
+export function formatAnswer(value: string | null | undefined, questionType: QuestionType, content?: string | null): string {
   if (!value) return '';
   if (questionType === 'true_false') {
     if (value === 'true') return 'Đúng (对)';
     if (value === 'false') return 'Sai (错)';
   }
+  if (questionType === 'ordering') return orderingSentence(value, parseOrderingTokens(content));
   return value;
 }
 
