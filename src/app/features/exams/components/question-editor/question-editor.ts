@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { ExamQuestion, QuestionType } from '../../models/exam.model';
-import { parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
+import { orderingAlternatives, parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
 import { OrderingAnswerComponent } from '../ordering-answer/ordering-answer';
 import { AudioUploaderComponent } from '../audio-uploader/audio-uploader';
 import { ImageUploaderComponent, imageFileFromClipboard } from '../image-uploader/image-uploader';
@@ -36,9 +36,17 @@ export class QuestionEditorComponent {
     return this.orderingCache.tokens;
   }
 
-  /** Chọn đáp án bằng thẻ từ, trừ khi đáp án có nhiều cách xếp ("①④②③ / ②④①③") — khi đó sửa bằng ô chữ */
-  useOrderingChips(): boolean {
-    return this.orderingTokens().length > 1 && !/[/|,]/.test(this.question().correct_answer ?? '');
+  /** Đáp án 'ordering' = cách xếp chính (chọn bằng thẻ từ) + các cách xếp khác, nối bằng " / " */
+  orderingPrimary(): string {
+    return orderingAlternatives(this.question().correct_answer)[0] ?? '';
+  }
+
+  orderingExtras(): string {
+    return orderingAlternatives(this.question().correct_answer).slice(1).join(' / ');
+  }
+
+  setOrderingAnswer(primary: string, extras: string) {
+    this.question().correct_answer = [primary, extras.trim()].filter(Boolean).join(' / ');
   }
 
   onAudioChange(url: string | null) {

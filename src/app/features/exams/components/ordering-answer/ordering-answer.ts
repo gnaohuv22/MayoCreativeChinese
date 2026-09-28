@@ -7,7 +7,7 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { orderingMarks, type OrderingToken } from '../../models/exam-ordering';
+import { orderingMarks, toOrderingMarks, type OrderingToken } from '../../models/exam-ordering';
 
 /**
  * Ghép câu cho dạng 'ordering': kéo thả từ vào dòng câu (hoặc chạm để thêm / bỏ).
@@ -30,7 +30,7 @@ export class OrderingAnswerComponent {
   placed = computed(() => {
     const byMark = new Map(this.tokens().map((t) => [t.mark, t]));
     const seen = new Set<string>();
-    return orderingMarks(this.value())
+    return orderingMarks(toOrderingMarks(this.value(), this.tokens()))
       .filter((m) => byMark.has(m) && !seen.has(m) && seen.add(m))
       .map((m) => byMark.get(m)!);
   });

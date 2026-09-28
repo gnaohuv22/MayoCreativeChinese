@@ -212,11 +212,22 @@
         <label class="block text-xs font-semibold text-brand-navy dark:text-white mb-1">
           Đáp án chuẩn (Từ điền / Thứ tự sắp xếp / Chữ Hán):
         </label>
-        @if (questionType() === 'ordering' && useOrderingChips()) {
+        @if (questionType() === 'ordering' && orderingTokens().length > 1) {
           <app-ordering-answer
             [tokens]="orderingTokens()"
-            [value]="question().correct_answer"
-            (valueChange)="question().correct_answer = $event"
+            [value]="orderingPrimary()"
+            (valueChange)="setOrderingAnswer($event, orderingExtras())"
+          />
+          <label class="block text-xs font-semibold text-brand-navy dark:text-white mt-3 mb-1">
+            Cách xếp khác cũng đúng:
+          </label>
+          <input
+            type="text"
+            [ngModel]="orderingExtras()"
+            (ngModelChange)="setOrderingAnswer(orderingPrimary(), $event)"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            placeholder="VD: 3124 / 我比妹妹高"
+            class="w-full text-xs p-2.5 rounded-xl bg-zinc-50 dark:bg-brand-dark/60 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-mono focus:outline-none focus:border-brand-pink"
           />
         } @else {
           <input

@@ -14,6 +14,7 @@ import type {
   QuestionGradeResult
 } from '../models/exam.model';
 import { renumberQuestions } from '../models/exam.model';
+import { orderingAnswerMatches, parseOrderingTokens } from '../models/exam-ordering';
 
 const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, is_published, created_at, updated_at';
 const SECTION_COLUMNS = 'id, exam_id, section_type, title, sort_order, max_score, instructions, audio_url';
@@ -290,7 +291,7 @@ export class ExamService {
           const userAns = (answers[qId] || '').trim();
           const correctAns = (q.correct_answer || '').trim();
 
-          const isCorrect = this.checkAnswerCorrectness(userAns, correctAns, part.question_type);
+          const isCorrect = this.checkAnswerCorrectness(userAns, correctAns, part.question_type, q.content);
           const earned = isCorrect ? qMaxScore : 0;
 
           if (isCorrect) {
@@ -372,8 +373,13 @@ export class ExamService {
   }
 
   /** So khớp đáp án người học với đáp án đúng theo từng dạng câu hỏi */
-  private checkAnswerCorrectness(userAns: string, correctAns: string, questionType: string): boolean {
+  private checkAnswerCorrectness(userAns: string, correctAns: string, questionType: string, content?: string | null): boolean {
     if (!userAns) return false;
+
+    // Sắp xếp câu: đáp án đúng có thể viết "①④②③", "1423" hoặc cả câu — đổi hết về số khoanh tròn rồi so
+    if (questionType === 'ordering') {
+      return orderingAnswerMatches(userAns, correctAns, parseOrderingTokens(content));
+    }
 
     const normUser = userAns.trim().toLowerCase();
     const normCorrect = correctAns.trim().toLowerCase();
