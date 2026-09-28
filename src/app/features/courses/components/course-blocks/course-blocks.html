@@ -52,7 +52,7 @@
               @for (row of block.rows; track $index) {
                 <tr class="align-top">
                   @for (cell of row; track $index; let c = $index) {
-                    <td [class.whitespace-nowrap]="c === 0" class="px-4 py-3">
+                    <td [class.whitespace-nowrap]="c === 0 && !cell[0]?.bullet" class="px-4 py-3">
                       @if (cell.length > 0 && cell[0].bullet) {
                         <ul class="list-disc pl-4 space-y-1 marker:text-brand-pink">
                           @for (line of cell; track $index) {
