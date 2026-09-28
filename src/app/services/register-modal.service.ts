@@ -19,14 +19,16 @@ export class RegisterModalService {
     if (this.isOpen()) return;
     this.context.set(context);
     this.isOpen.set(true);
-    // Lock body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    // Khoá cuộn trang khi mở form (Safari cần khoá cả <html>, không chỉ <body>)
+    document.documentElement.style.overflowY = 'hidden';
+    document.body.style.overflowY = 'hidden';
   }
 
   close(): void {
     if (!this.isOpen()) return;
     this.isOpen.set(false);
-    // Restore body scrolling
-    document.body.style.overflow = '';
+    // Mở lại cuộn trang
+    document.documentElement.style.overflowY = '';
+    document.body.style.overflowY = '';
   }
 }
