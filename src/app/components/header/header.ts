@@ -25,7 +25,9 @@ export class HeaderComponent {
   /** Trang có phần đầu nền tối (VD: trang khoá học) — header trong suốt cần chữ sáng */
   readonly overDarkHero = input(false);
   /** Header còn trong suốt nằm trên nền tối: phần tử con dùng màu của chế độ tối */
-  readonly onDarkHero = computed(() => this.overDarkHero() && !this.isScrolled());
+  /** Nền header hiện khi đã cuộn hoặc đang mở menu điện thoại */
+  readonly isSolid = computed(() => this.isScrolled() || this.isMobileMenuOpen());
+  readonly onDarkHero = computed(() => this.overDarkHero() && !this.isSolid());
   readonly lightText = computed(() => this.theme.isDarkMode() || this.onDarkHero());
 
   openRegisterModal(): void {

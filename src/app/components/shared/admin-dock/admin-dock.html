@@ -1,5 +1,5 @@
 @if (visible()) {
-  <div class="dock fixed right-8 z-50 flex flex-col items-end gap-2" [class.bottom-8]="!raised()" [class.bottom-24]="raised()" [class.is-open]="open()">
+  <div class="dock fixed bottom-8 right-8 z-50 flex flex-col items-end gap-2" [class.max-lg:bottom-24]="raised()" [class.is-open]="open()">
     @if (open()) {
       <div id="admin-dock-menu" class="flex flex-col items-end gap-2" role="menu" aria-label="Công cụ quản trị">
         <div class="dock-item dock-card" style="--i: 0">

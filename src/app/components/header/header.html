@@ -1,10 +1,17 @@
+<!-- Mobile Menu Backdrop (ngoài <header>: backdrop-blur của header sẽ giam lớp fixed này trong khung header) -->
+@if (isMobileMenuOpen()) {
+  <div class="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-40 lg:hidden"
+       aria-hidden="true"
+       (click)="closeMobileMenu()"></div>
+}
+
 <header class="fixed top-0 left-0 w-full z-50 transition-all duration-300"
-        [class.bg-white/85]="isScrolled() && !theme.isDarkMode()"
-        [class.bg-brand-dark/85]="isScrolled() && theme.isDarkMode()"
-        [class.backdrop-blur-md]="isScrolled()"
-        [class.shadow-md]="isScrolled()"
+        [class.bg-white/85]="isSolid() && !theme.isDarkMode()"
+        [class.bg-brand-dark/85]="isSolid() && theme.isDarkMode()"
+        [class.backdrop-blur-md]="isSolid()"
+        [class.shadow-md]="isSolid()"
         [class.py-3]="isScrolled()"
-        [class.bg-transparent]="!isScrolled()"
+        [class.bg-transparent]="!isSolid()"
         [class.py-5]="!isScrolled()">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" [class.dark]="onDarkHero()">
     <div class="flex items-center justify-between">
@@ -123,13 +130,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Mobile Menu Backdrop -->
-  @if (isMobileMenuOpen()) {
-    <div class="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-40 lg:hidden"
-         aria-hidden="true"
-         (click)="closeMobileMenu()"></div>
-  }
 
   <!-- Mobile Menu Drawer -->
   <div id="mobile-menu-drawer" class="lg:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg shadow-inner relative z-50"

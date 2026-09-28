@@ -2,9 +2,11 @@
   display: block;
 }
 
-/* Chừa chỗ cho nút "Đăng ký ngay" cố định ở đáy màn hình */
-.course-page {
-  padding-bottom: 5rem;
+/* Chừa chỗ cho nút "Đăng ký ngay" cố định ở đáy trên điện thoại */
+@media (max-width: 1023px) {
+  .course-page {
+    padding-bottom: 5rem;
+  }
 }
 
 /* 3 chặng hiển thị như bậc thang trên desktop, xếp thẳng trên điện thoại */
