@@ -31,12 +31,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform-style: preserve-3d;
+  /* Ẩn hẳn mặt đang quay lưng ở giữa lúc lật (thẻ nằm ngang): iOS Safari bỏ qua
+     backface-visibility với nội dung cuộn/cỡ chữ lớn nên hai mặt chồng lên nhau và chữ Hán bị vỡ. */
+  transition:
+    transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0s linear 0.225s;
 }
 
 .card-front {
   transform: rotateY(0deg);
+  visibility: visible;
 }
 
 /* Mặt sau: nội dung dài (nhiều ví dụ) cuộn bên trong thẻ, chừa chỗ cho huy hiệu cấp ở trên */
@@ -51,19 +55,22 @@
 
 .card-back {
   transform: rotateY(180deg);
+  visibility: hidden;
 }
 
 .is-flipped .card-front {
   transform: rotateY(-180deg);
+  visibility: hidden;
 }
 
 .is-flipped .card-back {
   transform: rotateY(0deg);
+  visibility: visible;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-face {
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
     transform: none !important;
   }
   .card-front {
