@@ -22,9 +22,9 @@
       <!-- SWITCH TO FLASHCARD / QUIZ -->
       <div class="flex items-center gap-2">
         <a [routerLink]="routes().quiz"
-           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-white dark:bg-white/5 text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/40 active:scale-95 shadow-xs transition-all">
+           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border border-brand-navy/15 dark:border-white/15 bg-white dark:bg-white/5 text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/40 active:scale-95 shadow-xs transition-all" title="Luyện tập trắc nghiệm" aria-label="Luyện tập trắc nghiệm">
           <app-icon name="question-mark" size="xs" />
-          <span>Trắc nghiệm</span>
+          <span class="hidden sm:inline">Trắc nghiệm</span>
         </a>
         <a [routerLink]="routes().study"
            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-brand-pink text-white hover:bg-brand-pink/90 active:scale-95 shadow-xs transition-all">

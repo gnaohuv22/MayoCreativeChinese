@@ -44,15 +44,15 @@
           </a>
 
           <a [routerLink]="allRoutes().quiz"
-             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all">
+             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all" title="Trắc nghiệm cả cấp" aria-label="Trắc nghiệm cả cấp">
             <app-icon name="question-mark" size="xs" />
-            <span>Trắc nghiệm cả cấp</span>
+            <span class="hidden sm:inline">Trắc nghiệm cả cấp</span>
           </a>
 
           <a [routerLink]="allRoutes().list"
-             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all">
+             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all" title="Xem bảng từ vựng" aria-label="Xem bảng từ vựng">
             <app-icon name="document-text" size="xs" />
-            <span>Xem bảng từ vựng</span>
+            <span class="hidden sm:inline">Xem bảng từ vựng</span>
           </a>
         </div>
       </div>
@@ -120,17 +120,17 @@
 
                 <a [routerLink]="lesson.quizRoute"
                    class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-brand-navy/15 dark:border-white/15 text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/30 transition-all"
-                   title="Luyện tập trắc nghiệm">
+                   title="Luyện tập trắc nghiệm" aria-label="Luyện tập trắc nghiệm">
                   <app-icon name="question-mark" size="xs" />
-                  <span>Trắc nghiệm</span>
+                  <span class="hidden sm:inline">Trắc nghiệm</span>
                 </a>
 
                 <a [routerLink]="allRoutes().list"
                    [queryParams]="lesson.listQuery"
                    class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-brand-navy/15 dark:border-white/15 text-brand-navy dark:text-white hover:text-brand-pink hover:border-brand-pink/30 transition-all"
-                   title="Xem danh sách">
+                   title="Xem danh sách" aria-label="Xem danh sách">
                   <app-icon name="document-text" size="xs" />
-                  <span>Danh sách</span>
+                  <span class="hidden sm:inline">Danh sách</span>
                 </a>
               </div>
             </div>

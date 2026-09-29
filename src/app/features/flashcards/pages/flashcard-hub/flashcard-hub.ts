@@ -20,8 +20,6 @@ export interface CollectionCardItem {
   levels: { num: number | string; label: string; count: number }[];
   route: string;
   totalCards: number;
-  /** Cấp đầu tiên có từ — đích của "Xem danh sách" */
-  listLevel: number | string | null;
   highlightText?: string;
 }
 
@@ -61,7 +59,7 @@ export class FlashcardHubComponent implements OnInit {
       const totalSupplement = sumOf(countsSupplement);
       this.totalWordsInSystem.set(totalV2 + totalV3 + totalCombined + totalSupplement);
 
-      const items: Omit<CollectionCardItem, 'listLevel'>[] = [
+      const items: CollectionCardItem[] = [
         {
           key: 'hsk2',
           title: 'Từ Vựng HSK 2.0',
@@ -106,10 +104,7 @@ export class FlashcardHubComponent implements OnInit {
         },
       ];
 
-      this.collections.set(items.map(item => ({
-        ...item,
-        listLevel: item.levels.find(l => l.count > 0)?.num ?? null,
-      })));
+      this.collections.set(items);
     } catch (err) {
       console.error('Error loading collections in hub', err);
     } finally {

@@ -83,14 +83,26 @@
 
     <!-- Right: Theme Toggle & Quick Action -->
     <div class="flex items-center gap-2 sm:gap-3">
-      <!-- Mobile quick link to exams if on other pages -->
-      <a
-        routerLink="/exams"
-        class="md:hidden p-2 rounded-xl text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
-        title="Đề thi HSK"
-      >
-        <app-icon name="academic" size="sm" />
-      </a>
+      <!-- Lối tắt trên điện thoại: sang mục còn lại (đang ở Đề thi → Flashcard, còn lại → Đề thi) -->
+      @if (activeModule() === 'exams') {
+        <a
+          routerLink="/flashcards"
+          class="md:hidden p-2 rounded-xl text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
+          title="Flashcard"
+          aria-label="Flashcard"
+        >
+          <app-icon name="book-open" size="sm" />
+        </a>
+      } @else {
+        <a
+          routerLink="/exams"
+          class="md:hidden p-2 rounded-xl text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors"
+          title="Đề thi HSK"
+          aria-label="Đề thi HSK"
+        >
+          <app-icon name="academic" size="sm" />
+        </a>
+      }
 
       <!-- Reusable Circular Theme Toggle Component -->
       <app-theme-toggle />
