@@ -1,6 +1,7 @@
 <app-nav-header activeModule="flashcards" [pageTitle]="pageTitle()" [backLink]="backLink()" [backLabel]="backLabel()" [showBack]="true" />
 
-<div class="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-6 sm:py-10">
+<!-- Chiều cao trừ đi thanh đầu trang (h-16 + viền) để trang không bị cuộn -->
+<div class="min-h-[calc(100dvh-4rem-1px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300 py-4 sm:py-6">
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     @if (loading()) {
       <div class="max-w-md mx-auto mt-8 h-[380px] bg-white/80 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-lg animate-pulse rounded-3xl"></div>
@@ -30,59 +31,55 @@
         </div>
       </div>
     } @else {
-      <div class="max-w-2xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6">
-        <!-- Toolbar -->
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <select [value]="filter()" (change)="setFilter($any($event.target).value)" class="bg-white/90 dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm text-brand-navy dark:text-white font-semibold shadow-sm focus:ring-2 focus:ring-brand-pink/30 cursor-pointer">
+      <div class="max-w-2xl mx-auto">
+        <!-- Toolbar: bộ lọc + vị trí thẻ, các nút công cụ ở dòng dưới -->
+        <div class="flex items-center justify-between gap-3">
+          <select [value]="filter()" (change)="setFilter($any($event.target).value)" class="bg-white/90 dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm text-brand-navy dark:text-white font-semibold focus:ring-2 focus:ring-brand-pink/30 cursor-pointer">
             <option value="all">Tất cả ({{ cards().length }})</option>
             <option value="new">Chưa học</option>
             <option value="hard">Cần ôn lại</option>
             <option value="bookmarked">Đã đánh dấu</option>
           </select>
-          
-          <div class="font-display font-extrabold text-brand-navy dark:text-white text-base sm:text-lg">
+
+          <div class="font-display font-extrabold text-brand-navy dark:text-white text-base sm:text-lg tabular-nums whitespace-nowrap">
             {{ currentIndex() + 1 }} <span class="text-brand-navy/40 dark:text-white/40 font-normal">/</span> {{ filteredCards().length }}
           </div>
+        </div>
 
-          <div class="flex items-center gap-2">
-            <button (click)="toggleShuffle()" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink dark:hover:text-brand-pink shadow-sm transition-colors cursor-pointer" [class.text-brand-pink]="shuffled()" [class.border-brand-pink]="shuffled()">
-              <app-icon name="arrow-path" size="xs" />
-              <span class="hidden xs:inline">Xáo trộn</span>
-            </button>
+        <div class="mt-3 flex items-center justify-center gap-2">
+          <button (click)="toggleShuffle()" [attr.aria-pressed]="shuffled()" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink dark:hover:text-brand-pink transition-colors cursor-pointer aria-pressed:text-brand-pink aria-pressed:border-brand-pink/40 aria-pressed:bg-brand-pink/10" title="Xáo trộn thẻ" aria-label="Xáo trộn thẻ">
+            <app-icon name="arrow-path" size="xs" />
+            <span class="hidden sm:inline">Xáo trộn</span>
+          </button>
 
-            <!-- TRẮC NGHIỆM -->
-            <a [routerLink]="routes().quiz" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink transition-colors" title="Luyện tập trắc nghiệm">
-              <app-icon name="question-mark" size="xs" />
-              <span class="hidden sm:inline">Trắc nghiệm</span>
-            </a>
+          <a [routerLink]="routes().quiz" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink dark:hover:text-brand-pink transition-colors cursor-pointer" title="Luyện tập trắc nghiệm" aria-label="Luyện tập trắc nghiệm">
+            <app-icon name="question-mark" size="xs" />
+            <span class="hidden sm:inline">Trắc nghiệm</span>
+          </a>
 
-            <!-- SWITCH TO LIST VIEW -->
-            <a [routerLink]="routes().list" [queryParams]="routes().listQuery" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink transition-colors" title="Xem danh sách">
-              <app-icon name="document-text" size="xs" />
-              <span class="hidden sm:inline">Danh sách</span>
-            </a>
-          </div>
+          <a [routerLink]="routes().list" [queryParams]="routes().listQuery" class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border border-brand-navy/10 dark:border-white/15 bg-white/90 dark:bg-white/5 text-brand-navy/70 dark:text-brand-text-dark/80 hover:text-brand-pink dark:hover:text-brand-pink transition-colors cursor-pointer" title="Xem danh sách" aria-label="Xem danh sách">
+            <app-icon name="document-text" size="xs" />
+            <span class="hidden sm:inline">Danh sách</span>
+          </a>
         </div>
 
         <!-- Progress bar -->
-        <div class="w-full bg-brand-navy/10 dark:bg-white/10 rounded-full h-1.5 mb-8 overflow-hidden">
+        <div class="w-full bg-brand-navy/10 dark:bg-white/10 rounded-full h-1.5 mt-4 mb-5 sm:mb-6 overflow-hidden">
           <div class="bg-brand-pink h-1.5 rounded-full transition-all duration-300 shadow-sm" [style.width]="((currentIndex() + 1) / filteredCards().length * 100) + '%'"></div>
         </div>
 
-        <!-- Card Area with Nav Arrows -->
-        <div class="flex items-center justify-center gap-3 sm:gap-6">
-          <!-- Prev Button -->
-          <button (click)="prevCard()" [disabled]="currentIndex() === 0" class="p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ trước">
+        <!-- Thẻ: mũi tên hai bên trên máy tính; điện thoại dùng hàng nút dưới thẻ hoặc vuốt ngang -->
+        <div class="flex items-center justify-center gap-6">
+          <button (click)="prevCard()" [disabled]="currentIndex() === 0" class="hidden sm:block p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ trước">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
 
-          <!-- Vocab Card -->
-          <div class="flex-1 max-w-[480px]">
+          <div class="flex-1 min-w-0 max-w-[480px]" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
             @if (currentCard(); as card) {
-              <app-vocab-card 
-                [card]="card" 
+              <app-vocab-card
+                [card]="card"
                 [progress]="progressMap().get(progressKey(card)) || null"
                 [flipped]="flipped()"
                 (flipChange)="flipCard()"
@@ -91,16 +88,15 @@
             }
           </div>
 
-          <!-- Next Button -->
-          <button (click)="nextCard()" [disabled]="currentIndex() === filteredCards().length - 1" class="p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
+          <button (click)="nextCard()" [disabled]="currentIndex() === filteredCards().length - 1" class="hidden sm:block p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </button>
         </div>
-        
+
         <!-- Instructions Hint -->
-        <div class="mt-6 text-center">
+        <div class="hidden sm:block mt-5 text-center">
           <p class="text-xs text-brand-navy/40 dark:text-brand-text-dark/50 inline-flex items-center justify-center gap-2 flex-wrap bg-brand-navy/5 dark:bg-white/5 px-4 py-1.5 rounded-full">
             <span><kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-brand-dark text-brand-navy dark:text-white font-mono text-[10px] shadow-sm">Space</kbd> Lật thẻ</span>
             <span>•</span>
@@ -112,30 +108,44 @@
           </p>
         </div>
 
-        <!-- Assessment buttons -->
-        <div class="mt-8 flex justify-center gap-3 sm:gap-4 transition-all duration-300" [class.opacity-0]="!flipped()" [class.pointer-events-none]="!flipped()">
-          <!-- Hard Button -->
-          <button (click)="rateCard(1)" class="rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-150 border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 shadow-sm cursor-pointer flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-amber-600 dark:text-amber-400">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        <!-- Mũi tên (chỉ điện thoại) + nút đánh giá -->
+        <div class="mt-4 sm:mt-6 flex items-center justify-between sm:justify-center gap-1">
+          <button (click)="prevCard()" [disabled]="currentIndex() === 0" class="sm:hidden -ml-2 p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ trước">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            Khó
           </button>
 
-          <!-- Know / Review Button -->
-          <button (click)="rateCard(2)" class="rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-150 border border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:bg-sky-500/20 shadow-sm cursor-pointer flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-sky-600 dark:text-sky-400">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-            </svg>
-            Biết
-          </button>
+          <div class="flex justify-center gap-2 sm:gap-4 transition-all duration-300" [class.opacity-0]="!flipped()" [class.pointer-events-none]="!flipped()">
+            <!-- Hard Button -->
+            <button (click)="rateCard(1)" class="rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5 text-sm font-bold transition-all duration-150 border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 shadow-sm cursor-pointer flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-amber-600 dark:text-amber-400">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              Khó
+            </button>
 
-          <!-- Mastered Button -->
-          <button (click)="rateCard(3)" class="rounded-full px-6 py-2.5 text-sm font-bold transition-all duration-150 bg-brand-pink text-white hover:bg-brand-pink/90 shadow-md shadow-brand-pink/25 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            <!-- Know / Review Button -->
+            <button (click)="rateCard(2)" class="rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5 text-sm font-bold transition-all duration-150 border border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:bg-sky-500/20 shadow-sm cursor-pointer flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-sky-600 dark:text-sky-400">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+              </svg>
+              Biết
+            </button>
+
+            <!-- Mastered Button -->
+            <button (click)="rateCard(3)" class="rounded-full px-4 sm:px-6 py-2 sm:py-2.5 text-sm font-bold transition-all duration-150 bg-brand-pink text-white hover:bg-brand-pink/90 shadow-md shadow-brand-pink/25 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Thuộc
+            </button>
+          </div>
+
+          <button (click)="nextCard()" [disabled]="currentIndex() === filteredCards().length - 1" class="sm:hidden -mr-2 p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
-            Thuộc
           </button>
         </div>
       </div>

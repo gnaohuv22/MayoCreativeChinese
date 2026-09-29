@@ -69,11 +69,13 @@ export const routes: Routes = [
   },
   {
     path: 'flashcards',
+    title: 'Flashcard',
     loadChildren: () =>
       import('./features/flashcards/flashcard.routes').then(m => m.flashcardRoutes),
   },
   {
     path: 'exams',
+    title: 'Đề thi HSK',
     loadChildren: () =>
       import('./features/exams/exam.routes').then(m => m.examRoutes),
   },

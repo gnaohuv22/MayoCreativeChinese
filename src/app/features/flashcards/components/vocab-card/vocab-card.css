@@ -8,15 +8,15 @@
   cursor: pointer;
   width: 100%;
   max-width: 480px;
-  min-height: 360px;
-  height: 380px;
+  /* Thẻ cao theo màn hình, trừ phần thanh công cụ và nút bên dưới để trang vừa khít */
+  height: clamp(340px, calc(100dvh - 17.5rem), 520px);
   margin: 0 auto;
   position: relative;
 }
 
 @media (min-width: 640px) {
   .card-container {
-    height: 400px;
+    height: clamp(360px, calc(100dvh - 22rem), 480px);
   }
 }
 

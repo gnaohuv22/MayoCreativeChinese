@@ -234,6 +234,25 @@ export class FlashcardStudyComponent implements OnInit {
     this.flipped.set(false);
   }
 
+  // Vuốt ngang trên thẻ để chuyển thẻ (điện thoại)
+  private touchStart: { x: number; y: number } | null = null;
+
+  onTouchStart(event: TouchEvent) {
+    const t = event.touches[0];
+    this.touchStart = { x: t.clientX, y: t.clientY };
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (!this.touchStart) return;
+    const t = event.changedTouches[0];
+    const dx = t.clientX - this.touchStart.x;
+    const dy = t.clientY - this.touchStart.y;
+    this.touchStart = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) this.nextCard();
+    else this.prevCard();
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
     if (event.key === 'ArrowRight') {
