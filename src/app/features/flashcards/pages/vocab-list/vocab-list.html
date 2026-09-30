@@ -36,7 +36,7 @@
     <!-- HEADER TITLE & STATS -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs">
       <div class="space-y-1">
-        <div class="flex items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-2">
           <h1 class="font-display font-black text-2xl sm:text-3xl text-brand-navy dark:text-white">
             Danh sách từ vựng {{ levelLabel() }}
           </h1>
@@ -130,10 +130,10 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-brand-navy/10 dark:border-white/10 bg-brand-navy/5 dark:bg-white/5 text-[11px] font-bold text-brand-navy/70 dark:text-white/70 uppercase tracking-wider">
-                <th class="py-3 px-4 w-12 text-center">#</th>
-                <th class="py-3 px-4 min-w-[120px]">Chữ Hán</th>
-                <th class="py-3 px-4 min-w-[140px]">Phiên âm (Pinyin)</th>
-                <th class="py-3 px-4 min-w-[180px]">Nghĩa tiếng Việt</th>
+                <th class="py-3 px-2 sm:px-4 w-10 sm:w-12 text-center">#</th>
+                <th class="py-3 px-2 sm:px-4 sm:min-w-[120px]">Chữ Hán</th>
+                <th class="hidden sm:table-cell py-3 px-4 min-w-[140px]">Phiên âm (Pinyin)</th>
+                <th class="py-3 px-2 sm:px-4 min-w-[120px] sm:min-w-[180px]">Nghĩa tiếng Việt</th>
                 <th class="py-3 px-4 min-w-[260px]">Câu ví dụ minh họa</th>
                 @if (config().grouping) {
                   <th class="py-3 px-4 w-32 text-center">{{ config().grouping === 'topic' ? 'Chủ đề' : 'Bài học' }}</th>
@@ -144,29 +144,30 @@
               @for (word of words(); track word.id ?? word.hanzi; let idx = $index) {
                 <tr class="hover:bg-brand-pink/5 dark:hover:bg-white/5 transition-colors">
                   <!-- STT -->
-                  <td class="py-3.5 px-4 text-center text-xs font-semibold text-zinc-400">
+                  <td class="py-3.5 px-2 sm:px-4 text-center text-xs font-semibold text-zinc-400">
                     {{ rangeStart() + idx }}
                   </td>
 
                   <!-- HANZI -->
-                  <td class="py-3.5 px-4">
+                  <td class="py-3.5 px-2 sm:px-4">
                     <div class="flex items-center gap-2">
-                      <span class="font-sans font-bold text-xl text-brand-navy dark:text-white tracking-wide">
+                      <span class="font-sans font-bold text-xl text-brand-navy dark:text-white tracking-wide whitespace-nowrap">
                         {{ word.hanzi }}
                       </span>
                       <app-speak-button [text]="word.hanzi" size="xs" />
                     </div>
+                    <span class="sm:hidden block mt-0.5 text-xs font-semibold text-brand-pink">{{ word.pinyin }}</span>
                   </td>
 
                   <!-- PINYIN -->
-                  <td class="py-3.5 px-4">
+                  <td class="hidden sm:table-cell py-3.5 px-4">
                     <span class="font-semibold text-brand-pink">
                       {{ word.pinyin }}
                     </span>
                   </td>
 
                   <!-- MEANING -->
-                  <td class="py-3.5 px-4 font-medium text-brand-navy/90 dark:text-zinc-200">
+                  <td class="py-3.5 px-2 sm:px-4 font-medium text-brand-navy/90 dark:text-zinc-200">
                     {{ word.meaning }}
                   </td>
 
@@ -179,8 +180,8 @@
                   @if (config().grouping === 'topic') {
                     <td class="py-3.5 px-4 text-center">
                       @if (word.topic) {
-                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                          {{ word.topic }}
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400" [title]="word.topic">
+                          {{ topicLabel(word.topic) }}
                         </span>
                       } @else {
                         <span class="text-zinc-400 text-xs">—</span>
@@ -218,28 +219,30 @@
             (click)="goToPage(1)"
             [disabled]="currentPage() === 1"
             class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all"
-            title="Trang đầu">
+            title="Trang đầu" aria-label="Trang đầu">
             «
           </button>
 
           <button
             type="button"
             (click)="goToPage(currentPage() - 1)"
+            aria-label="Trang trước"
             [disabled]="currentPage() === 1"
             class="px-3 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all">
-            ‹ Trước
+            ‹<span class="hidden sm:inline"> Trước</span>
           </button>
 
-          <span class="px-3 py-1.5 text-xs font-bold text-brand-navy dark:text-white">
-            Trang {{ currentPage() }} / {{ totalPages() }}
+          <span class="px-2 sm:px-3 py-1.5 text-xs font-bold text-brand-navy dark:text-white whitespace-nowrap">
+            <span class="hidden sm:inline">Trang </span>{{ currentPage() }} / {{ totalPages() }}
           </span>
 
           <button
             type="button"
             (click)="goToPage(currentPage() + 1)"
+            aria-label="Trang sau"
             [disabled]="currentPage() === totalPages() || totalPages() === 0"
             class="px-3 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all">
-            Sau ›
+            <span class="hidden sm:inline">Sau </span>›
           </button>
 
           <button
@@ -247,7 +250,7 @@
             (click)="goToPage(totalPages())"
             [disabled]="currentPage() === totalPages() || totalPages() === 0"
             class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-brand-navy/10 dark:border-white/10 bg-white dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-navy/5 transition-all"
-            title="Trang cuối">
+            title="Trang cuối" aria-label="Trang cuối">
             »
           </button>
         </div>

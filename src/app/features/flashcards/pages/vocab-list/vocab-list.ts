@@ -141,6 +141,13 @@ export class VocabListComponent implements OnInit {
     this.loadData();
   }
 
+  /** Nhãn ngắn cho cột chủ đề: "Chủ đề 1: 学校… / Trường học…" → "Chủ đề 1" */
+  topicLabel(topic: string): string {
+    const firstLine = topic.split('\n')[0].trim();
+    const head = firstLine.split(':')[0].trim();
+    return head || firstLine;
+  }
+
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
