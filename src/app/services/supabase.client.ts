@@ -1,12 +1,14 @@
-import { isDevMode } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://animyjihwiyqsxvikxxg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ipJ6WbMASU_-LFDIWNyMkg_1404EDZJ';
 
-/** Dữ liệu (REST) đi qua proxy có giới hạn tần suất (api/rest.ts); auth và storage vẫn gọi thẳng */
+/**
+ * Dữ liệu (REST) đi qua proxy có giới hạn tần suất (api/rest.ts; local: proxy.conf.mjs);
+ * auth và storage vẫn gọi thẳng
+ */
 const REST_PREFIX = `${SUPABASE_URL}/rest/v1/`;
-const REST_PROXY = isDevMode() ? 'https://mayo-creative-chinese.vercel.app/api/rest' : '/api/rest';
+const REST_PROXY = '/api/rest';
 
 function proxiedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;

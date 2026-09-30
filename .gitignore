@@ -49,3 +49,6 @@ DESIGN.md
 PRODUCT.md
 .impeccable
 cloudflared.exe
+
+# Local secrets (vercel env pull)
+.env*.local
