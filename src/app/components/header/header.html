@@ -14,14 +14,14 @@
         [class.bg-transparent]="!isSolid()"
         [class.py-5]="!isScrolled()">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" [class.dark]="onDarkHero()">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-2">
       <!-- Logo -->
-      <a href="/#home" class="flex items-center space-x-3 group">
-        <div class="relative w-10 h-10 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+      <a href="/#home" class="flex items-center gap-3 min-w-0 group">
+        <div class="relative shrink-0 w-10 h-10 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
           <img ngSrc="android-chrome-192x192.png" width="36" height="36" alt="MCC Logo" class="object-contain" priority />
         </div>
-        <div class="flex flex-col">
-          <span class="text-lg font-bold font-display tracking-tight text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300">
+        <div class="flex flex-col whitespace-nowrap max-[374px]:hidden">
+          <span class="text-base min-[400px]:text-lg font-bold font-display tracking-tight text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300">
             Mayo Creative
           </span>
           <span class="text-xs font-semibold uppercase tracking-widest text-brand-pink -mt-1">
@@ -104,10 +104,10 @@
       </div>
 
       <!-- Mobile Controls -->
-      <div class="lg:hidden flex items-center space-x-3">
+      <div class="lg:hidden flex shrink-0 items-center gap-1.5 min-[360px]:gap-3">
         <!-- Register Trial CTA for Mobile/Tablet (Visible out of Drawer) -->
         <button (click)="openRegisterModal()"
-                class="px-3.5 py-1.5 bg-brand-pink text-white rounded-full text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer animate-subtle-glow">
+                class="px-3.5 py-1.5 whitespace-nowrap bg-brand-pink text-white rounded-full text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer animate-subtle-glow">
           {{ i18n.translate()('nav.register_trial') }}
         </button>
 

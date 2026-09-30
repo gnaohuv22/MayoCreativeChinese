@@ -4,13 +4,13 @@
   <div class="px-4 sm:px-6 max-w-6xl mx-auto space-y-6">
 
     <!-- BREADCRUMB & BACK -->
-    <div class="flex items-center justify-between">
-      <a [routerLink]="['/flashcards', scope().collection]" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors">
+    <div class="flex items-center justify-between gap-3">
+      <a [routerLink]="['/flashcards', scope().collection]" class="inline-flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-white/70 hover:text-brand-pink transition-colors">
         <app-icon name="arrow-left" size="xs" />
         <span>Quay lại {{ config().shortLabel }}</span>
       </a>
 
-      <div class="flex items-center gap-2">
+      <div class="hidden sm:flex items-center gap-2">
         <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-pink text-white shadow-sm whitespace-nowrap">{{ config().shortLabel }}</span>
       </div>
     </div>
@@ -64,12 +64,12 @@
 
     <!-- LESSONS LIST -->
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <h2 class="font-display font-bold text-lg text-brand-navy dark:text-white flex items-center gap-2">
           <app-icon name="book-open" size="sm" customClass="text-brand-pink" />
           <span>Danh sách {{ groupNoun() }} ({{ groups().length }})</span>
         </h2>
-        <span class="text-xs text-brand-navy/60 dark:text-white/60 font-medium">
+        <span class="text-xs text-brand-navy/60 dark:text-white/60 font-medium whitespace-nowrap">
           Tổng cộng: <strong class="text-brand-pink">{{ totalWords() }}</strong> từ
         </span>
       </div>
@@ -95,11 +95,11 @@
             <div class="group bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-2xl p-5 shadow-xs hover:border-brand-pink/50 hover:shadow-md transition-all flex flex-col justify-between">
               <div>
                 <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-xl bg-brand-pink/10 text-brand-pink font-bold flex items-center justify-center text-xs">
+                  <div class="flex items-start gap-3 min-w-0">
+                    <span class="shrink-0 w-8 h-8 rounded-xl bg-brand-pink/10 text-brand-pink font-bold flex items-center justify-center text-xs">
                       {{ badge(lesson, i) }}
                     </span>
-                    <div>
+                    <div class="min-w-0">
                       <h3 class="font-bold text-sm text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
                         {{ lesson.title }}
                       </h3>

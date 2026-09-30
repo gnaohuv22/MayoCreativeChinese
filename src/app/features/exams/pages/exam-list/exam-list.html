@@ -4,9 +4,9 @@
   <div class="max-w-6xl mx-auto space-y-8">
 
     <!-- HERO BANNER -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-navy via-brand-navy to-brand-pink/80 text-white p-8 sm:p-12 shadow-xl">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-navy via-brand-navy to-brand-pink/80 text-white p-6 sm:p-12 shadow-xl">
       <div class="relative z-10 max-w-2xl space-y-4">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-white/20 backdrop-blur-md border border-white/20">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black whitespace-nowrap bg-white/20 backdrop-blur-md border border-white/20">
           <app-icon name="academic" size="xs" />
           <span>Đề thi thử HSK</span>
           <span class="w-1.5 h-1.5 rounded-full bg-brand-pink"></span>
@@ -54,14 +54,14 @@
           [class.dark:border-white/10]="selectedVersion() !== '2.0'"
           [class.bg-white/60]="selectedVersion() !== '2.0'"
           [class.dark:bg-white/5]="selectedVersion() !== '2.0'"
-          class="p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between"
+          class="p-4 sm:p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between gap-3"
         >
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase">
                 Tiêu chuẩn
               </span>
-              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
+              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white whitespace-nowrap">
                 Thi Thử HSK 2.0
               </h3>
               @if (!isLoading() && versionCount()['2.0'] === 0) {
@@ -72,7 +72,7 @@
               Hệ thống 6 cấp độ truyền thống: HSK 1 → HSK 6
             </p>
           </div>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+          <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                [class.bg-brand-pink]="selectedVersion() === '2.0'"
                [class.text-white]="selectedVersion() === '2.0'"
                [class.bg-brand-navy/5]="selectedVersion() !== '2.0'"
@@ -93,14 +93,14 @@
           [class.dark:border-white/10]="selectedVersion() !== '3.0'"
           [class.bg-white/60]="selectedVersion() !== '3.0'"
           [class.dark:bg-white/5]="selectedVersion() !== '3.0'"
-          class="p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between"
+          class="p-4 sm:p-5 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between gap-3"
         >
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 uppercase">
                 Mới nhất
               </span>
-              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white">
+              <h3 class="font-display font-black text-lg text-brand-navy dark:text-white whitespace-nowrap">
                 Thi Thử HSK 3.0
               </h3>
               @if (!isLoading() && versionCount()['3.0'] === 0) {
@@ -111,7 +111,7 @@
               Chuẩn 9 cấp độ mới: NEW HSK 1 → NEW HSK 9
             </p>
           </div>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+          <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                [class.bg-brand-pink]="selectedVersion() === '3.0'"
                [class.text-white]="selectedVersion() === '3.0'"
                [class.bg-brand-navy/5]="selectedVersion() !== '3.0'"

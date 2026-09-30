@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { permissionGuard, staffGuard } from './services/admin.guard';
 
 export const routes: Routes = [
+  // Trang chủ do app.html tự dựng (không qua router-outlet); khai báo để không rơi vào route 404
+  { path: '', pathMatch: 'full', children: [] },
   {
     // Trang chi tiết khóa học (nội dung từ brief — scripts/course-brief-to-ts.py)
     path: 'khoa-hoc/:slug',
@@ -78,5 +80,11 @@ export const routes: Routes = [
     title: 'Đề thi HSK',
     loadChildren: () =>
       import('./features/exams/exam.routes').then(m => m.examRoutes),
+  },
+  {
+    path: '**',
+    title: 'Không tìm thấy trang',
+    loadComponent: () =>
+      import('./features/not-found/not-found').then(m => m.NotFoundComponent),
   },
 ];
