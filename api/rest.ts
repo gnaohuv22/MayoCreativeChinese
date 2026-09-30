@@ -7,6 +7,7 @@
 const SUPABASE_URL = 'https://animyjihwiyqsxvikxxg.supabase.co';
 
 const ALLOWED_ORIGINS = new Set([
+  'https://mayo-creative-chinese.vercel.app',
   'https://mayocreativechinese.edu.vn',
   'https://www.mayocreativechinese.edu.vn',
   'http://localhost:4200',

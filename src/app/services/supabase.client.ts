@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_ipJ6WbMASU_-LFDIWNyMkg_1404EDZJ';
 
 /** Dữ liệu (REST) đi qua proxy có giới hạn tần suất (api/rest.ts); auth và storage vẫn gọi thẳng */
 const REST_PREFIX = `${SUPABASE_URL}/rest/v1/`;
-const REST_PROXY = isDevMode() ? 'https://mayocreativechinese.edu.vn/api/rest' : '/api/rest';
+const REST_PROXY = isDevMode() ? 'https://mayo-creative-chinese.vercel.app/api/rest' : '/api/rest';
 
 function proxiedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
