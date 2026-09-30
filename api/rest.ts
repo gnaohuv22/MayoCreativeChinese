@@ -12,8 +12,8 @@ const ALLOWED_ORIGINS = new Set([
   'https://www.mayocreativechinese.edu.vn',
 ]);
 
-/** Header không chuyển tiếp (hop-by-hop / do fetch tự đặt lại) */
-const SKIP_REQUEST_HEADERS = new Set(['host', 'connection', 'content-length', 'x-rest-path', 'x-mcc-proxy', 'origin', 'referer', 'cookie']);
+/** Chỉ chuyển tiếp header PostgREST cần (header hệ thống của Vercel làm fetch báo lỗi) */
+const FORWARD_REQUEST_HEADERS = ['apikey', 'authorization', 'accept', 'accept-profile', 'content-profile', 'content-type', 'prefer', 'range', 'x-client-info'];
 const SKIP_RESPONSE_HEADERS = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'set-cookie']);
 
 function corsHeaders(request: Request): Headers {
@@ -43,18 +43,25 @@ async function handler(request: Request): Promise<Response> {
   }
 
   const headers = new Headers();
-  request.headers.forEach((value, key) => {
-    if (!SKIP_REQUEST_HEADERS.has(key.toLowerCase())) headers.set(key, value);
-  });
+  for (const key of FORWARD_REQUEST_HEADERS) {
+    const value = request.headers.get(key);
+    if (value !== null) headers.set(key, value);
+  }
   const secret = process.env['SUPABASE_PROXY_SECRET'];
   if (secret) headers.set('x-mcc-proxy', secret);
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  const upstream = await fetch(SUPABASE_URL + path, {
-    method: request.method,
-    headers,
-    body: hasBody ? await request.arrayBuffer() : undefined,
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(SUPABASE_URL + path, {
+      method: request.method,
+      headers,
+      body: hasBody ? await request.arrayBuffer() : undefined,
+    });
+  } catch (err) {
+    console.error('REST proxy fetch failed:', err);
+    return Response.json({ message: `Proxy error: ${(err as Error).message}` }, { status: 502, headers: cors });
+  }
 
   const responseHeaders = new Headers(cors);
   upstream.headers.forEach((value, key) => {
