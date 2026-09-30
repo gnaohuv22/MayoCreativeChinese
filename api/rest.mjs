@@ -16,7 +16,7 @@ const ALLOWED_ORIGINS = new Set([
 const FORWARD_REQUEST_HEADERS = ['apikey', 'authorization', 'accept', 'accept-profile', 'content-profile', 'content-type', 'prefer', 'range', 'x-client-info'];
 const SKIP_RESPONSE_HEADERS = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'set-cookie']);
 
-function corsHeaders(request: Request): Headers {
+function corsHeaders(request) {
   const headers = new Headers();
   const origin = request.headers.get('origin');
   if (origin && ALLOWED_ORIGINS.has(origin)) {
@@ -30,7 +30,7 @@ function corsHeaders(request: Request): Headers {
   return headers;
 }
 
-async function handler(request: Request): Promise<Response> {
+async function handler(request) {
   const cors = corsHeaders(request);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
@@ -51,7 +51,7 @@ async function handler(request: Request): Promise<Response> {
   if (secret) headers.set('x-mcc-proxy', secret);
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  let upstream: Response;
+  let upstream;
   try {
     upstream = await fetch(SUPABASE_URL + path, {
       method: request.method,
@@ -60,7 +60,7 @@ async function handler(request: Request): Promise<Response> {
     });
   } catch (err) {
     console.error('REST proxy fetch failed:', err);
-    return Response.json({ message: `Proxy error: ${(err as Error).message}` }, { status: 502, headers: cors });
+    return Response.json({ message: `Proxy error: ${err.message}` }, { status: 502, headers: cors });
   }
 
   const responseHeaders = new Headers(cors);

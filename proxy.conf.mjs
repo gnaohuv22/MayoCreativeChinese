@@ -1,4 +1,4 @@
-// Proxy cho `ng serve`: thay cho api/rest.ts khi chạy local — chuyển /api/rest thẳng tới
+// Proxy cho `ng serve`: thay cho api/rest.mjs khi chạy local — chuyển /api/rest thẳng tới
 // Supabase kèm header bí mật (migration 015), không đi qua Vercel.
 // Bí mật lấy từ biến môi trường SUPABASE_PROXY_SECRET hoặc file .env.local
 // (tạo bằng `vercel env pull .env.local`, hoặc tự ghi SUPABASE_PROXY_SECRET=...).

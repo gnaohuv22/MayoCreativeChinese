@@ -4,7 +4,7 @@ const SUPABASE_URL = 'https://animyjihwiyqsxvikxxg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ipJ6WbMASU_-LFDIWNyMkg_1404EDZJ';
 
 /**
- * Dữ liệu (REST) đi qua proxy có giới hạn tần suất (api/rest.ts; local: proxy.conf.mjs);
+ * Dữ liệu (REST) đi qua proxy có giới hạn tần suất (api/rest.mjs; local: proxy.conf.mjs);
  * auth và storage vẫn gọi thẳng
  */
 const REST_PREFIX = `${SUPABASE_URL}/rest/v1/`;

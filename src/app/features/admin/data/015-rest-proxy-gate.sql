@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 015 — CHỈ CHO PHÉP ANON GỌI REST QUA PROXY (api/rest.ts)
+-- 015 — CHỈ CHO PHÉP ANON GỌI REST QUA PROXY (api/rest.mjs)
 -- ==============================================================================
 -- Proxy trên Vercel gắn header x-mcc-proxy = bí mật; Vercel Firewall giới hạn tần suất
 -- trước proxy. Request anon gọi thẳng supabase.co không có header này sẽ bị từ chối.
