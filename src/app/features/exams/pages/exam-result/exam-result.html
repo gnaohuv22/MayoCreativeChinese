@@ -281,14 +281,14 @@
               <!-- Question Specific Audio (if any) -->
               @if (q.audioUrl) {
                 <div class="p-2 rounded-2xl bg-zinc-50 dark:bg-white/5">
-                  <audio controls [src]="q.audioUrl" class="w-full h-8"></audio>
+                  <audio controls preload="metadata" [src]="q.audioUrl" class="w-full h-8"></audio>
                 </div>
               }
 
               <!-- Question Image (if any) -->
               @if (q.imageUrl) {
                 <div class="rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 max-w-md">
-                  <img [src]="q.imageUrl" alt="Hình ảnh câu hỏi" class="w-full object-contain max-h-72" />
+                  <img [src]="q.imageUrl" loading="lazy" decoding="async" alt="Hình ảnh câu hỏi" class="w-full object-contain max-h-72" />
                 </div>
               }
 
@@ -311,7 +311,7 @@
                       class="relative p-1.5 rounded-2xl border-2 bg-white"
                     >
                       @if (opt.image_url) {
-                        <img [src]="opt.image_url" alt="Phương án {{ opt.label }}" class="w-full h-24 object-contain" />
+                        <img [src]="opt.image_url" loading="lazy" decoding="async" alt="Phương án {{ opt.label }}" class="w-full h-24 object-contain" />
                       }
                       <figcaption class="absolute top-1 left-1 w-6 h-6 rounded-lg bg-brand-navy text-white text-xs font-bold flex items-center justify-center">
                         {{ opt.label }}
