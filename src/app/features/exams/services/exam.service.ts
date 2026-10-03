@@ -16,6 +16,7 @@ import type {
 import { renumberQuestions } from '../models/exam.model';
 import { orderingAnswerMatches, parseOrderingTokens } from '../models/exam-ordering';
 import { compressImage } from '../utils/image-compress.util';
+import { RequestCache } from '../../../services/request-cache';
 
 const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, is_published, created_at, updated_at';
 const SECTION_COLUMNS = 'id, exam_id, section_type, title, sort_order, max_score, instructions, audio_url';
@@ -25,6 +26,9 @@ const QUESTION_PUBLIC_COLUMNS = 'id, part_id, question_num, content, audio_url, 
 const QUESTION_COLUMNS = `${QUESTION_PUBLIC_COLUMNS}, correct_answer, explanation`;
 const OPTION_COLUMNS = 'id, question_id, label, content, image_url, sort_order';
 
+/** Cache phía học viên (đề đã xuất bản, không kèm đáp án); ghi bất kỳ → xoá cache */
+const CACHE_TTL_MS = 10 * 60 * 1000;
+
 /** RLS chặn ghi thì Supabase không báo lỗi mà chỉ trả về 0 dòng */
 const NO_ROW_ERROR = 'Không tìm thấy đề thi hoặc bạn không có quyền thực hiện thao tác này';
 
@@ -32,9 +36,17 @@ const NO_ROW_ERROR = 'Không tìm thấy đề thi hoặc bạn không có quy�
 export class ExamService {
   private readonly supabase = getSupabase();
   private readonly BUCKET_NAME = 'exam-assets';
+  private readonly cache = new RequestCache(CACHE_TTL_MS);
 
   /** Lấy danh sách đề thi kèm bộ lọc (HSK level, version, published status) */
   async getExams(filter?: ExamFilter): Promise<Exam[]> {
+    // Chỉ cache danh sách học viên xem; trang quản trị luôn lấy mới
+    if (filter?.is_published !== true) return this.loadExams(filter);
+    const list = await this.cache.get(`list:${JSON.stringify(filter)}`, () => this.loadExams(filter), l => l.length > 0);
+    return structuredClone(list);
+  }
+
+  private async loadExams(filter?: ExamFilter): Promise<Exam[]> {
     let query = this.supabase
       .from('exams')
       .select(`${EXAM_COLUMNS}, sections:exam_sections(section_type, sort_order, parts:exam_parts(questions:exam_questions(id)))`)
@@ -83,7 +95,14 @@ export class ExamService {
    * withAnswers chỉ dùng cho admin (anon không có quyền đọc cột đáp án).
    */
   async getExamWithDetails(examId: string, options: { withAnswers?: boolean } = {}): Promise<Exam | null> {
-    const questionColumns = options.withAnswers ? QUESTION_COLUMNS : QUESTION_PUBLIC_COLUMNS;
+    if (options.withAnswers) return this.loadExamWithDetails(examId, true);
+    // Bản sao: attachAnswers ghi đáp án thẳng vào object, không để lọt vào cache
+    const exam = await this.cache.get(`exam:${examId}`, () => this.loadExamWithDetails(examId, false), e => e !== null);
+    return exam && structuredClone(exam);
+  }
+
+  private async loadExamWithDetails(examId: string, withAnswers: boolean): Promise<Exam | null> {
+    const questionColumns = withAnswers ? QUESTION_COLUMNS : QUESTION_PUBLIC_COLUMNS;
     const { data, error } = await this.supabase
       .from('exams')
       .select(`
@@ -154,6 +173,7 @@ export class ExamService {
 
   /** Cập nhật thông tin chung của đề thi */
   async updateExam(id: string, changes: Partial<Exam>): Promise<{ error?: string }> {
+    this.cache.clear();
     const { data, error } = await this.supabase
       .from('exams')
       .update(changes)
@@ -170,6 +190,7 @@ export class ExamService {
 
   /** Xoá một đề thi (sẽ tự động cascade xoá toàn bộ sections, parts, questions, options) */
   async deleteExam(id: string): Promise<{ error?: string }> {
+    this.cache.clear();
     const { data, error } = await this.supabase
       .from('exams')
       .delete()
@@ -194,6 +215,7 @@ export class ExamService {
    * qua RPC save_full_exam — một transaction, lỗi ở bất kỳ cấp nào sẽ rollback toàn bộ.
    */
   async saveFullExam(exam: Exam): Promise<{ id?: string; error?: string }> {
+    this.cache.clear();
     renumberQuestions(exam);
     const { data, error } = await this.supabase.rpc('save_full_exam', { p_exam: exam });
     if (error) {

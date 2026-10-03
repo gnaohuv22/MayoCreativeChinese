@@ -4,6 +4,7 @@ import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } fro
 import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
 import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
+import { RequestCache } from '../../../services/request-cache';
 
 /** Supabase trả tối đa 1000 dòng / request */
 const PAGE = 1000;
@@ -13,11 +14,22 @@ const VOCAB_COLUMNS = 'id, collection, hanzi, pinyin, meaning, hsk_level, hsk_ve
 /** RLS chặn ghi thì Supabase không báo lỗi mà chỉ trả về 0 dòng */
 const NO_ROW_ERROR = 'Không tìm thấy từ hoặc bạn không có quyền thực hiện thao tác này';
 
+/** Từ vựng hiếm khi đổi; trang quản lý xoá cache sau mỗi lần ghi */
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
+/** Khoá cache theo phạm vi — null/undefined = không lọc, khác với 0 / '' (chưa phân bài / chủ đề) */
+function scopeKey(scope: VocabScope): string {
+  const lesson = scope.lesson == null ? '*' : scope.lesson;
+  const topic = scope.topic == null ? '*' : `t:${scope.topic}`;
+  return `${scope.collection}|${scope.levelParam}|${lesson}|${topic}`;
+}
+
 export type NewVocabCard = Omit<VocabCard, 'id' | 'created_at' | 'updated_at'> & { collection: VocabCollection };
 
 @Injectable({ providedIn: 'root' })
 export class VocabService {
   private readonly supabase = getSupabase();
+  private readonly cache = new RequestCache(CACHE_TTL_MS);
 
   /** Query có sẵn bộ lọc theo phạm vi (bộ + cấp + bài / chủ đề) */
   private scopedQuery(scope: VocabScope, columns = VOCAB_COLUMNS, options?: { count: 'exact' }) {
@@ -40,22 +52,33 @@ export class VocabService {
 
   /** Lấy toàn bộ dòng, tự chia trang 1000 dòng */
   private async fetchAll<T>(build: () => any): Promise<T[]> {
-    const all: T[] = [];
+    return (await this.fetchAllChecked<T>(build)).rows;
+  }
+
+  /** Như fetchAll, kèm cờ ok = false khi có trang lỗi (kết quả thiếu, không nên cache) */
+  private async fetchAllChecked<T>(build: () => any): Promise<{ rows: T[]; ok: boolean }> {
+    const rows: T[] = [];
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await build().range(from, from + PAGE - 1);
       if (error) {
         console.error('Vocab query failed:', error);
-        break;
+        return { rows, ok: false };
       }
-      all.push(...(data ?? []));
+      rows.push(...(data ?? []));
       if (!data || data.length < PAGE) break;
     }
-    return all;
+    return { rows, ok: true };
+  }
+
+  /** fetchAllChecked có cache; trả bản sao mảng để trang gọi tự do sắp xếp */
+  private async cachedRows<T>(key: string, build: () => any): Promise<T[]> {
+    const { rows } = await this.cache.get(key, () => this.fetchAllChecked<T>(build), r => r.ok);
+    return [...rows];
   }
 
   /** Toàn bộ từ trong 1 phạm vi, theo thứ tự cấp → bài → nhập */
   async getVocabForScope(scope: VocabScope): Promise<VocabCard[]> {
-    return this.fetchAll<VocabCard>(() =>
+    return this.cachedRows<VocabCard>(`cards:${scopeKey(scope)}`, () =>
       this.scopedQuery(scope)
         .order('hsk_level', { ascending: true })
         .order('lesson_number', { ascending: true, nullsFirst: false })
@@ -65,22 +88,25 @@ export class VocabService {
 
   /** Thông tin tối thiểu để tính tiến độ học (không tải cả ví dụ) */
   async getCardRefsForScope(scope: VocabScope): Promise<Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'>[]> {
-    return this.fetchAll(() => this.scopedQuery(scope, 'id, hanzi, hsk_level, collection').order('id'));
+    return this.cachedRows(`refs:${scopeKey(scope)}`, () => this.scopedQuery(scope, 'id, hanzi, hsk_level, collection').order('id'));
   }
 
   /** Số từ theo từng cấp của 1 bộ */
   async getLevelCounts(collection: VocabCollection): Promise<Map<number, number>> {
-    const levels = collectionLevels(collection);
-    const results = await Promise.all(levels.map(level =>
-      this.supabase
-        .from('vocab_cards')
-        .select('id', { count: 'exact', head: true })
-        .eq('collection', collection)
-        .eq('hsk_level', level)
-    ));
-    const counts = new Map<number, number>();
-    results.forEach((res, i) => counts.set(levels[i], res.error ? 0 : res.count ?? 0));
-    return counts;
+    const { counts } = await this.cache.get(`counts:${collection}`, async () => {
+      const levels = collectionLevels(collection);
+      const results = await Promise.all(levels.map(level =>
+        this.supabase
+          .from('vocab_cards')
+          .select('id', { count: 'exact', head: true })
+          .eq('collection', collection)
+          .eq('hsk_level', level)
+      ));
+      const counts = new Map<number, number>();
+      results.forEach((res, i) => counts.set(levels[i], res.error ? 0 : res.count ?? 0));
+      return { counts, ok: results.every(res => !res.error) };
+    }, r => r.ok);
+    return new Map(counts);
   }
 
   /**
@@ -92,7 +118,7 @@ export class VocabService {
     if (!grouping) return [];
     const base: VocabScope = { collection: scope.collection, levelParam: scope.levelParam };
 
-    const rows = await this.fetchAll<Pick<VocabCard, 'id' | 'lesson_number' | 'lesson_title' | 'topic'>>(() =>
+    const rows = await this.cachedRows<Pick<VocabCard, 'id' | 'lesson_number' | 'lesson_title' | 'topic'>>(`groups:${scopeKey(base)}`, () =>
       this.scopedQuery(base, 'id, lesson_number, lesson_title, topic').order('id')
     );
 
@@ -188,6 +214,7 @@ export class VocabService {
 
   /** Thêm 1 từ vựng (admin/ops) */
   async addCard(card: NewVocabCard): Promise<{ success: boolean; error?: string }> {
+    this.cache.clear();
     const { error } = await this.supabase
       .from('vocab_cards')
       .insert(this.withVersion(card));
@@ -203,6 +230,7 @@ export class VocabService {
 
   /** Thêm nhiều từ vựng (batch import). Trùng hoàn toàn → bỏ qua, không ghi đè */
   async addCards(cards: NewVocabCard[]): Promise<{ inserted: number; errors: string[] }> {
+    this.cache.clear();
     const errors: string[] = [];
     let inserted = 0;
 
@@ -230,6 +258,7 @@ export class VocabService {
 
   /** Cập nhật 1 từ vựng (admin/ops) */
   async updateCard(id: number, changes: Partial<VocabCard>): Promise<{ success: boolean; error?: string }> {
+    this.cache.clear();
     const payload = changes.collection ? this.withVersion(changes as NewVocabCard) : changes;
     const { data, error } = await this.supabase
       .from('vocab_cards')
@@ -249,6 +278,7 @@ export class VocabService {
 
   /** Xoá 1 từ vựng (admin/ops) */
   async deleteCard(id: number): Promise<{ success: boolean; error?: string }> {
+    this.cache.clear();
     const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
@@ -264,6 +294,7 @@ export class VocabService {
 
   /** Xoá nhiều từ vựng (admin/ops) */
   async deleteCards(ids: number[]): Promise<{ success: boolean; error?: string }> {
+    this.cache.clear();
     const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
