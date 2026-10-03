@@ -26,3 +26,19 @@ export function getSupabase(): SupabaseClient {
   }
   return supabaseInstance;
 }
+
+export const SESSION_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết. Vui lòng tải lại trang, đăng nhập lại rồi thử lại.';
+
+/**
+ * Kiểm tra phiên trước khi ghi (getSession tự gia hạn token nếu cần). Mất phiên thì
+ * supabase-js gửi request bằng khoá anon và DB chỉ báo lỗi RLS khó hiểu.
+ */
+export async function sessionError(): Promise<string | null> {
+  const { data } = await getSupabase().auth.getSession();
+  return data.session ? null : SESSION_EXPIRED_MESSAGE;
+}
+
+/** Lỗi ghi → câu dễ hiểu; RLS từ chối (42501) gần như luôn do request đã thành anon */
+export function writeErrorMessage(error: { code?: string; message: string }): string {
+  return error.code === '42501' || error.message.includes('row-level security') ? SESSION_EXPIRED_MESSAGE : error.message;
+}

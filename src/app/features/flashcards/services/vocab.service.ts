@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getSupabase } from '../../../services/supabase.client';
+import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
 import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
@@ -215,6 +215,8 @@ export class VocabService {
   /** Thêm 1 từ vựng (admin/ops) */
   async addCard(card: NewVocabCard): Promise<{ success: boolean; error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { success: false, error: expired };
     const { error } = await this.supabase
       .from('vocab_cards')
       .insert(this.withVersion(card));
@@ -223,7 +225,7 @@ export class VocabService {
       if (error.code === '23505') {
         return { success: false, error: `Từ "${card.hanzi}" (${card.pinyin} — ${card.meaning}) đã có trong ${VOCAB_COLLECTIONS[card.collection].shortLabel} cấp ${card.hsk_level}` };
       }
-      return { success: false, error: error.message };
+      return { success: false, error: writeErrorMessage(error) };
     }
     return { success: true };
   }
@@ -231,6 +233,8 @@ export class VocabService {
   /** Thêm nhiều từ vựng (batch import). Trùng hoàn toàn → bỏ qua, không ghi đè */
   async addCards(cards: NewVocabCard[]): Promise<{ inserted: number; errors: string[] }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { inserted: 0, errors: [expired] };
     const errors: string[] = [];
     let inserted = 0;
 
@@ -249,7 +253,7 @@ export class VocabService {
         .upsert(unique.slice(i, i + 500), { onConflict: 'collection,hsk_level,hanzi,pinyin,meaning', ignoreDuplicates: true })
         .select('id');
 
-      if (error) errors.push(error.message);
+      if (error) errors.push(writeErrorMessage(error));
       else inserted += data?.length ?? 0;
     }
 
@@ -259,6 +263,8 @@ export class VocabService {
   /** Cập nhật 1 từ vựng (admin/ops) */
   async updateCard(id: number, changes: Partial<VocabCard>): Promise<{ success: boolean; error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { success: false, error: expired };
     const payload = changes.collection ? this.withVersion(changes as NewVocabCard) : changes;
     const { data, error } = await this.supabase
       .from('vocab_cards')
@@ -270,7 +276,7 @@ export class VocabService {
       if (error.code === '23505') {
         return { success: false, error: 'Đã có từ giống hệt (Hán tự + pinyin + nghĩa) trong cùng bộ và cấp.' };
       }
-      return { success: false, error: error.message };
+      return { success: false, error: writeErrorMessage(error) };
     }
     if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };
@@ -279,6 +285,8 @@ export class VocabService {
   /** Xoá 1 từ vựng (admin/ops) */
   async deleteCard(id: number): Promise<{ success: boolean; error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { success: false, error: expired };
     const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
@@ -286,7 +294,7 @@ export class VocabService {
       .select('id');
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: writeErrorMessage(error) };
     }
     if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };
@@ -295,6 +303,8 @@ export class VocabService {
   /** Xoá nhiều từ vựng (admin/ops) */
   async deleteCards(ids: number[]): Promise<{ success: boolean; error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { success: false, error: expired };
     const { data, error } = await this.supabase
       .from('vocab_cards')
       .delete()
@@ -302,7 +312,7 @@ export class VocabService {
       .select('id');
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: writeErrorMessage(error) };
     }
     if (!data?.length) return { success: false, error: NO_ROW_ERROR };
     return { success: true };

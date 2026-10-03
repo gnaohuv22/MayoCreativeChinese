@@ -23,6 +23,9 @@ export class AdminLoginComponent {
   error = signal<string | null>(null);
 
   constructor() {
+    if (this.route.snapshot.queryParamMap.get('reason') === 'expired') {
+      this.error.set('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại để tiếp tục.');
+    }
     this.auth.ready.then(() => {
       if (this.auth.isStaff()) this.router.navigateByUrl(this.returnUrl());
     });

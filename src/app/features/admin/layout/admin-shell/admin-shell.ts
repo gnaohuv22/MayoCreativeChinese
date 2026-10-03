@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, effect, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, type Permission } from '../../../../services/auth.service';
 import { AppIconComponent, type IconName } from '../../../../components/shared/icon/app-icon';
@@ -44,6 +44,14 @@ export class AdminShellComponent {
   ]);
 
   readonly initial = computed(() => (this.auth.username()[0] ?? '?').toUpperCase());
+
+  constructor() {
+    // Mất phiên giữa chừng → về trang đăng nhập rồi quay lại đúng trang, thay vì để ghi dữ liệu thất bại
+    effect(() => {
+      if (!this.auth.sessionLost()) return;
+      this.router.navigate(['/admin/login'], { queryParams: { returnUrl: this.router.url, reason: 'expired' } });
+    });
+  }
 
   async signOut() {
     await this.auth.signOut();

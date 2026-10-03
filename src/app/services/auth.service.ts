@@ -61,6 +61,10 @@ export class AuthService {
   /** Có hồ sơ nhân sự = được vào khu quản trị */
   readonly isStaff = computed(() => this.context() !== null);
 
+  /** Phiên bị mất mà không phải do bấm Đăng xuất (hết hạn, gia hạn lỗi, đăng xuất ở tab khác) */
+  readonly sessionLost = signal(false);
+  private signingOut = false;
+
   /** Resolve khi đã khôi phục session + quyền */
   readonly ready: Promise<void>;
 
@@ -70,8 +74,13 @@ export class AuthService {
       if (data.session) await this.loadContext();
     });
     this.supabase.auth.onAuthStateChange((event, session) => {
+      const hadSession = this.session() !== null;
       this.session.set(session);
       if (!session) {
+        if (hadSession && !this.signingOut) {
+          console.warn(`[auth] Mất phiên đăng nhập (${event}) lúc ${new Date().toLocaleString('vi-VN')}`);
+          this.sessionLost.set(true);
+        }
         this.context.set(null);
       } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         // Không gọi Supabase trực tiếp trong callback (supabase-js có thể treo) — đẩy sang tick sau
@@ -98,6 +107,7 @@ export class AuthService {
     const email = login.includes('@') ? login : `${login}@${LOGIN_EMAIL_DOMAIN}`;
     const { error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
+    this.sessionLost.set(false);
     if (!(await this.loadContext())) {
       await this.supabase.auth.signOut();
       return { error: 'Tài khoản này không có quyền quản trị.' };
@@ -107,7 +117,12 @@ export class AuthService {
   }
 
   async signOut(): Promise<void> {
-    await this.supabase.auth.signOut();
+    this.signingOut = true;
+    try {
+      await this.supabase.auth.signOut();
+    } finally {
+      this.signingOut = false;
+    }
     this.context.set(null);
   }
 

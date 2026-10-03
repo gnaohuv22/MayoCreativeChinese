@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getSupabase } from '../../../services/supabase.client';
+import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
 import type {
   HskVersion,
   Exam,
@@ -175,6 +175,8 @@ export class ExamService {
   /** Cập nhật thông tin chung của đề thi */
   async updateExam(id: string, changes: Partial<Exam>): Promise<{ error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { error: expired };
     const { data, error } = await this.supabase
       .from('exams')
       .update(changes)
@@ -183,7 +185,7 @@ export class ExamService {
 
     if (error) {
       console.error(`Lỗi khi cập nhật đề thi [${id}]:`, error);
-      return { error: error.message };
+      return { error: writeErrorMessage(error) };
     }
     if (!data?.length) return { error: NO_ROW_ERROR };
     return {};
@@ -192,6 +194,8 @@ export class ExamService {
   /** Xoá một đề thi (sẽ tự động cascade xoá toàn bộ sections, parts, questions, options) */
   async deleteExam(id: string): Promise<{ error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { error: expired };
     const { data, error } = await this.supabase
       .from('exams')
       .delete()
@@ -200,7 +204,7 @@ export class ExamService {
 
     if (error) {
       console.error(`Lỗi khi xoá đề thi [${id}]:`, error);
-      return { error: error.message };
+      return { error: writeErrorMessage(error) };
     }
     if (!data?.length) return { error: NO_ROW_ERROR };
     return {};
@@ -217,11 +221,13 @@ export class ExamService {
    */
   async saveFullExam(exam: Exam): Promise<{ id?: string; error?: string }> {
     this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { error: expired };
     renumberQuestions(exam);
     const { data, error } = await this.supabase.rpc('save_full_exam', { p_exam: exam });
     if (error) {
       console.error('Lỗi khi lưu đề thi:', error);
-      return { error: error.message };
+      return { error: writeErrorMessage(error) };
     }
     return { id: data as string };
   }
@@ -257,6 +263,8 @@ export class ExamService {
 
   /** Tải lên file Audio hoặc Image lên Supabase Storage bucket `exam-assets` */
   async uploadAsset(file: File, folder: 'audio' | 'images'): Promise<{ url?: string; error?: string }> {
+    const expired = await sessionError();
+    if (expired) return { error: expired };
     try {
       file = folder === 'images' ? await compressImage(file) : await compressAudio(file);
       const ext = file.name.split('.').pop() || '';
@@ -275,7 +283,7 @@ export class ExamService {
 
       if (uploadError) {
         console.error('Lỗi upload storage:', uploadError);
-        return { error: uploadError.message };
+        return { error: writeErrorMessage(uploadError) };
       }
 
       const { data } = this.supabase.storage
