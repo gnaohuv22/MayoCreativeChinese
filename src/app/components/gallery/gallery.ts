@@ -36,57 +36,57 @@ export class GalleryComponent {
     // Tet 2026 Activity
     {
       id: 'tet1',
-      src: 'tet-2026-activity/IMG_1970.jpg',
+      src: 'tet-2026-activity/IMG_1970.webp',
       category: 'tet',
       captionKey: 'gallery.caption.tet1'
     },
     {
       id: 'tet2',
-      src: 'tet-2026-activity/IMG_1979.jpg',
+      src: 'tet-2026-activity/IMG_1979.webp',
       category: 'tet',
       captionKey: 'gallery.caption.tet2'
     },
     {
       id: 'tet3',
-      src: 'tet-2026-activity/IMG_1963.jpg',
+      src: 'tet-2026-activity/IMG_1963.webp',
       category: 'tet',
       captionKey: 'gallery.caption.tet3'
     },
     // HSK Achievements
     {
       id: 'hsk1',
-      src: 'hsk-achievement/IMG_2771.JPG',
+      src: 'hsk-achievement/IMG_2771.webp',
       category: 'hsk',
       captionKey: 'gallery.caption.hsk1'
     },
     {
       id: 'hsk2',
-      src: 'hsk-achievement/ddb4b26f-f9af-4aa3-823e-689b479eb9c0.jpeg',
+      src: 'hsk-achievement/ddb4b26f-f9af-4aa3-823e-689b479eb9c0.webp',
       category: 'hsk',
       captionKey: 'gallery.caption.hsk2'
     },
     {
       id: 'hsk3',
-      src: 'hsk-achievement/fb1d0525-373d-4ba7-8842-61437fc4f80e.jpeg',
+      src: 'hsk-achievement/fb1d0525-373d-4ba7-8842-61437fc4f80e.webp',
       category: 'hsk',
       captionKey: 'gallery.caption.hsk3'
     },
     // Women's Day Activity
     {
       id: 'women1',
-      src: 'hsk-achievement/women-day-2025/IMG_4816.JPG',
+      src: 'hsk-achievement/women-day-2025/IMG_4816.webp',
       category: 'women',
       captionKey: 'gallery.caption.women1'
     },
     {
       id: 'women2',
-      src: 'hsk-achievement/women-day-2025/IMG_4825.JPG',
+      src: 'hsk-achievement/women-day-2025/IMG_4825.webp',
       category: 'women',
       captionKey: 'gallery.caption.women2'
     },
     {
       id: 'women3',
-      src: 'hsk-achievement/women-day-2025/IMG_4833.JPG',
+      src: 'hsk-achievement/women-day-2025/IMG_4833.webp',
       category: 'women',
       captionKey: 'gallery.caption.women3'
     }

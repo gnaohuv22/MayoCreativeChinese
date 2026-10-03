@@ -27,7 +27,7 @@ export class TeachersComponent {
   readonly teachers: Teacher[] = [
     {
       id: 'mai',
-      image: 'teacher-introduce/Mai.png',
+      image: 'teacher-introduce/Mai.webp',
       nameKey: 'teacher.mai.name',
       roleKey: 'teachers.role.founder',
       bioKey: 'teacher.mai.bio',
@@ -41,7 +41,7 @@ export class TeachersComponent {
     },
     {
       id: 'thao',
-      image: 'teacher-introduce/Thao.png',
+      image: 'teacher-introduce/Thao.webp',
       nameKey: 'teacher.thao.name',
       roleKey: 'teachers.role.cofounder',
       bioKey: 'teacher.thao.bio',
@@ -55,7 +55,7 @@ export class TeachersComponent {
     },
     {
       id: 'ly',
-      image: 'teacher-introduce/Ly.png',
+      image: 'teacher-introduce/Ly.webp',
       nameKey: 'teacher.ly.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.ly.bio',
@@ -69,7 +69,7 @@ export class TeachersComponent {
     },
     {
       id: 'dung',
-      image: 'teacher-introduce/Dung.png',
+      image: 'teacher-introduce/Dung.webp',
       nameKey: 'teacher.dung.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.dung.bio',
@@ -82,7 +82,7 @@ export class TeachersComponent {
     },
     {
       id: 'lina',
-      image: 'teacher-introduce/Lina.png',
+      image: 'teacher-introduce/Lina.webp',
       nameKey: 'teacher.lina.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.lina.bio',
@@ -95,7 +95,7 @@ export class TeachersComponent {
     },
     {
       id: 'hong',
-      image: 'teacher-introduce/Hong.png',
+      image: 'teacher-introduce/Hong.webp',
       nameKey: 'teacher.hong.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.hong.bio',
@@ -134,7 +134,7 @@ export class TeachersComponent {
     },
     {
       id: 'linh',
-      image: 'teacher-introduce/Linh.png',
+      image: 'teacher-introduce/Linh.webp',
       nameKey: 'teacher.linh.name',
       roleKey: 'teachers.role.tutor',
       bioKey: 'teacher.linh.bio',
