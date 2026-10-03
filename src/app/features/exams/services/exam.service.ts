@@ -16,6 +16,7 @@ import type {
 import { renumberQuestions } from '../models/exam.model';
 import { orderingAnswerMatches, parseOrderingTokens } from '../models/exam-ordering';
 import { compressImage } from '../utils/image-compress.util';
+import { compressAudio } from '../utils/audio-compress.util';
 import { RequestCache } from '../../../services/request-cache';
 
 const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, is_published, created_at, updated_at';
@@ -257,7 +258,7 @@ export class ExamService {
   /** Tải lên file Audio hoặc Image lên Supabase Storage bucket `exam-assets` */
   async uploadAsset(file: File, folder: 'audio' | 'images'): Promise<{ url?: string; error?: string }> {
     try {
-      if (folder === 'images') file = await compressImage(file);
+      file = folder === 'images' ? await compressImage(file) : await compressAudio(file);
       const ext = file.name.split('.').pop() || '';
       const cleanFileName = file.name
         .substring(0, file.name.lastIndexOf('.'))
