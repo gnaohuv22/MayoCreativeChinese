@@ -43,7 +43,8 @@ export class App {
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
       map(e => e.urlAfterRedirects)
     ),
-    { initialValue: this.router.url }
+    // router.url vẫn là '/' trước lần điều hướng đầu → mở thẳng /flashcards sẽ dựng landing (tải ~24 MB ảnh)
+    { initialValue: location.pathname }
   );
 
   readonly isLandingPage = computed(() => {
