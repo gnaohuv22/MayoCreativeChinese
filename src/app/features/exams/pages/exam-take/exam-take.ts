@@ -263,23 +263,19 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     return ex?.sections ? this.activeSectionIndex() < ex.sections.length - 1 : false;
   });
 
+  /** Mọi cách chuyển phần (chọn phần, trước / sau) đều đưa về đầu phần thi */
   setSection(index: number) {
     this.activeSectionIndex.set(index);
     this.cdr.markForCheck();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   prevSection() {
-    if (this.hasPrevSection()) {
-      this.setSection(this.activeSectionIndex() - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    if (this.hasPrevSection()) this.setSection(this.activeSectionIndex() - 1);
   }
 
   nextSection() {
-    if (this.hasNextSection()) {
-      this.setSection(this.activeSectionIndex() + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    if (this.hasNextSection()) this.setSection(this.activeSectionIndex() + 1);
   }
 
   // Nhảy tới câu hỏi cụ thể trong trang
