@@ -197,11 +197,10 @@
                   {{ i18n.translate()('register.label.mode') }}
                 </label>
                 <select id="studyMode"
-                        [value]="studyMode()"
                         (change)="onStudyModeChange($event)"
                         class="w-full px-4 py-3 bg-white dark:bg-brand-dark/50 border border-brand-navy/10 dark:border-white/10 rounded-xl text-sm transition-all duration-200 outline-none text-brand-navy dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-pink focus:border-transparent">
                   @for (mode of studyModes; track mode) {
-                    <option [value]="mode">{{ i18n.translate()('register.mode.' + mode) }}</option>
+                    <option [value]="mode" [selected]="mode === studyMode()">{{ i18n.translate()('register.mode.' + mode) }}</option>
                   }
                 </select>
               </div>
