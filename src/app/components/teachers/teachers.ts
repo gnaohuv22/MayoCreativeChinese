@@ -108,7 +108,7 @@ export class TeachersComponent {
     },
     {
       id: 'lelinh',
-      initial: 'L',
+      image: 'teacher-introduce/LeLinh.webp',
       nameKey: 'teacher.lelinh.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.lelinh.bio',
