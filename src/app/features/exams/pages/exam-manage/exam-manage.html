@@ -28,18 +28,21 @@
       <app-stat-card
         label="Tổng số đề thi"
         [value]="exams().length"
+        subtext="Toàn bộ hệ thống"
         icon="document-text"
         color="navy"
       />
       <app-stat-card
         label="Đề HSK 2.0"
         [value]="countByVersion('2.0')"
+        subtext="Chuẩn 6 cấp cũ"
         icon="book-open"
         color="pink"
       />
       <app-stat-card
         label="Đề HSK 3.0"
         [value]="countByVersion('3.0')"
+        subtext="Chuẩn 9 cấp mới"
         icon="academic"
         color="indigo"
       />
@@ -56,24 +59,34 @@
     <div class="p-5 rounded-3xl bg-white/80 dark:bg-brand-dark/80 border border-brand-navy/10 dark:border-white/10 shadow-sm backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
         <!-- Tìm kiếm tên -->
-        <div class="relative flex-1 min-w-[200px]">
+        <div class="relative flex-1 min-w-[220px]">
           <input
             type="text"
             [(ngModel)]="filter.searchQuery"
             (input)="loadExams()"
             placeholder="Tìm theo tên đề thi hoặc mô tả..."
-            class="w-full text-xs pl-8 pr-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:border-brand-pink"
+            class="w-full h-10 text-xs sm:text-sm pl-9 pr-8 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 transition-all"
           />
-          <div class="absolute left-2.5 top-2.5 text-zinc-600 dark:text-zinc-300 pointer-events-none">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
             <app-icon name="search" size="xs" />
           </div>
+          @if (filter.searchQuery) {
+            <button
+              type="button"
+              (click)="filter.searchQuery = ''; loadExams()"
+              class="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs cursor-pointer"
+              title="Xóa tìm kiếm"
+            >
+              ✕
+            </button>
+          }
         </div>
 
         <!-- Lọc Cấp độ HSK -->
         <select
           [(ngModel)]="filter.hsk_level"
           (change)="loadExams()"
-          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          class="h-10 text-xs px-3 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 transition-all cursor-pointer"
         >
           <option value="all">Tất cả cấp độ HSK</option>
           @for (lvl of [1,2,3,4,5,6,7,8,9]; track lvl) {
@@ -85,7 +98,7 @@
         <select
           [(ngModel)]="filter.hsk_version"
           (change)="loadExams()"
-          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          class="h-10 text-xs px-3 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 transition-all cursor-pointer"
         >
           <option value="all">Tất cả phiên bản</option>
           <option value="2.0">HSK 2.0 (Cũ)</option>
@@ -96,7 +109,7 @@
         <select
           [(ngModel)]="filter.visibility"
           (change)="loadExams()"
-          class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
+          class="h-10 text-xs px-3 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 transition-all cursor-pointer"
         >
           <option value="all">Tất cả trạng thái</option>
           @for (opt of visibilityOptions; track opt.value) {
@@ -108,7 +121,7 @@
       <button
         type="button"
         (click)="resetFilters()"
-        class="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300 hover:text-brand-pink font-semibold transition-colors cursor-pointer"
+        class="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl text-xs text-zinc-600 dark:text-zinc-300 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/5 font-semibold transition-all cursor-pointer whitespace-nowrap"
       >
         <app-icon name="arrow-path" size="xs" />
         <span>Đặt lại bộ lọc</span>

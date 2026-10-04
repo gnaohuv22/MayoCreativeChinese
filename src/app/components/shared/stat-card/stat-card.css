@@ -1,4 +1,5 @@
 /* Styles for StatCardComponent */
 :host {
   display: block;
+  height: 100%;
 }
