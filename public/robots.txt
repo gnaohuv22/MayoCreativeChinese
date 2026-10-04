@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://mayo-creative-chinese.vercel.app/sitemap.xml
