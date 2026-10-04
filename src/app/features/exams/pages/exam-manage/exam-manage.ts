@@ -9,6 +9,7 @@ import { ExamCardComponent } from '../../components/exam-card/exam-card';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
 import { AuthService } from '../../../../services/auth.service';
+import { VISIBILITY_LABELS, VISIBILITY_OPTIONS, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
 
 @Component({
   selector: 'app-exam-manage',
@@ -31,13 +32,14 @@ export class ExamManageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
+  protected readonly visibilityOptions = VISIBILITY_OPTIONS;
   exams = signal<Exam[]>([]);
   isLoading = signal<boolean>(true);
 
   filter: ExamFilter = {
     hsk_level: 'all',
     hsk_version: 'all',
-    is_published: 'all',
+    visibility: 'all',
     searchQuery: '',
   };
 
@@ -56,7 +58,7 @@ export class ExamManageComponent implements OnInit {
     this.filter = {
       hsk_level: 'all',
       hsk_version: 'all',
-      is_published: 'all',
+      visibility: 'all',
       searchQuery: '',
     };
     this.loadExams();
@@ -66,25 +68,25 @@ export class ExamManageComponent implements OnInit {
     return this.exams().filter(e => e.hsk_version === ver).length;
   }
 
-  countPublished(): number {
-    return this.exams().filter(e => e.is_published).length;
+  countByVisibility(visibility: ContentVisibility): number {
+    return this.exams().filter(e => e.visibility === visibility).length;
   }
 
-  async togglePublish(item: Exam) {
-    if (!item.id) return;
-    const newStatus = !item.is_published;
-    const res = await this.examService.togglePublish(item.id, newStatus);
-    if (!res.error) {
-      // Create fresh immutable object to trigger OnPush in child ExamCardComponent immediately
-      this.exams.update(list => list.map(e => e.id === item.id ? { ...e, is_published: newStatus } : e));
-      if (newStatus) {
-        this.toastService.success(`Đã xuất bản đề thi "${item.title}" thành công!`);
-      } else {
-        this.toastService.info(`Đã chuyển đề thi "${item.title}" về trạng thái bản nháp.`);
-      }
-    } else {
+  /** id của đề đang đổi trạng thái hiển thị */
+  savingVisibilityId = signal<string | null>(null);
+
+  async setVisibility({ exam: item, visibility }: { exam: Exam; visibility: ContentVisibility }) {
+    if (!item.id || this.savingVisibilityId()) return;
+    this.savingVisibilityId.set(item.id);
+    const res = await this.examService.setVisibility(item.id, visibility);
+    this.savingVisibilityId.set(null);
+    if (res.error) {
       this.toastService.error(`Không thể cập nhật trạng thái: ${res.error}`);
+      return;
     }
+    // Object mới để OnPush trong ExamCardComponent cập nhật ngay
+    this.exams.update(list => list.map(e => e.id === item.id ? { ...e, visibility } : e));
+    this.toastService.success(`Đã chuyển "${item.title}" sang ${VISIBILITY_LABELS[visibility]}.`);
   }
 
   /** id của đề đang được nhân bản */

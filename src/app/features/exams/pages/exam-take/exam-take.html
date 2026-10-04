@@ -7,8 +7,13 @@
   } @else if (!exam()) {
     <div class="flex-1 flex flex-col items-center justify-center p-12 text-center">
       <app-icon name="question-mark" size="xl" customClass="text-zinc-400 dark:text-zinc-500 mb-3" />
-      <h2 class="text-xl font-bold text-brand-navy dark:text-white">Không tìm thấy đề thi</h2>
-      <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-6">Đề thi này không tồn tại hoặc đã bị gỡ bỏ.</p>
+      @if (comingSoon()) {
+        <h2 class="text-xl font-bold text-brand-navy dark:text-white">Đề thi sắp ra mắt</h2>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-6">Đề thi này đang được biên soạn.</p>
+      } @else {
+        <h2 class="text-xl font-bold text-brand-navy dark:text-white">Không tìm thấy đề thi</h2>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-6">Đề thi này không tồn tại hoặc đã bị gỡ bỏ.</p>
+      }
       <a routerLink="/exams" class="px-5 py-2.5 rounded-2xl bg-brand-navy text-white text-sm font-semibold">
         Quay lại danh sách đề thi
       </a>

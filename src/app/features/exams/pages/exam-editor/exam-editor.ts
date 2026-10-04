@@ -16,6 +16,7 @@ import { QuestionEditorComponent } from '../../components/question-editor/questi
 import { AudioUploaderComponent } from '../../components/audio-uploader/audio-uploader';
 import { ImageUploaderComponent } from '../../components/image-uploader/image-uploader';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { VisibilityPickerComponent } from '../../../../components/shared/visibility/visibility-picker';
 
 @Component({
   selector: 'app-exam-editor',
@@ -27,6 +28,7 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
     AudioUploaderComponent,
     ImageUploaderComponent,
     AppIconComponent,
+    VisibilityPickerComponent,
   ],
   templateUrl: './exam-editor.html',
   styleUrl: './exam-editor.css',
@@ -63,7 +65,7 @@ export class ExamEditorComponent implements OnInit {
     total_score: 300,
     passing_score: 180,
     description: '',
-    is_published: false,
+    visibility: 'private',
     sections: []
   };
 

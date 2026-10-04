@@ -1,5 +1,16 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, Routes } from '@angular/router';
 import type { VocabCollection } from './models/vocab-card.model';
+import { VocabService } from './services/vocab.service';
+
+/** Cấp bản nháp / nội bộ mở bằng link → về trang chọn cấp (hiện "Sắp ra mắt") */
+const levelOpenGuard: CanActivateFn = async route => {
+  const collection = route.data['collection'] as VocabCollection;
+  const router = inject(Router);
+  const access = await inject(VocabService).accessResolver();
+  return access(collection, route.paramMap.get('level') ?? '') !== 'locked'
+    || router.createUrlTree(['/flashcards', collection]);
+};
 
 const levelPicker = () =>
   import('./pages/vocab-level-picker/vocab-level-picker').then(m => m.VocabLevelPickerComponent);
@@ -17,9 +28,9 @@ function flatCollection(collection: VocabCollection): Routes {
   const data = { collection };
   return [
     { path: collection, loadComponent: levelPicker, data },
-    { path: `${collection}/:level`, loadComponent: study, data },
-    { path: `${collection}/:level/list`, loadComponent: list, data },
-    { path: `${collection}/:level/quiz`, loadComponent: quiz, data },
+    { path: `${collection}/:level`, loadComponent: study, data, canActivate: [levelOpenGuard] },
+    { path: `${collection}/:level/list`, loadComponent: list, data, canActivate: [levelOpenGuard] },
+    { path: `${collection}/:level/quiz`, loadComponent: quiz, data, canActivate: [levelOpenGuard] },
   ];
 }
 
@@ -27,14 +38,15 @@ function flatCollection(collection: VocabCollection): Routes {
 function groupedCollection(collection: VocabCollection, groupSegment: 'lesson' | 'topic'): Routes {
   const data = { collection };
   const group = `${collection}/:level/${groupSegment}/:${groupSegment}`;
+  const canActivate = [levelOpenGuard];
   return [
     { path: collection, loadComponent: levelPicker, data },
-    { path: `${collection}/:level`, loadComponent: groupPicker, data },
-    { path: `${collection}/:level/all`, loadComponent: study, data },
-    { path: `${collection}/:level/all/quiz`, loadComponent: quiz, data },
-    { path: group, loadComponent: study, data },
-    { path: `${group}/quiz`, loadComponent: quiz, data },
-    { path: `${collection}/:level/list`, loadComponent: list, data },
+    { path: `${collection}/:level`, loadComponent: groupPicker, data, canActivate },
+    { path: `${collection}/:level/all`, loadComponent: study, data, canActivate },
+    { path: `${collection}/:level/all/quiz`, loadComponent: quiz, data, canActivate },
+    { path: group, loadComponent: study, data, canActivate },
+    { path: `${group}/quiz`, loadComponent: quiz, data, canActivate },
+    { path: `${collection}/:level/list`, loadComponent: list, data, canActivate },
   ];
 }
 

@@ -18,8 +18,9 @@ import { orderingAnswerMatches, parseOrderingTokens } from '../models/exam-order
 import { compressImage } from '../utils/image-compress.util';
 import { compressAudio } from '../utils/audio-compress.util';
 import { RequestCache } from '../../../services/request-cache';
+import type { ContentVisibility } from '../../../components/shared/visibility/content-visibility';
 
-const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, is_published, created_at, updated_at';
+const EXAM_COLUMNS = 'id, title, hsk_level, hsk_version, duration_mins, total_score, passing_score, description, visibility, created_at, updated_at';
 const SECTION_COLUMNS = 'id, exam_id, section_type, title, sort_order, max_score, instructions, audio_url';
 const PART_COLUMNS = 'id, section_id, title, question_type, instructions, sort_order, example_text, stimulus_text, stimulus_image_url, stimulus_audio_url, option_labels';
 /** Cột học viên (anon) được đọc — đáp án lấy riêng qua get_exam_answers (migration 011) */
@@ -39,10 +40,10 @@ export class ExamService {
   private readonly BUCKET_NAME = 'exam-assets';
   private readonly cache = new RequestCache(CACHE_TTL_MS);
 
-  /** Lấy danh sách đề thi kèm bộ lọc (HSK level, version, published status) */
+  /** Lấy danh sách đề thi kèm bộ lọc (HSK level, version, trạng thái hiển thị) */
   async getExams(filter?: ExamFilter): Promise<Exam[]> {
     // Chỉ cache danh sách học viên xem; trang quản trị luôn lấy mới
-    if (filter?.is_published !== true) return this.loadExams(filter);
+    if (!filter?.learner) return this.loadExams(filter);
     const list = await this.cache.get(`list:${JSON.stringify(filter)}`, () => this.loadExams(filter), l => l.length > 0);
     return structuredClone(list);
   }
@@ -60,8 +61,10 @@ export class ExamService {
     if (filter?.hsk_version && filter.hsk_version !== 'all') {
       query = query.eq('hsk_version', filter.hsk_version);
     }
-    if (filter?.is_published !== undefined && filter.is_published !== 'all') {
-      query = query.eq('is_published', filter.is_published);
+    if (filter?.learner) {
+      query = query.in('visibility', ['staff', 'public']);
+    } else if (filter?.visibility && filter.visibility !== 'all') {
+      query = query.eq('visibility', filter.visibility);
     }
     if (filter?.searchQuery && filter.searchQuery.trim()) {
       const search = filter.searchQuery.trim();
@@ -210,9 +213,9 @@ export class ExamService {
     return {};
   }
 
-  /** Bật/tắt trạng thái xuất bản đề thi */
-  async togglePublish(id: string, isPublished: boolean): Promise<{ error?: string }> {
-    return this.updateExam(id, { is_published: isPublished });
+  /** Đổi trạng thái hiển thị: Bản nháp / Nội bộ / Công khai */
+  async setVisibility(id: string, visibility: ContentVisibility): Promise<{ error?: string }> {
+    return this.updateExam(id, { visibility });
   }
 
   /**
@@ -246,7 +249,7 @@ export class ExamService {
       created_at: undefined,
       updated_at: undefined,
       title: `${source.title} (bản sao)`,
-      is_published: false,
+      visibility: 'private',
     };
     return this.saveFullExam(copy);
   }

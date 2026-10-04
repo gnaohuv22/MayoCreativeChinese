@@ -3,9 +3,18 @@
  * người học qua lại giữa các trang. Request đang chạy được dùng chung; kết quả lỗi không giữ lại.
  */
 export class RequestCache {
+  private static readonly instances = new Set<RequestCache>();
+
+  /** Xoá mọi cache — khi đăng nhập / đăng xuất (nhân sự đọc được nội dung khách không thấy) */
+  static clearAll(): void {
+    for (const cache of RequestCache.instances) cache.clear();
+  }
+
   private readonly entries = new Map<string, { at: number; value: Promise<unknown> }>();
 
-  constructor(private readonly ttlMs: number) {}
+  constructor(private readonly ttlMs: number) {
+    RequestCache.instances.add(this);
+  }
 
   /** `keep` = false → không giữ kết quả (vd request lỗi), lần sau tải lại */
   get<T>(key: string, load: () => Promise<T>, keep: (value: T) => boolean = () => true): Promise<T> {

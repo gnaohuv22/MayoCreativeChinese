@@ -44,8 +44,9 @@
         color="indigo"
       />
       <app-stat-card
-        label="Đã xuất bản"
-        [value]="countPublished()"
+        label="Công khai"
+        [value]="countByVisibility('public')"
+        [subtext]="'Nội bộ: ' + countByVisibility('staff')"
         icon="check"
         color="emerald"
       />
@@ -93,13 +94,14 @@
 
         <!-- Lọc Trạng thái -->
         <select
-          [(ngModel)]="filter.is_published"
+          [(ngModel)]="filter.visibility"
           (change)="loadExams()"
           class="text-xs px-3 py-2 rounded-xl bg-zinc-50 dark:bg-brand-dark border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
         >
           <option value="all">Tất cả trạng thái</option>
-          <option [value]="true">Đã công khai</option>
-          <option [value]="false">Bản nháp</option>
+          @for (opt of visibilityOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
         </select>
       </div>
 
@@ -141,7 +143,8 @@
             [exam]="item"
             mode="admin"
             [canDelete]="canDelete()"
-            (togglePublish)="togglePublish($event)"
+            [savingVisibility]="savingVisibilityId() === item.id"
+            (visibilityChange)="setVisibility($event)"
             (delete)="deleteExam($event)"
             (duplicate)="duplicateExam($event)"
             [duplicating]="duplicatingId() === item.id"

@@ -55,7 +55,24 @@
         </svg>
         Duyệt & Sửa
       </button>
+      <button 
+        (click)="activeTab.set('visibility')"
+        [class.bg-brand-pink]="activeTab() === 'visibility'"
+        [class.text-white]="activeTab() === 'visibility'"
+        [class.shadow-md]="activeTab() === 'visibility'"
+        [class.text-brand-navy/70]="activeTab() !== 'visibility'"
+        [class.dark:text-brand-text-dark/70]="activeTab() !== 'visibility'"
+        [class.hover:bg-brand-navy/5]="activeTab() !== 'visibility'"
+        [class.dark:hover:bg-white/5]="activeTab() !== 'visibility'"
+        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+        <app-icon name="eye" size="xs" />
+        Hiển thị
+      </button>
     </div>
+
+    @if (activeTab() === 'visibility') {
+      <app-vocab-visibility />
+    }
 
     <!-- TAB 1: Thêm từ -->
     @if (activeTab() === 'add') {

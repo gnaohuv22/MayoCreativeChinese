@@ -5,6 +5,7 @@ import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
+import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
 import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection, VocabScope } from '../../models/vocab-card.model';
 import { scopeLevelLabel, scopeRoutes } from '../../utils/vocab-scope.util';
@@ -17,6 +18,8 @@ export interface CollectionLevelCard {
   reviewed: number;
   mastered: number;
   hasData: boolean;
+  /** Cấp nội bộ — chỉ nhân sự thấy */
+  staffOnly: boolean;
   studyRoute: string[];
   listRoute: string[];
   quizRoute: string[];
@@ -25,7 +28,7 @@ export interface CollectionLevelCard {
 @Component({
   selector: 'app-vocab-level-picker',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent],
   templateUrl: './vocab-level-picker.html',
   styleUrl: './vocab-level-picker.css',
 })
@@ -67,11 +70,16 @@ export class VocabLevelPickerComponent implements OnInit {
     this.subtitle.set(this.SUBTITLES[col]);
 
     try {
-      const counts = await this.vocabService.getLevelCounts(col);
+      const [counts, access] = await Promise.all([
+        this.vocabService.getLevelCounts(col),
+        this.vocabService.accessResolver(),
+      ]);
 
       const list = await Promise.all(config.levelParams.map(async param => {
         const scope: VocabScope = { collection: col, levelParam: param };
-        const count = parseLevelParam(param).reduce((sum, l) => sum + (counts.get(l) ?? 0), 0);
+        const levelAccess = access(col, param);
+        // Cấp bản nháp / nội bộ (với khách) hiện như chưa có từ
+        const count = levelAccess === 'locked' ? 0 : parseLevelParam(param).reduce((sum, l) => sum + (counts.get(l) ?? 0), 0);
 
         let reviewed = 0;
         let mastered = 0;
@@ -90,6 +98,7 @@ export class VocabLevelPickerComponent implements OnInit {
           reviewed,
           mastered,
           hasData: count > 0,
+          staffOnly: levelAccess === 'staff',
           // Bộ chia nhỏ → vào trang chọn bài / chủ đề; bộ phẳng → vào flashcard
           studyRoute: config.grouping ? routes.back : routes.study,
           listRoute: routes.list,

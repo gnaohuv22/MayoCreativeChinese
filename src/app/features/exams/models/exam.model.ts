@@ -84,7 +84,8 @@ export interface Exam {
   total_score: number;       // Thường là 300
   passing_score: number;     // Thường là 180
   description?: string | null;
-  is_published: boolean;     // Công khai cho học viên xem/thi
+  /** Bản nháp / Nội bộ / Công khai (migration 017) */
+  visibility: ContentVisibility;
   created_at?: string;
   updated_at?: string;
   sections?: ExamSection[];  // Cấu trúc lồng nhau khi fetch full đề
@@ -97,11 +98,14 @@ export interface Exam {
 export interface ExamFilter {
   hsk_level?: number | 'all';
   hsk_version?: HskVersion | 'all';
-  is_published?: boolean | 'all';
+  visibility?: ContentVisibility | 'all';
+  /** Trang học viên: đề nội bộ + công khai */
+  learner?: boolean;
   searchQuery?: string;
 }
 
 import type { IconName } from '../../../components/shared/icon/app-icon';
+import type { ContentVisibility } from '../../../components/shared/visibility/content-visibility';
 
 /** Thông tin nhãn hiển thị cho loại câu hỏi */
 export const QUESTION_TYPE_LABELS: Record<QuestionType, { label: string; icon: IconName; description: string }> = {

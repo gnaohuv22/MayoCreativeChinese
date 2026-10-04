@@ -5,11 +5,15 @@ import { SECTION_TYPE_LABELS } from '../../models/exam.model';
 import type { Exam } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
+import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
+import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
+import { VisibilityPickerComponent } from '../../../../components/shared/visibility/visibility-picker';
+import { type ContentAccess, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
 
 @Component({
   selector: 'app-exam-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, HskBadgeComponent],
+  imports: [CommonModule, RouterLink, AppIconComponent, HskBadgeComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent, VisibilityPickerComponent],
   templateUrl: './exam-card.html',
   styleUrl: './exam-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,7 +29,13 @@ export class ExamCardComponent {
   /** Đang nhân bản đề này (khoá nút) */
   duplicating = input<boolean>(false);
   canDelete = input<boolean>(false);
-  togglePublish = output<Exam>();
+  /** Trang học viên: locked = "Sắp ra mắt" (đề nội bộ, khách xem) */
+  access = input<ContentAccess>('open');
+  /** Đang lưu trạng thái hiển thị (khoá bộ chọn) */
+  savingVisibility = input<boolean>(false);
+  visibilityChange = output<{ exam: Exam; visibility: ContentVisibility }>();
+
+  locked = computed(() => this.mode() === 'learner' && this.access() === 'locked');
 
   /** "Nghe hiểu 5 câu · Đọc hiểu 6 câu" — số câu thật của từng phần */
   sectionSummary = computed(() =>

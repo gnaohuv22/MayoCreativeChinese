@@ -1,10 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
-import { VOCAB_COLLECTIONS, collectionLevels, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
+import { VOCAB_COLLECTIONS, collectionLevels, parseLevelParam, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
 import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
 import { RequestCache } from '../../../services/request-cache';
+import { AuthService } from '../../../services/auth.service';
+import { contentAccess, strictestVisibility } from '../../../components/shared/visibility/content-visibility';
+import type { ContentAccess, ContentVisibility } from '../../../components/shared/visibility/content-visibility';
 
 /** Supabase trả tối đa 1000 dòng / request */
 const PAGE = 1000;
@@ -24,12 +27,56 @@ function scopeKey(scope: VocabScope): string {
   return `${scope.collection}|${scope.levelParam}|${lesson}|${topic}`;
 }
 
+/** Mức hiển thị theo `${collection}|${hsk_level}`; không có = công khai */
+export type VocabVisibilityMap = Map<string, ContentVisibility>;
+
+/** Mức hiển thị của 1 cấp trên trang (cấp gộp 7-9 lấy mức chặt nhất) */
+export function levelVisibility(map: VocabVisibilityMap, collection: VocabCollection, levelParam: string): ContentVisibility {
+  return strictestVisibility(parseLevelParam(levelParam).map(l => map.get(`${collection}|${l}`) ?? 'public'));
+}
+
 export type NewVocabCard = Omit<VocabCard, 'id' | 'created_at' | 'updated_at'> & { collection: VocabCollection };
 
 @Injectable({ providedIn: 'root' })
 export class VocabService {
   private readonly supabase = getSupabase();
   private readonly cache = new RequestCache(CACHE_TTL_MS);
+  private readonly auth = inject(AuthService);
+
+  /** Mức hiển thị của mọi (bộ, cấp) đã đặt */
+  async getVisibility(): Promise<VocabVisibilityMap> {
+    const { map } = await this.cache.get('visibility', async () => {
+      const { data, error } = await this.supabase
+        .from('vocab_level_visibility')
+        .select('collection, hsk_level, visibility');
+      if (error) console.error('Vocab visibility query failed:', error);
+      const map: VocabVisibilityMap = new Map(
+        (data ?? []).map(r => [`${r.collection}|${r.hsk_level}`, r.visibility as ContentVisibility]),
+      );
+      return { map, ok: !error };
+    }, r => r.ok);
+    return new Map(map);
+  }
+
+  /** Hàm tra quyền xem của người đang xem cho từng cấp (trang học viên) */
+  async accessResolver(): Promise<(collection: VocabCollection, levelParam: string) => ContentAccess> {
+    const [map] = await Promise.all([this.getVisibility(), this.auth.ready]);
+    const isStaff = this.auth.can('content.read');
+    return (collection, levelParam) => contentAccess(levelVisibility(map, collection, levelParam), isStaff);
+  }
+
+  /** Đổi mức hiển thị các cấp của 1 bộ (bộ HSK 1-9: cấp 7-9 đổi cùng nhau) */
+  async setVisibility(collection: VocabCollection, levels: number[], visibility: ContentVisibility): Promise<{ error?: string }> {
+    this.cache.clear();
+    const expired = await sessionError();
+    if (expired) return { error: expired };
+    const { error } = await this.supabase.rpc('set_vocab_visibility', {
+      p_collection: collection,
+      p_levels: levels,
+      p_visibility: visibility,
+    });
+    return error ? { error: writeErrorMessage(error) } : {};
+  }
 
   /** Query có sẵn bộ lọc theo phạm vi (bộ + cấp + bài / chủ đề) */
   private scopedQuery(scope: VocabScope, columns = VOCAB_COLUMNS, options?: { count: 'exact' }) {

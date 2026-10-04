@@ -57,13 +57,16 @@
               <div>
                 <div class="flex justify-between items-start">
                   <div>
-                    <div class="flex items-center gap-2.5">
+                    <div class="flex flex-wrap items-center gap-2.5">
                       <h2 class="font-display font-black text-2xl text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors">
                         {{ levelLabel(item.level) }}
                       </h2>
                       <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 text-brand-navy/60 dark:text-brand-text-dark/70">
                         {{ item.name }}
                       </span>
+                      @if (item.staffOnly) {
+                        <app-staff-only-badge />
+                      }
                     </div>
 
                     <p class="text-sm font-medium text-brand-navy/60 dark:text-brand-text-dark/70 mt-2">

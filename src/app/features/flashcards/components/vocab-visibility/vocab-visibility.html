@@ -1,0 +1,33 @@
+@if (loading()) {
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="h-64 rounded-2xl bg-white/80 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 animate-pulse"></div>
+    }
+  </div>
+} @else {
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    @for (col of collections(); track col.key) {
+      <section class="rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-sm overflow-hidden">
+        <h2 class="px-5 py-3 font-display font-black text-base text-brand-navy dark:text-white border-b border-brand-navy/10 dark:border-white/10">
+          {{ col.title }}
+        </h2>
+        <ul class="divide-y divide-brand-navy/5 dark:divide-white/5">
+          @for (row of col.levels; track row.param) {
+            <li class="px-5 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <div class="min-w-0">
+                <span class="font-bold text-sm text-brand-navy dark:text-white">{{ row.label }}</span>
+                <span class="ml-2 text-xs text-zinc-600 dark:text-zinc-300 tabular-nums">{{ row.count }} từ</span>
+              </div>
+              <app-visibility-picker
+                [value]="row.visibility"
+                [disabled]="saving() === col.key + '|' + row.param"
+                [label]="'Trạng thái ' + row.label"
+                (changed)="setVisibility(col.key, row, $event)"
+              />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+}

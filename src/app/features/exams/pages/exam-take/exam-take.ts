@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import { ThemeService } from '../../../../services/theme.service';
+import { AuthService } from '../../../../services/auth.service';
 import { hasPartStimulus, partOptionLabels } from '../../models/exam.model';
 import { parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
 import { OrderingAnswerComponent } from '../../components/ordering-answer/ordering-answer';
@@ -43,12 +44,15 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly examService = inject(ExamService);
+  private readonly auth = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
   protected readonly theme = inject(ThemeService);
 
   examId = signal<string>('');
   exam = signal<Exam | null>(null);
   isLoading = signal<boolean>(true);
+  /** Đề nội bộ mở bằng link khi chưa đăng nhập */
+  comingSoon = signal<boolean>(false);
 
   // Trạng thái phiên thi
   isExamStarted = signal<boolean>(false);
@@ -152,7 +156,15 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
   async loadExam(id: string) {
     this.isLoading.set(true);
-    const data = await this.examService.getExamWithDetails(id);
+    let data = await this.examService.getExamWithDetails(id);
+    // Đề nội bộ: khách đọc được tên đề nhưng không có câu hỏi → coi như sắp ra mắt
+    if (data && data.visibility !== 'public') {
+      await this.auth.ready;
+      if (!this.auth.can('content.read')) {
+        data = null;
+        this.comingSoon.set(true);
+      }
+    }
     this.exam.set(data);
     if (data) {
       const durSecs = (data.duration_mins || 90) * 60;
@@ -162,8 +174,9 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
       // Thử khôi phục bài làm dở dang nếu có trong session
       this.restoreDraft(id);
 
-      // Nếu có query param ?autostart=1 thì kích hoạt làm bài ngay lập tức
-      if (this.route.snapshot.queryParamMap.get('autostart') === '1') {
+      // Kiểm thử: ?autostart=1 vào làm bài ngay và điền sẵn vài đáp án (?modal=1 mở luôn hộp nộp bài).
+      // Chỉ chạy khi nhân sự đã đăng nhập; học viên mở link này vẫn thấy màn hình chuẩn bị bình thường.
+      if (this.route.snapshot.queryParamMap.get('autostart') === '1' && (await this.isStaffViewer())) {
         this.startExam();
         const sec1 = data.sections?.[0];
         if (sec1?.parts?.[0]?.questions?.[0]?.id) {
@@ -187,6 +200,11 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     }
     this.isLoading.set(false);
     this.cdr.markForCheck();
+  }
+
+  private async isStaffViewer(): Promise<boolean> {
+    await this.auth.ready;
+    return this.auth.can('content.read');
   }
 
   startExam() {

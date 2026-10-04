@@ -10,7 +10,8 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   create: { label: 'Tạo mới', tone: 'emerald' },
   update: { label: 'Sửa', tone: 'sky' },
   delete: { label: 'Xoá', tone: 'red' },
-  publish: { label: 'Xuất bản', tone: 'emerald' },
+  publish: { label: 'Công khai', tone: 'emerald' },
+  staff_only: { label: 'Nội bộ', tone: 'sky' },
   unpublish: { label: 'Chuyển nháp', tone: 'amber' },
   login: { label: 'Đăng nhập', tone: 'zinc' },
   password_change: { label: 'Đổi mật khẩu', tone: 'violet' },
@@ -26,7 +27,7 @@ const ENTITIES: Record<string, { label: string; icon: IconName }> = {
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  title: 'tên đề', description: 'mô tả', is_published: 'trạng thái xuất bản', hsk_level: 'cấp HSK', hsk_version: 'phiên bản',
+  title: 'tên đề', description: 'mô tả', is_published: 'trạng thái xuất bản', visibility: 'trạng thái hiển thị', hsk_level: 'cấp HSK', hsk_version: 'phiên bản',
   duration_mins: 'thời gian', total_score: 'điểm tối đa', passing_score: 'điểm đạt',
   hanzi: 'Hán tự', pinyin: 'pinyin', meaning: 'nghĩa', example: 'ví dụ', example_pinyin: 'pinyin ví dụ',
   example_meaning: 'nghĩa ví dụ', lesson_number: 'bài', lesson_title: 'tên bài', topic: 'chủ đề', collection: 'bộ từ vựng',

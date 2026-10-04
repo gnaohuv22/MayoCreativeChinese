@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase.client';
 import { AdminPresence } from './admin-presence';
+import { RequestCache } from './request-cache';
 
 /** Đăng nhập bằng tên ngắn (vd "admin") → email Supabase Auth tương ứng */
 const LOGIN_EMAIL_DOMAIN = 'mayocreativechinese.edu.vn';
@@ -89,6 +90,13 @@ export class AuthService {
     });
     const presence = inject(AdminPresence);
     effect(() => presence.active.set(this.isStaff()));
+    // Dữ liệu đã cache theo quyền cũ (khách / nhân sự) không còn đúng
+    let wasStaff = false;
+    effect(() => {
+      const staff = this.isStaff();
+      if (staff !== wasStaff) RequestCache.clearAll();
+      wasStaff = staff;
+    });
   }
 
   can(permission: Permission): boolean {

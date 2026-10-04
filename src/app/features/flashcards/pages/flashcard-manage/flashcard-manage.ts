@@ -4,6 +4,7 @@ import { VocabService, type NewVocabCard } from '../../services/vocab.service';
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
 import { DuplicateConfirmComponent, type DuplicateHanziItem } from '../../components/duplicate-confirm/duplicate-confirm';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { VocabVisibilityComponent } from '../../components/vocab-visibility/vocab-visibility';
 import { ToastService } from '../../../../services/toast.service';
 import { AuthService } from '../../../../services/auth.service';
 import { VOCAB_COLLECTIONS, VOCAB_COLLECTION_KEYS, collectionLevels, vocabEntryKey } from '../../models/vocab-card.model';
@@ -23,7 +24,7 @@ interface DupDialogState {
 @Component({
   selector: 'app-flashcard-manage',
   standalone: true,
-  imports: [FormsModule, ImportPreviewComponent, DuplicateConfirmComponent, AppIconComponent],
+  imports: [FormsModule, ImportPreviewComponent, DuplicateConfirmComponent, AppIconComponent, VocabVisibilityComponent],
   templateUrl: './flashcard-manage.html',
   styleUrl: './flashcard-manage.css',
 })
@@ -34,7 +35,7 @@ export class FlashcardManageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
-  activeTab = signal<'add' | 'import' | 'browse'>('add');
+  activeTab = signal<'add' | 'import' | 'browse' | 'visibility'>('add');
 
   /** 4 bộ từ vựng độc lập */
   readonly collections = VOCAB_COLLECTION_KEYS.map(key => VOCAB_COLLECTIONS[key]);
