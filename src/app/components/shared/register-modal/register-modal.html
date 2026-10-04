@@ -207,6 +207,25 @@
               </div>
             }
 
+            <!-- Đồng ý xử lý dữ liệu cá nhân -->
+            <div>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox"
+                       [checked]="consent()"
+                       (change)="consent.set($any($event.target).checked)"
+                       class="mt-0.5 w-4 h-4 shrink-0 rounded accent-brand-pink cursor-pointer"
+                       required />
+                <span class="text-xs leading-relaxed text-brand-navy/80 dark:text-brand-text-dark/80">
+                  {{ i18n.translate()('register.consent') }}
+                </span>
+              </label>
+              @if (consentTouched() && !consent()) {
+                <span class="block text-[11px] font-semibold text-brand-pink mt-1 animate-fade-in">
+                  {{ i18n.translate()('register.validation.consent') }}
+                </span>
+              }
+            </div>
+
             <!-- Submit Button -->
             <div class="pt-2">
               <button type="submit"

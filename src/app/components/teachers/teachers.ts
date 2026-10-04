@@ -121,7 +121,7 @@ export class TeachersComponent {
     },
     {
       id: 'thuymai',
-      initial: 'M',
+      image: 'teacher-introduce/ThuyMai.webp',
       nameKey: 'teacher.thuymai.name',
       roleKey: 'teachers.role.teacher',
       bioKey: 'teacher.thuymai.bio',
@@ -143,6 +143,32 @@ export class TeachersComponent {
         'teacher.linh.cred2',
         'teacher.linh.cred3',
         'teacher.linh.cred4'
+      ]
+    },
+    {
+      id: 'tam',
+      image: 'teacher-introduce/MyTam.webp',
+      nameKey: 'teacher.tam.name',
+      roleKey: 'teachers.role.tutor',
+      bioKey: 'teacher.tam.bio',
+      credentials: [
+        'teacher.tam.cred1',
+        'teacher.tam.cred2',
+        'teacher.tam.cred3',
+        'teacher.tam.cred4'
+      ]
+    },
+    {
+      id: 'huyenanh',
+      image: 'teacher-introduce/HuyenAnh.webp',
+      nameKey: 'teacher.huyenanh.name',
+      roleKey: 'teachers.role.tutor',
+      bioKey: 'teacher.huyenanh.bio',
+      credentials: [
+        'teacher.huyenanh.cred1',
+        'teacher.huyenanh.cred2',
+        'teacher.huyenanh.cred3',
+        'teacher.huyenanh.cred4'
       ]
     }
   ];

@@ -21,6 +21,8 @@ export class RegisterModalComponent {
   readonly birthYear = signal('');
   readonly phoneNumber = signal('');
   readonly email = signal('');
+  /** Đồng ý cho MCC dùng thông tin để liên hệ (Nghị định 13/2023/NĐ-CP) — bắt buộc, không tick sẵn */
+  readonly consent = signal(false);
   /** Hình thức học — chỉ hiện khi mở từ trang khóa học */
   readonly studyMode = signal<'online' | 'offline' | 'undecided'>('undecided');
   readonly studyModes = ['online', 'offline', 'undecided'] as const;
@@ -30,6 +32,7 @@ export class RegisterModalComponent {
   readonly birthYearTouched = signal(false);
   readonly phoneNumberTouched = signal(false);
   readonly emailTouched = signal(false);
+  readonly consentTouched = signal(false);
 
   // Submission States
   readonly isSubmitting = signal(false);
@@ -80,7 +83,8 @@ export class RegisterModalComponent {
       this.isFullNameValid() &&
       this.isBirthYearValid() &&
       this.isPhoneNumberValid() &&
-      this.isEmailValid()
+      this.isEmailValid() &&
+      this.consent()
     );
   });
 
@@ -118,6 +122,7 @@ export class RegisterModalComponent {
     this.birthYearTouched.set(true);
     this.phoneNumberTouched.set(true);
     this.emailTouched.set(true);
+    this.consentTouched.set(true);
 
     if (!this.isFormValid() || this.isSubmitting()) {
       return;
@@ -161,6 +166,8 @@ export class RegisterModalComponent {
     this.birthYear.set('');
     this.phoneNumber.set('');
     this.email.set('');
+    this.consent.set(false);
+    this.consentTouched.set(false);
     this.studyMode.set('undecided');
     this.fullNameTouched.set(false);
     this.birthYearTouched.set(false);

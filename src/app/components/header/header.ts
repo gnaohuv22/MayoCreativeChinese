@@ -1,25 +1,27 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { I18nService, Lang } from '../../services/i18n.service';
 import { ThemeService } from '../../services/theme.service';
-import { RegisterModalService } from '../../services/register-modal.service';
 
 @Component({
   selector: 'app-header',
-  imports: [NgOptimizedImage],
+  imports: [NgOptimizedImage, NgTemplateOutlet, RouterLink],
   templateUrl: './header.html',
   host: {
-    '(window:scroll)': 'onWindowScroll()'
+    '(window:scroll)': 'onWindowScroll()',
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'closeMenus()',
   }
 })
 export class HeaderComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly theme = inject(ThemeService);
-  protected readonly registerModal = inject(RegisterModalService);
 
   readonly isScrolled = signal(false);
   readonly isMobileMenuOpen = signal(false);
   readonly isLangDropdownOpen = signal(false);
+  readonly isFreeMenuOpen = signal(false);
   readonly activeSection = signal('home');
 
   /** Trang có phần đầu nền tối (VD: trang khoá học) — header trong suốt cần chữ sáng */
@@ -30,8 +32,19 @@ export class HeaderComponent {
   readonly onDarkHero = computed(() => this.overDarkHero() && !this.isSolid());
   readonly lightText = computed(() => this.theme.isDarkMode() || this.onDarkHero());
 
-  openRegisterModal(): void {
-    this.registerModal.open();
+  toggleFreeMenu(): void {
+    this.isFreeMenuOpen.update(v => !v);
+  }
+
+  closeMenus(): void {
+    this.isFreeMenuOpen.set(false);
+    this.isLangDropdownOpen.set(false);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (this.isFreeMenuOpen() && !(event.target as Element | null)?.closest('[data-free-menu]')) {
+      this.isFreeMenuOpen.set(false);
+    }
   }
 
   readonly navItems = [
