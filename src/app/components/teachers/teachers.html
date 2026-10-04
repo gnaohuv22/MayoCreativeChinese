@@ -1,10 +1,8 @@
 <section id="teachers"
   class="py-24 bg-brand-light dark:bg-brand-dark/30 relative overflow-hidden transition-colors duration-300">
   <!-- Background accents -->
-  <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand-pink/5 rounded-full filter blur-3xl -z-10"
-    style="animation: float-gentle 8s ease-in-out infinite"></div>
-  <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-brand-navy/5 rounded-full filter blur-3xl -z-10"
-    style="animation: float-gentle-reverse 10s ease-in-out infinite"></div>
+  <div class="absolute top-0 left-1/4 w-96 h-96 -z-10 bg-radial-[closest-side] from-brand-pink/5 to-transparent"></div>
+  <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] -z-10 bg-radial-[closest-side] from-brand-navy/5 to-transparent"></div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
@@ -50,8 +48,7 @@
         <!-- Hover shimmer overlay -->
         <div
           class="absolute inset-0 z-20 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent"
-            style="animation: shimmer-slide 2.5s ease-in-out infinite"></div>
+          <div class="shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent"></div>
         </div>
 
         <div>
@@ -81,7 +78,7 @@
             <!-- Floating Role Badge -->
             <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between">
               <span
-                class="px-3 py-1 rounded-full bg-brand-navy/90 text-[10px] font-bold uppercase tracking-wider text-white border border-white/10 backdrop-blur-md group-hover:bg-brand-pink/90 transition-colors duration-300">
+                class="px-3 py-1 rounded-full bg-brand-navy/90 text-[10px] font-bold uppercase tracking-wider text-white border border-white/10 group-hover:bg-brand-pink/90 transition-colors duration-300">
                 {{ i18n.translate()(teacher.roleKey) }}
               </span>
             </div>
