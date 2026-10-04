@@ -9,6 +9,7 @@ import {
   ChangeDetectorRef,
   ElementRef,
   viewChild,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -202,6 +203,22 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  private targetEndTimeMs = 0;
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange() {
+    if (document.visibilityState === 'visible' && this.isExamStarted() && this.timerInterval) {
+      this.syncTimer();
+    }
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.isSubmitModalOpen() && !this.isSubmitting()) {
+      this.closeSubmitModal();
+    }
+  }
+
   private async isStaffViewer(): Promise<boolean> {
     await this.auth.ready;
     return this.auth.can('content.read');
@@ -209,27 +226,33 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
   startExam() {
     this.isExamStarted.set(true);
+    this.targetEndTimeMs = Date.now() + this.timeRemainingSeconds() * 1000;
     this.startTimer();
+    window.scrollTo({ top: 0, behavior: 'instant' });
     this.cdr.markForCheck();
   }
 
   private startTimer() {
     this.stopTimer();
+    if (!this.targetEndTimeMs || this.targetEndTimeMs <= Date.now()) {
+      this.targetEndTimeMs = Date.now() + this.timeRemainingSeconds() * 1000;
+    }
     this.timerInterval = setInterval(() => {
-      const current = this.timeRemainingSeconds();
-      if (current <= 1) {
-        this.timeRemainingSeconds.set(0);
-        this.stopTimer();
-        this.handleTimeUp();
-      } else {
-        this.timeRemainingSeconds.set(current - 1);
-        // Lưu nháp định kỳ
-        if (current % 10 === 0) {
-          this.saveDraft();
-        }
-      }
-      this.cdr.markForCheck();
+      this.syncTimer();
     }, 1000);
+  }
+
+  private syncTimer() {
+    if (!this.isExamStarted() || !this.targetEndTimeMs) return;
+    const remaining = Math.max(0, Math.ceil((this.targetEndTimeMs - Date.now()) / 1000));
+    this.timeRemainingSeconds.set(remaining);
+    if (remaining <= 0) {
+      this.stopTimer();
+      this.handleTimeUp();
+    } else if (remaining % 10 === 0) {
+      this.saveDraft();
+    }
+    this.cdr.markForCheck();
   }
 
   private stopTimer() {
@@ -262,6 +285,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
       set.add(questionId);
     }
     this.flaggedQuestionIds.set(set);
+    this.saveDraft();
     this.cdr.markForCheck();
   }
 
@@ -435,6 +459,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
         answers: this.answers(),
         flagged: Array.from(this.flaggedQuestionIds()),
         timeRemaining: this.timeRemainingSeconds(),
+        targetEndTime: this.targetEndTimeMs,
         isStarted: this.isExamStarted(),
       };
       sessionStorage.setItem(this.getDraftKey(ex.id), JSON.stringify(draft));
@@ -448,12 +473,26 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
       const draft = JSON.parse(str);
       if (draft.answers) this.answers.set(draft.answers);
       if (draft.flagged) this.flaggedQuestionIds.set(new Set(draft.flagged));
-      if (draft.timeRemaining !== undefined && draft.timeRemaining > 0) {
-        this.timeRemainingSeconds.set(draft.timeRemaining);
+
+      let remaining = this.initialDurationSeconds();
+      if (draft.targetEndTime) {
+        remaining = Math.max(0, Math.ceil((draft.targetEndTime - Date.now()) / 1000));
+        this.targetEndTimeMs = draft.targetEndTime;
+      } else if (draft.timeRemaining !== undefined) {
+        remaining = Math.max(0, Number(draft.timeRemaining));
+        this.targetEndTimeMs = Date.now() + remaining * 1000;
       }
+      this.timeRemainingSeconds.set(remaining);
+
       if (draft.isStarted) {
         this.isExamStarted.set(true);
-        this.startTimer();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        if (remaining <= 0) {
+          this.stopTimer();
+          this.handleTimeUp();
+        } else {
+          this.startTimer();
+        }
       }
     } catch {}
   }

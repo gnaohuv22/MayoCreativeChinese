@@ -1,8 +1,8 @@
 <header class="sticky top-0 z-40 backdrop-blur-md bg-white/90 dark:bg-brand-dark/90 border-b border-brand-navy/10 dark:border-white/10 shadow-xs transition-colors duration-300 w-full">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
     <!-- Left: Brand Logo & Title & Back -->
-    <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-      <a routerLink="/" class="flex items-center space-x-2.5 group" aria-label="Về trang chủ Mayo Creative Chinese">
+    <div class="flex items-center gap-2 sm:gap-4 min-w-0 shrink">
+      <a routerLink="/" class="flex items-center space-x-2.5 group shrink-0" aria-label="Về trang chủ Mayo Creative Chinese">
         <div class="relative w-8 h-8 sm:w-9 sm:h-9 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-xs group-hover:scale-105 transition-transform duration-300">
           <img src="android-chrome-192x192.png" width="32" height="32" alt="MCC Logo" class="object-contain" />
         </div>
@@ -16,9 +16,9 @@
         </div>
       </a>
 
-      <!-- Badge: Đang phát triển (hiện khi ở flashcard hoặc khi showDevBadge) -->
+      <!-- Badge: Đang phát triển (ẩn trên tablet khi có nút quay lại để tránh chật chội) -->
       @if (activeModule() === 'flashcards' || showDevBadge()) {
-        <span class="hidden xs:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+        <span [class.hidden]="showBack()" [class.xl:inline-flex]="showBack()" class="hidden xs:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
           <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
           Đang phát triển
         </span>
@@ -27,7 +27,7 @@
       <!-- Back Link (optional) -->
       @if (showBack() && backLink()) {
         <span class="text-brand-navy/20 dark:text-white/20">|</span>
-        <a [routerLink]="backLink()" class="text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-zinc-300 hover:text-brand-pink dark:hover:text-brand-pink transition-colors flex items-center gap-1">
+        <a [routerLink]="backLink()" class="text-xs sm:text-sm font-semibold text-brand-navy/70 dark:text-zinc-300 hover:text-brand-pink dark:hover:text-brand-pink transition-colors flex items-center gap-1 whitespace-nowrap shrink-0">
           <app-icon name="arrow-left" size="xs" />
           <span>{{ backLabel() || 'Quay lại' }}</span>
         </a>
@@ -36,7 +36,7 @@
       <!-- Page Title (desktop left) if showNavLinks is true -->
       @if (pageTitle() && showNavLinks()) {
         <span class="text-brand-navy/20 dark:text-white/20 hidden lg:inline">|</span>
-        <span class="text-xs sm:text-sm font-bold font-display text-brand-navy dark:text-white hidden lg:inline">
+        <span class="text-xs sm:text-sm font-bold font-display text-brand-navy dark:text-white hidden lg:inline truncate">
           {{ pageTitle() }}
         </span>
       }
@@ -76,7 +76,7 @@
         </a>
       </nav>
     } @else if (pageTitle()) {
-      <div class="hidden md:block font-display font-bold text-brand-navy dark:text-white text-base">
+      <div class="hidden md:block font-display font-bold text-brand-navy dark:text-white text-sm lg:text-base truncate max-w-[200px] md:max-w-xs lg:max-w-md text-center">
         {{ pageTitle() }}
       </div>
     }

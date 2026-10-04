@@ -152,22 +152,38 @@ export class VocabService {
     return this.cachedRows(`refs:${scopeKey(scope)}`, () => this.scopedQuery(scope, 'id, hanzi, hsk_level, collection').order('id'));
   }
 
-  /** Số từ theo từng cấp của 1 bộ */
-  async getLevelCounts(collection: VocabCollection): Promise<Map<number, number>> {
-    const { counts } = await this.cache.get(`counts:${collection}`, async () => {
-      const levels = collectionLevels(collection);
-      const results = await Promise.all(levels.map(level =>
-        this.supabase
-          .from('vocab_cards')
-          .select('id', { count: 'exact', head: true })
-          .eq('collection', collection)
-          .eq('hsk_level', level)
-      ));
-      const counts = new Map<number, number>();
-      results.forEach((res, i) => counts.set(levels[i], res.error ? 0 : res.count ?? 0));
-      return { counts, ok: results.every(res => !res.error) };
+  /** Toàn bộ số từ theo từng cấp cho cả 4 bộ, gom trong 1 query và cache chung */
+  async getAllLevelCounts(): Promise<Record<VocabCollection, Map<number, number>>> {
+    const { allCounts } = await this.cache.get('counts:all', async () => {
+      const { rows, ok } = await this.fetchAllChecked<{ collection: VocabCollection; hsk_level: number }>(() =>
+        this.supabase.from('vocab_cards').select('collection, hsk_level')
+      );
+      const allCounts: Record<VocabCollection, Map<number, number>> = {
+        hsk2: new Map(),
+        hsk3: new Map(),
+        combined: new Map(),
+        supplement: new Map(),
+      };
+      for (const r of rows) {
+        if (!r.collection || !allCounts[r.collection]) continue;
+        const m = allCounts[r.collection];
+        m.set(r.hsk_level, (m.get(r.hsk_level) ?? 0) + 1);
+      }
+      return { allCounts, ok };
     }, r => r.ok);
-    return new Map(counts);
+
+    return {
+      hsk2: new Map(allCounts.hsk2),
+      hsk3: new Map(allCounts.hsk3),
+      combined: new Map(allCounts.combined),
+      supplement: new Map(allCounts.supplement),
+    };
+  }
+
+  /** Số từ theo từng cấp của 1 bộ (dùng chung kết quả từ getAllLevelCounts) */
+  async getLevelCounts(collection: VocabCollection): Promise<Map<number, number>> {
+    const all = await this.getAllLevelCounts();
+    return all[collection] ? new Map(all[collection]) : new Map();
   }
 
   /**

@@ -1,6 +1,6 @@
 import type { ParamMap } from '@angular/router';
 import { VOCAB_COLLECTIONS, parseLevelParam } from '../models/vocab-card.model';
-import type { VocabCollection, VocabScope } from '../models/vocab-card.model';
+import type { HskVersion, VocabCollection, VocabScope } from '../models/vocab-card.model';
 
 /** Tham số route cho nhóm "chưa phân chủ đề" (tên chủ đề rỗng không đưa lên URL được) */
 export const NO_TOPIC_PARAM = '_';
@@ -24,6 +24,25 @@ export function scopeLevels(scope: VocabScope): number[] {
 /** "NEW HSK 3", "HSK 7-9" */
 export function scopeLevelLabel(scope: Pick<VocabScope, 'collection' | 'levelParam'>): string {
   return `${VOCAB_COLLECTIONS[scope.collection].levelPrefix} ${scope.levelParam}`;
+}
+
+/**
+ * Nhãn cấp hiển thị cho thẻ từ vựng:
+ * - Combined cấp 7..9: "HSK 7-9"
+ * - HSK 3.0 (collection hsk3): "NEW HSK n"
+ * - Các bộ khác: "HSK n"
+ */
+export function vocabCardLevelLabel(card: {
+  collection?: VocabCollection;
+  hsk_level: number;
+  hsk_version?: HskVersion;
+}): string {
+  if (card.collection === 'combined' && card.hsk_level >= 7) {
+    return 'HSK 7-9';
+  }
+  const isHsk3 = card.collection === 'hsk3' || (card.hsk_version === '3.0' && card.collection !== 'combined' && card.collection !== 'supplement');
+  const prefix = isHsk3 ? 'NEW HSK' : 'HSK';
+  return `${prefix} ${card.hsk_level}`;
 }
 
 /** Tên nhóm đang chọn: "Bài 3", "Chủ đề: Gia đình", hoặc null nếu học cả cấp */

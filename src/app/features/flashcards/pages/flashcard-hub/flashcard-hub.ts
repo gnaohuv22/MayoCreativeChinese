@@ -42,13 +42,12 @@ export class FlashcardHubComponent implements OnInit {
   async ngOnInit() {
     this.loading.set(true);
     try {
-      // 4 bộ độc lập — đếm theo từng cấp để làm mờ cấp chưa có từ
-      const keys: VocabCollection[] = ['hsk2', 'hsk3', 'combined', 'supplement'];
-      const [access, ...counts] = await Promise.all([
+      // 4 bộ độc lập — gom số từ trong 1 query duy nhất
+      const [access, allCounts] = await Promise.all([
         this.vocabService.accessResolver(),
-        ...keys.map(c => this.vocabService.getLevelCounts(c)),
+        this.vocabService.getAllLevelCounts(),
       ]);
-      const [countsV2, countsV3, countsCombined, countsSupplement] = counts;
+      const { hsk2: countsV2, hsk3: countsV3, combined: countsCombined, supplement: countsSupplement } = allCounts;
       // Cấp bản nháp / nội bộ (với khách) tính như chưa có từ
       const levelsOf = (collection: VocabCollection, counts: Map<number, number>, params: (number | string)[], label: (p: number | string) => string) =>
         params.map(num => {

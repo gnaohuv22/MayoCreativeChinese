@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import { map } from 'rxjs';
 import { HeaderComponent } from '../../../../components/header/header';
 import { FooterComponent } from '../../../../components/footer/footer';
@@ -37,6 +37,7 @@ export class CourseDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
   private readonly registerModal = inject(RegisterModalService);
 
   private readonly slug = toSignal(this.route.paramMap.pipe(map(p => p.get('slug') ?? '')), { initialValue: '' });
@@ -97,7 +98,21 @@ export class CourseDetailComponent {
         this.router.navigateByUrl('/#courses');
         return;
       }
-      if (c) this.title.setTitle(`${c.name} | Mayo Creative Chinese`);
+      if (c) {
+        const fullTitle = `${c.name} | Mayo Creative Chinese`;
+        const desc = c.goal || c.lead?.[0]?.text || 'Khóa học tiếng Trung tại Mayo Creative Chinese';
+        const url = typeof window !== 'undefined'
+          ? window.location.href
+          : `https://mayo-creative-chinese.vercel.app/khoa-hoc/${c.slug}`;
+
+        this.title.setTitle(fullTitle);
+        this.meta.updateTag({ name: 'description', content: desc });
+        this.meta.updateTag({ property: 'og:title', content: fullTitle });
+        this.meta.updateTag({ property: 'og:description', content: desc });
+        this.meta.updateTag({ property: 'og:url', content: url });
+        this.meta.updateTag({ property: 'twitter:title', content: fullTitle });
+        this.meta.updateTag({ property: 'twitter:description', content: desc });
+      }
     });
 
     effect(() => {

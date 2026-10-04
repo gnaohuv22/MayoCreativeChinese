@@ -82,7 +82,7 @@
         <!-- Dark Mode Toggle Button -->
         <button (click)="theme.toggleTheme()"
                 class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none cursor-pointer"
-                aria-label="Toggle dark mode">
+                aria-label="Chuyển chế độ sáng/tối">
           @if (theme.isDarkMode()) {
             <!-- Sun Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-gold animate-pulse">
@@ -130,8 +130,8 @@
                 class="p-2 rounded-md text-brand-navy dark:text-white hover:text-brand-pink focus:outline-none"
                 [attr.aria-expanded]="isMobileMenuOpen()"
                 aria-controls="mobile-menu-drawer"
-                aria-label="Toggle navigation menu">
-          <span class="sr-only">Open main menu</span>
+                aria-label="Mở/đóng menu điều hướng">
+          <span class="sr-only">Mở menu điều hướng</span>
           @if (isMobileMenuOpen()) {
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -149,7 +149,9 @@
   <!-- Mobile Menu Drawer -->
   <div id="mobile-menu-drawer" class="lg:hidden overflow-hidden transition-all duration-300 max-h-0 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-lg shadow-inner relative z-50"
        [class.max-h-[460px]]="isMobileMenuOpen()"
-       [class.py-4]="isMobileMenuOpen()">
+       [class.py-4]="isMobileMenuOpen()"
+       [attr.inert]="!isMobileMenuOpen() ? '' : null"
+       [attr.aria-hidden]="!isMobileMenuOpen()">
     <div class="px-4 space-y-2">
       @for (item of navItems; track item.id) {
         <a routerLink="/" [fragment]="item.id"
@@ -193,7 +195,7 @@
         <!-- Dark Mode Toggle Button for Mobile Drawer -->
         <button (click)="theme.toggleTheme()"
                 class="p-2 rounded-full border border-brand-navy/10 dark:border-white/20 text-brand-navy dark:text-white hover:bg-brand-pink/5 transition-all duration-300 focus:outline-none cursor-pointer"
-                aria-label="Toggle dark mode">
+                aria-label="Chuyển chế độ sáng/tối">
           @if (theme.isDarkMode()) {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-gold animate-pulse">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.5 1.5m10.5 10.5l1.5 1.5M3 12h2.25m13.5 0H21M5.25 18.75l1.5-1.5m10.5-10.5l1.5-1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />

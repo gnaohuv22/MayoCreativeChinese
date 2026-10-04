@@ -9,7 +9,19 @@ export type Lang = 'vi' | 'zh' | 'en' | 'ja' | 'km';
 export class I18nService {
   private readonly http = inject(HttpClient);
 
-  readonly currentLang = signal<Lang>('vi');
+  private getSavedLang(): Lang {
+    try {
+      const saved = localStorage.getItem('mcc_lang') || localStorage.getItem('lang');
+      if (saved && ['vi', 'zh', 'en', 'ja', 'km'].includes(saved)) {
+        return saved as Lang;
+      }
+    } catch {
+      // ignore
+    }
+    return 'vi';
+  }
+
+  readonly currentLang = signal<Lang>(this.getSavedLang());
   readonly translations = signal<Record<string, string>>({});
   
   private fallbackTranslations: Record<string, string> = {};
@@ -23,6 +35,11 @@ export class I18nService {
   ];
 
   constructor() {
+    const initialLang = this.currentLang();
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = initialLang;
+    }
+
     // Preload Vietnamese as the fallback dictionary
     this.http.get<Record<string, string>>('i18n/vi.json').subscribe({
       next: (data) => {
@@ -38,8 +55,8 @@ export class I18nService {
     });
 
     // If initial language is not Vietnamese, load it
-    if (this.currentLang() !== 'vi') {
-      this.loadTranslations(this.currentLang());
+    if (initialLang !== 'vi') {
+      this.loadTranslations(initialLang);
     }
   }
 
@@ -56,7 +73,15 @@ export class I18nService {
 
   setLang(lang: Lang): void {
     this.currentLang.set(lang);
-    document.documentElement.lang = lang;
+    try {
+      localStorage.setItem('mcc_lang', lang);
+      localStorage.setItem('lang', lang);
+    } catch {
+      // ignore
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = lang;
+    }
     this.loadTranslations(lang);
   }
 

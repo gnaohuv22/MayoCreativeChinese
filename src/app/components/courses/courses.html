@@ -20,7 +20,7 @@
         (click)="scrollSlider('left')"
         [disabled]="!canScrollLeft()"
         class="w-10 h-10 rounded-full border border-brand-navy/10 dark:border-white/10 flex items-center justify-center text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white hover:border-brand-pink disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
-        aria-label="Scroll courses left">
+        aria-label="Cuộn khóa học sang trái">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
@@ -29,7 +29,7 @@
         (click)="scrollSlider('right')"
         [disabled]="!canScrollRight()"
         class="w-10 h-10 rounded-full border border-brand-navy/10 dark:border-white/10 flex items-center justify-center text-brand-navy dark:text-white hover:bg-brand-pink hover:text-white hover:border-brand-pink disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
-        aria-label="Scroll courses right">
+        aria-label="Cuộn khóa học sang phải">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
@@ -38,7 +38,7 @@
 
     <!-- Horizontal Slider -->
     <div #slider
-         class="course-slider flex gap-8 overflow-x-auto snap-x snap-mandatory pb-6 -mx-4 px-4 lg:mx-0 lg:px-0"
+         class="course-slider flex gap-8 overflow-x-auto snap-x snap-mandatory pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0"
          (scroll)="onSliderScroll()">
 
       @for (course of courses; track course.id) {
@@ -104,7 +104,7 @@
             </p>
 
             <!-- Metadata -->
-            <div class="border-t border-brand-navy/5 dark:border-white/5 pt-6 space-y-3.5 mb-8">
+            <div class="border-t border-brand-navy/5 dark:border-white/5 pt-6 flex flex-col gap-4 mb-8">
               <!-- Duration -->
               <div class="flex items-center justify-between text-xs sm:text-sm">
                 <span class="flex items-center gap-2 text-brand-navy/60 dark:text-white/65 font-medium">
@@ -133,7 +133,7 @@
                   </svg>
                   {{ i18n.translate()('course.objective') }}
                 </span>
-                <span class="text-brand-navy dark:text-white font-bold text-right">{{ i18n.translate()(course.objectiveKey) }}</span>
+                <span class="text-brand-navy dark:text-white font-bold text-right leading-snug">{{ i18n.translate()(course.objectiveKey) }}</span>
               </div>
             </div>
           </div>
@@ -161,7 +161,7 @@
     </div>
 
     <!-- Mobile swipe indicator -->
-    <div class="lg:hidden flex items-center justify-center gap-2 mt-4" role="tablist" aria-label="Course pagination">
+    <div class="lg:hidden flex items-center justify-center gap-2 mt-4" role="tablist" aria-label="Phân trang khóa học">
       @for (course of courses; track course.id; let i = $index) {
         <button
           (click)="scrollToCard(i)"

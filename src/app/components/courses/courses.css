@@ -8,6 +8,19 @@
 .course-slider {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scroll-padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .course-slider {
+    scroll-padding-left: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .course-slider {
+    scroll-padding-left: 0;
+  }
 }
 
 .course-slider::-webkit-scrollbar {

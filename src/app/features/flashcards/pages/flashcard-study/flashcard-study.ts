@@ -8,7 +8,7 @@ import { SpeechService } from '../../services/speech.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
 import type { VocabCard, CardProgress, VocabCollection, VocabScope } from '../../models/vocab-card.model';
-import { scopeFromRoute, scopeRoutes, scopeTitle } from '../../utils/vocab-scope.util';
+import { scopeFromRoute, scopeLevelLabel, scopeRoutes, scopeTitle } from '../../utils/vocab-scope.util';
 
 @Component({
   selector: 'app-flashcard-study',
@@ -18,6 +18,7 @@ import { scopeFromRoute, scopeRoutes, scopeTitle } from '../../utils/vocab-scope
   styleUrl: './flashcard-study.css',
 })
 export class FlashcardStudyComponent implements OnInit {
+  readonly scopeLevelLabel = scopeLevelLabel;
   private route = inject(ActivatedRoute);
   private vocabService = inject(VocabService);
   private progressService = inject(ProgressService);
@@ -26,6 +27,7 @@ export class FlashcardStudyComponent implements OnInit {
   scope = signal<VocabScope>({ collection: 'hsk2', levelParam: '1' });
 
   cards = signal<VocabCard[]>([]);
+  private originalCards: VocabCard[] = [];
   progressMap = signal<Map<string, CardProgress>>(new Map());
   currentIndex = signal(0);
   flipped = signal(false);
@@ -76,6 +78,7 @@ export class FlashcardStudyComponent implements OnInit {
       const vocabList = await this.vocabService.getVocabForScope(this.scope());
       const progress = await this.progressService.getProgressForCards(vocabList);
 
+      this.originalCards = [...vocabList];
       this.cards.set(vocabList);
       this.progressMap.set(progress);
       this.currentIndex.set(0);
@@ -231,18 +234,18 @@ export class FlashcardStudyComponent implements OnInit {
   toggleShuffle() {
     if (this.isTransitioning()) return;
     const currentIsShuffled = this.shuffled();
-    this.cards.update(cards => {
-      const newCards = [...cards];
-      if (!currentIsShuffled) {
+    if (!currentIsShuffled) {
+      this.cards.update(cards => {
+        const newCards = [...cards];
         for (let i = newCards.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [newCards[i], newCards[j]] = [newCards[j], newCards[i]];
         }
-      } else {
-        newCards.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
-      }
-      return newCards;
-    });
+        return newCards;
+      });
+    } else {
+      this.cards.set([...this.originalCards]);
+    }
     this.shuffled.set(!currentIsShuffled);
     this.currentIndex.set(0);
     this.flipped.set(false);

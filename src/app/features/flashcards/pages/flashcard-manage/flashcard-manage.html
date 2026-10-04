@@ -510,7 +510,7 @@
                         <td class="p-3.5 text-center">
                           <div class="flex flex-col items-center gap-1">
                             <span class="text-[10px] font-bold text-brand-navy/60 dark:text-white/60 whitespace-nowrap">{{ collectionLabel(card.collection) }}</span>
-                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">HSK {{ card.hsk_level }}</span>
+                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/10 font-bold text-xs text-brand-navy dark:text-white border border-brand-navy/5 dark:border-white/10">{{ vocabCardLevelLabel(card) }}</span>
                             @if (card.lesson_number) {
                               <span class="text-[10px] font-semibold text-brand-pink">Bài {{ card.lesson_number }}</span>
                             }

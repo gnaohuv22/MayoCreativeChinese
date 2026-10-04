@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { HeaderComponent } from '../../components/header/header';
 import { FooterComponent } from '../../components/footer/footer';
@@ -36,4 +37,14 @@ import { AppIconComponent } from '../../components/shared/icon/app-icon';
     <app-register-modal />
   `,
 })
-export class NotFoundComponent {}
+export class NotFoundComponent implements OnInit, OnDestroy {
+  private readonly meta = inject(Meta);
+
+  ngOnInit(): void {
+    this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
+
+  ngOnDestroy(): void {
+    this.meta.removeTag("name='robots'");
+  }
+}

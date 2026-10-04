@@ -11,6 +11,7 @@ import { VOCAB_COLLECTIONS, VOCAB_COLLECTION_KEYS, collectionLevels, vocabEntryK
 import type { ParsedImportRow, VocabCard, ValidatedImportRow, VocabCollection } from '../../models/vocab-card.model';
 import { parseFile, validateRows } from '../../utils/file-parser.util';
 import { downloadCsvTemplate, downloadXlsxTemplate, exportAsJson } from '../../utils/template-generator.util';
+import { vocabCardLevelLabel } from '../../utils/vocab-scope.util';
 
 /** Dữ liệu cho hộp thoại xác nhận thêm từ cùng Hán tự khác nghĩa */
 interface DupDialogState {
@@ -29,6 +30,7 @@ interface DupDialogState {
   styleUrl: './flashcard-manage.css',
 })
 export class FlashcardManageComponent implements OnInit {
+  protected readonly vocabCardLevelLabel = vocabCardLevelLabel;
   protected readonly Math = Math;
   private vocabService = inject(VocabService);
   private toastService = inject(ToastService);

@@ -1,15 +1,40 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
+import { VOCAB_COLLECTIONS, parseLevelParam } from './models/vocab-card.model';
 import type { VocabCollection } from './models/vocab-card.model';
 import { VocabService } from './services/vocab.service';
 
-/** Cấp bản nháp / nội bộ mở bằng link → về trang chọn cấp (hiện "Sắp ra mắt") */
+/** Cấp không hợp lệ / bản nháp / nội bộ / chưa có dữ liệu mở bằng link → về trang chọn cấp (hiện "Sắp ra mắt") */
 const levelOpenGuard: CanActivateFn = async route => {
   const collection = route.data['collection'] as VocabCollection;
   const router = inject(Router);
-  const access = await inject(VocabService).accessResolver();
-  return access(collection, route.paramMap.get('level') ?? '') !== 'locked'
-    || router.createUrlTree(['/flashcards', collection]);
+  const config = VOCAB_COLLECTIONS[collection];
+  if (!config) {
+    return router.createUrlTree(['/flashcards']);
+  }
+
+  const levelParam = route.paramMap.get('level') ?? '';
+  if (!config.levelParams.includes(levelParam)) {
+    return router.createUrlTree(['/flashcards', collection]);
+  }
+
+  const vocabService = inject(VocabService);
+  const [counts, access] = await Promise.all([
+    vocabService.getLevelCounts(collection),
+    vocabService.accessResolver(),
+  ]);
+
+  const levelAccess = access(collection, levelParam);
+  if (levelAccess === 'locked') {
+    return router.createUrlTree(['/flashcards', collection]);
+  }
+
+  const count = parseLevelParam(levelParam).reduce((sum, l) => sum + (counts.get(l) ?? 0), 0);
+  if (count === 0 && levelAccess !== 'staff') {
+    return router.createUrlTree(['/flashcards', collection]);
+  }
+
+  return true;
 };
 
 const levelPicker = () =>

@@ -158,16 +158,24 @@ export class CoursesComponent {
   scrollToCard(index: number): void {
     const slider = this.sliderRef()?.nativeElement;
     if (!slider) return;
+    if (index === 0) {
+      slider.scrollTo({
+        left: 0,
+        behavior: 'smooth',
+      });
+      return;
+    }
     const children = slider.querySelectorAll('.course-card');
     const targetCard = children[index] as HTMLElement;
     if (targetCard) {
       const sliderRect = slider.getBoundingClientRect();
       const targetRect = targetCard.getBoundingClientRect();
-      const relativeLeft = targetRect.left - sliderRect.left + slider.scrollLeft;
+      const paddingLeft = parseFloat(window.getComputedStyle(slider).paddingLeft) || 0;
+      const relativeLeft = targetRect.left - sliderRect.left + slider.scrollLeft - paddingLeft;
       
       slider.scrollTo({
-        left: relativeLeft,
-        behavior: 'smooth'
+        left: Math.max(0, relativeLeft),
+        behavior: 'smooth',
       });
     }
   }

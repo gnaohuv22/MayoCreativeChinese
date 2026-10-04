@@ -45,6 +45,7 @@ Thumbs.db
 .agents
 .gemini
 .vscode
+.claude/
 DESIGN.md
 PRODUCT.md
 .impeccable
