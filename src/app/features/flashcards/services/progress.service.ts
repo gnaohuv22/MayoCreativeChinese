@@ -95,7 +95,8 @@ export class ProgressService {
     return {
       totalCards: cards.length,
       reviewed: progress.filter(p => p.reviewCount > 0).length,
-      mastered: progress.filter(p => p.confidence >= 2).length,
+      // "Đã thuộc" = bấm nút Thuộc (3); "Biết" (2) vẫn cần ôn
+      mastered: progress.filter(p => p.confidence === 3).length,
       bookmarked: progress.filter(p => p.bookmarked).length,
     };
   }

@@ -7,7 +7,7 @@ import { exportProgressJson } from '../../utils/template-generator.util';
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
-import { ADVANCED_LEVEL_PARAM, parseLevelParam } from '../../models/vocab-card.model';
+import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection } from '../../models/vocab-card.model';
 
 export interface CollectionCardItem {
@@ -61,7 +61,8 @@ export class FlashcardHubComponent implements OnInit {
       const levelsV3 = levelsOf('hsk3', countsV3, [1, 2, 3, 4, 5, 6, 7, 8, 9], i => `NEW HSK ${i}`);
       const levelsCombined = levelsOf('combined', countsCombined, [1, 2, 3, 4, 5, 6, ADVANCED_LEVEL_PARAM], i => `HSK ${i}`);
       const levelsSupplement = levelsOf('supplement', countsSupplement, [3, 4, 5, 6], i => `HSK ${i}`);
-      const totalV2 = sumOf(levelsV2);
+      // HSK 2.0 lưu theo kiểu cộng dồn (cấp 2 gồm cả từ cấp 1…): tổng = cấp cao nhất học được
+      const totalV2 = VOCAB_COLLECTIONS.hsk2.cumulative ? Math.max(0, ...levelsV2.map(l => l.count)) : sumOf(levelsV2);
       const totalV3 = sumOf(levelsV3);
       const totalCombined = sumOf(levelsCombined);
       const totalSupplement = sumOf(levelsSupplement);

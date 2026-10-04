@@ -46,14 +46,15 @@ export class FlashcardStudyComponent implements OnInit {
     const map = this.progressMap();
 
     if (filter === 'all') return cards;
-    return cards.filter(card => {
-      const p = map.get(progressKey(card));
-      if (filter === 'new') return !p || p.reviewCount === 0;
-      if (filter === 'hard') return p && (p.confidence === 1 || (p.reviewCount > 0 && p.confidence === 0));
-      if (filter === 'bookmarked') return p?.bookmarked === true;
-      return true;
-    });
+    return cards.filter(card => this.matchesFilter(filter, map.get(progressKey(card))));
   });
+
+  private matchesFilter(filter: 'all' | 'new' | 'hard' | 'bookmarked', p: CardProgress | undefined): boolean {
+    if (filter === 'new') return !p || p.reviewCount === 0;
+    if (filter === 'hard') return !!p && (p.confidence === 1 || (p.reviewCount > 0 && p.confidence === 0));
+    if (filter === 'bookmarked') return p?.bookmarked === true;
+    return true;
+  }
 
   currentCard = computed(() => {
     const list = this.filteredCards();
@@ -159,12 +160,31 @@ export class FlashcardStudyComponent implements OnInit {
             bookmarked: false,
           };
 
-      this.progressMap.update(map => {
+      const saveProgress = () => this.progressMap.update(map => {
         const newMap = new Map(map);
         newMap.set(key, updated);
         return newMap;
       });
 
+      // Thẻ vừa chấm rời khỏi bộ lọc (VD "Chưa học"): thẻ kế tiếp tự trượt vào vị trí hiện tại,
+      // không tăng chỉ số nữa (nếu không sẽ bỏ qua 1 thẻ). Úp thẻ trước để không lộ mặt sau thẻ mới.
+      if (!this.matchesFilter(this.filter(), updated)) {
+        const finish = () => {
+          saveProgress();
+          this.currentIndex.update(i => Math.max(0, Math.min(i, this.filteredCards().length - 1)));
+          this.isTransitioning.set(false);
+        };
+        if (this.flipped()) {
+          this.isTransitioning.set(true);
+          this.flipped.set(false);
+          setTimeout(finish, 320);
+        } else {
+          finish();
+        }
+        return;
+      }
+
+      saveProgress();
       if (this.currentIndex() < this.filteredCards().length - 1) {
         this.nextCard();
       } else {

@@ -27,6 +27,20 @@ function scopeKey(scope: VocabScope): string {
   return `${scope.collection}|${scope.levelParam}|${lesson}|${topic}`;
 }
 
+const TONED = 'āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜü';
+const PLAIN = 'aaaaeeeeiiiioooouuuuvvvvv';
+
+/** Chuẩn hoá giống cột pinyin_search: chữ thường, bỏ dấu thanh, bỏ khoảng trắng, ü → v */
+export function plainPinyin(text: string): string {
+  return [...text.toLowerCase().normalize('NFC')]
+    .map(ch => {
+      const i = TONED.indexOf(ch);
+      return i >= 0 ? PLAIN[i] : ch;
+    })
+    .join('')
+    .replace(/\s+/g, '');
+}
+
 /** Mức hiển thị theo `${collection}|${hsk_level}`; không có = công khai */
 export type VocabVisibilityMap = Map<string, ContentVisibility>;
 
@@ -217,7 +231,11 @@ export class VocabService {
     let q = this.scopedQuery(scope, VOCAB_COLUMNS, { count: 'exact' });
     if (query && query.trim()) {
       const clean = query.trim().replace(/[,()]/g, ' ');
-      q = q.or(`hanzi.ilike.%${clean}%,pinyin.ilike.%${clean}%,meaning.ilike.%${clean}%`);
+      const filters = [`hanzi.ilike.%${clean}%`, `pinyin.ilike.%${clean}%`, `meaning.ilike.%${clean}%`];
+      // Pinyin không dấu / không cách: "mama", "ma ma" đều tìm được māma (cột pinyin_search, migration 018)
+      const plain = plainPinyin(clean);
+      if (plain) filters.push(`pinyin_search.ilike.%${plain}%`);
+      q = q.or(filters.join(','));
     }
 
     const { data, count, error } = await q

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildQuestion, buildQuiz, pinyinToneVariants, QUIZ_OPTION_COUNT } from './quiz.util';
+import { buildQuestion, buildQuiz, meaningSenses, pinyinToneVariants, QUIZ_OPTION_COUNT } from './quiz.util';
 import type { VocabCard } from '../models/vocab-card.model';
 
 const card = (id: number, hanzi: string, pinyin: string, meaning: string): VocabCard =>
@@ -46,6 +46,50 @@ describe('buildQuestion', () => {
 
   it('returns null when there are not enough distractors', () => {
     expect(buildQuestion('meaning_hanzi', POOL[0], POOL.slice(0, 2))).toBeNull();
+  });
+});
+
+describe('meaningSenses', () => {
+  it('splits a meaning into senses and drops notes in brackets', () => {
+    expect(meaningSenses('cần, yêu cầu')).toEqual(['cần', 'yêu cầu']);
+    expect(meaningSenses('Có thể (khả năng); được')).toEqual(['có thể', 'được']);
+    expect(meaningSenses('bố hoặc cha')).toEqual(['bố', 'cha']);
+  });
+});
+
+describe('distractors that would also be correct', () => {
+  const pool: VocabCard[] = [
+    card(10, '要', 'yào', 'cần, yêu cầu'),
+    card(11, '要', 'yào', 'muốn'),
+    card(12, '想', 'xiǎng', 'muốn'),
+    card(13, '可以', 'kěyǐ', 'có thể, được'),
+    card(14, '能', 'néng', 'có thể'),
+    card(15, '不客气', 'bú kèqi', 'đừng khách sáo'),
+    card(16, '一起', 'yìqǐ', 'cùng nhau'),
+    ...POOL,
+  ];
+
+  it('skips a meaning that is another sense of the same hanzi', () => {
+    for (let i = 0; i < 30; i++) {
+      expect(buildQuestion('hanzi_meaning', pool[0], pool)!.options).not.toContain('muốn');
+    }
+  });
+
+  it('skips near-synonyms that share a sense', () => {
+    for (let i = 0; i < 30; i++) {
+      expect(buildQuestion('hanzi_meaning', pool[3], pool)!.options).not.toContain('có thể');
+      expect(buildQuestion('meaning_hanzi', pool[4], pool)!.options).not.toContain('可以');
+    }
+  });
+
+  it('does not offer the tone-sandhi spelling of 不 / 一 as a wrong pinyin', () => {
+    for (let i = 0; i < 30; i++) {
+      const q1 = buildQuestion('hanzi_pinyin', pool[5], pool)!;
+      expect(q1.options.filter(o => o !== 'bú kèqi')).not.toContain('bù kèqi');
+      const q2 = buildQuestion('hanzi_pinyin', pool[6], pool)!;
+      expect(q2.options).not.toContain('yīqǐ');
+      expect(q2.options).not.toContain('yíqǐ');
+    }
   });
 });
 

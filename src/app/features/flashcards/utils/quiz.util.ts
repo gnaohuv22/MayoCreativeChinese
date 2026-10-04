@@ -96,6 +96,52 @@ export function pinyinToneVariants(pinyin: string): string[] {
   return [...variants];
 }
 
+/** Thanh điệu biến đổi theo âm sau: 不 bù/bú, 一 yī/yí/yì — đổi thanh ở các âm này vẫn là cách đọc đúng */
+const SANDHI: { hanzi: string; initial: string; vowel: string }[] = [
+  { hanzi: '不', initial: 'b', vowel: 'u' },
+  { hanzi: '一', initial: 'y', vowel: 'i' },
+];
+
+/** Biến thể chỉ đổi thanh ở âm "bu" của 不 hoặc "yi" của 一 có trong từ */
+function isSandhiVariant(variant: string, answer: string, hanzi: string): boolean {
+  const v = [...norm(variant)];
+  const a = [...norm(answer)];
+  if (v.length !== a.length) return false;
+  const idx = v.findIndex((ch, i) => ch !== a[i]);
+  if (idx <= 0) return false;
+  const vowel = MARKED.get(a[idx])?.base;
+  const initial = a[idx - 1].toLowerCase();
+  return SANDHI.some(r => hanzi.includes(r.hanzi) && r.vowel === vowel && r.initial === initial);
+}
+
+/** Tách nghĩa thành các nét nghĩa: "cần, yêu cầu" → ["cần", "yêu cầu"]; bỏ phần chú thích trong ngoặc */
+export function meaningSenses(meaning: string | null | undefined): string[] {
+  return norm((meaning ?? '').replace(/\([^)]*\)/g, ' '))
+    .toLowerCase()
+    .split(/[,;，；/]|\s+hoặc\s+/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+/** Mọi nét nghĩa / cách đọc của từng Hán tự trong pool (1 chữ có thể có nhiều dòng, nhiều nghĩa) */
+function indexByHanzi(pool: readonly VocabCard[]) {
+  const senses = new Map<string, Set<string>>();
+  const readings = new Map<string, Set<string>>();
+  for (const c of pool) {
+    const key = norm(c.hanzi);
+    if (!senses.has(key)) senses.set(key, new Set());
+    if (!readings.has(key)) readings.set(key, new Set());
+    meaningSenses(c.meaning).forEach(m => senses.get(key)!.add(m));
+    if (c.pinyin) readings.get(key)!.add(norm(c.pinyin).toLowerCase());
+  }
+  return { senses, readings };
+}
+
+function overlaps(a: Iterable<string>, b: Set<string>): boolean {
+  for (const x of a) if (b.has(x)) return true;
+  return false;
+}
+
 // --- Question building ----------------------------------------------------
 
 /**
@@ -108,11 +154,16 @@ export function buildQuestion(type: QuizType, card: VocabCard, pool: readonly Vo
 
   const distractors: string[] = [];
   const taken = (v: string) => sameText(v, answer) || distractors.some(d => sameText(d, v));
+  const { senses, readings } = indexByHanzi(pool);
+  const cardSenses = senses.get(norm(card.hanzi)) ?? new Set(meaningSenses(card.meaning));
+  const cardReadings = readings.get(norm(card.hanzi)) ?? new Set<string>();
 
-  // Hán tự → pinyin: ưu tiên đổi thanh điệu của chính từ đó (luyện thanh điệu)
+  // Hán tự → pinyin: ưu tiên đổi thanh điệu của chính từ đó (luyện thanh điệu),
+  // trừ cách đọc khác của chính chữ đó và biến điệu của 不 / 一 (cũng đúng)
   if (type === 'hanzi_pinyin') {
     for (const v of shuffle(pinyinToneVariants(answer), rng)) {
       if (distractors.length >= QUIZ_OPTION_COUNT - 1) break;
+      if (cardReadings.has(v.toLowerCase()) || isSandhiVariant(v, answer, card.hanzi)) continue;
       if (!taken(v)) distractors.push(v);
     }
   }
@@ -120,9 +171,13 @@ export function buildQuestion(type: QuizType, card: VocabCard, pool: readonly Vo
   for (const other of shuffle(pool, rng)) {
     if (distractors.length >= QUIZ_OPTION_COUNT - 1) break;
     if (other === card || (other.id != null && other.id === card.id)) continue;
-    // Không lấy từ cùng chữ / cùng nghĩa làm đáp án nhiễu (có thể cũng đúng)
+    // Không lấy từ cùng chữ, hoặc có nét nghĩa trùng với bất kỳ nghĩa nào của chữ đang hỏi
+    // (VD 想 "muốn" khi hỏi 要 — 要 cũng có nghĩa "muốn"; 能 "có thể" khi hỏi 可以 "có thể, được")
     if (sameText(other.hanzi, card.hanzi)) continue;
-    if (type !== 'hanzi_meaning' && sameText(other.meaning, card.meaning)) continue;
+    const otherSenses = senses.get(norm(other.hanzi)) ?? new Set(meaningSenses(other.meaning));
+    if (type === 'hanzi_meaning' && overlaps(meaningSenses(other.meaning), cardSenses)) continue;
+    if (type === 'meaning_hanzi' && overlaps(meaningSenses(card.meaning), otherSenses)) continue;
+    if (type === 'hanzi_pinyin' && (sameText(other.meaning, card.meaning) || cardReadings.has(norm(other.pinyin).toLowerCase()))) continue;
     const value = answerOf(type, other);
     if (value && !taken(value)) distractors.push(value);
   }

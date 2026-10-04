@@ -22,6 +22,8 @@ export interface VocabCollectionConfig {
   levelPrefix: string;
   version: HskVersion;
   grouping: VocabGrouping;
+  /** Cấp sau chứa trọn từ của cấp trước (HSK 2.0: 150 → 300 → … → 5000) — tổng cả bộ = cấp cao nhất */
+  cumulative?: boolean;
 }
 
 /** Cấp cao cấp gộp trong bộ "Từ vựng HSK 1 - 9" (không tách 7, 8, 9) */
@@ -37,6 +39,7 @@ export const VOCAB_COLLECTIONS: Record<VocabCollection, VocabCollectionConfig> =
     levelPrefix: 'HSK',
     version: '2.0',
     grouping: null,
+    cumulative: true,
   },
   hsk3: {
     key: 'hsk3',
