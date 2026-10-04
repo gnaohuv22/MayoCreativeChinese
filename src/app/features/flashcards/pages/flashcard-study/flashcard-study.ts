@@ -255,6 +255,15 @@ export class FlashcardStudyComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
+    // Thẻ đang focus tự lật bằng Space (đã preventDefault) — không lật lần 2 ở đây
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+    if (event.key === ' ' && event.repeat) {
+      event.preventDefault();
+      return;
+    }
+
     if (event.key === 'ArrowRight') {
       this.nextCard();
     } else if (event.key === 'ArrowLeft') {

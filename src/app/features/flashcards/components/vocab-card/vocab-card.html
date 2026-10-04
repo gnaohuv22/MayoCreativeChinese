@@ -1,4 +1,4 @@
-<div class="card-container" (click)="flipChange.emit()" [class.is-flipped]="flipped()" role="button" [attr.aria-label]="flipped() ? 'Ẩn đáp án' : 'Lật thẻ để xem đáp án'" tabindex="0" (keydown.space)="$event.preventDefault(); flipChange.emit()">
+<div class="card-container" (click)="flipChange.emit()" [class.is-flipped]="flipped()" role="button" [attr.aria-label]="flipped() ? 'Ẩn đáp án' : 'Lật thẻ để xem đáp án'" tabindex="0" (keydown.space)="$event.preventDefault(); flipChange.emit()" (keydown.enter)="$event.preventDefault(); flipChange.emit()">
   <!-- Front -->
   <div class="card-face card-front bg-white dark:bg-brand-dark border border-brand-navy/10 dark:border-white/15 rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center shadow-xl shadow-brand-navy/5 dark:shadow-2xl transition-colors duration-300">
     <!-- Level Badge -->
