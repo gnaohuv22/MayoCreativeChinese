@@ -7,7 +7,7 @@
       
       <!-- Column 1: Brand Info -->
       <div class="md:col-span-5 flex flex-col space-y-6">
-        <a href="/#home" class="flex items-center space-x-3 group self-start">
+        <a routerLink="/" fragment="home" class="flex items-center space-x-3 group self-start">
           <div class="relative w-10 h-10 overflow-hidden rounded-full border border-brand-pink/20 bg-white p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
             <img ngSrc="android-chrome-192x192.png" width="36" height="36" alt="MCC Logo" class="object-contain" />
           </div>
@@ -65,19 +65,19 @@
         </h4>
         <ul class="space-y-2.5 text-xs sm:text-sm text-white/50 font-medium">
           <li>
-            <a href="/#about" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.about') }}</a>
+            <a routerLink="/" fragment="about" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.about') }}</a>
           </li>
           <li>
-            <a href="/#teachers" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.teachers') }}</a>
+            <a routerLink="/" fragment="teachers" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.teachers') }}</a>
           </li>
           <li>
-            <a href="/#courses" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.courses') }}</a>
+            <a routerLink="/" fragment="courses" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.courses') }}</a>
           </li>
           <li>
-            <a href="/#stories" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.stories') }}</a>
+            <a routerLink="/" fragment="stories" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.stories') }}</a>
           </li>
           <li>
-            <a href="/#gallery" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.gallery') }}</a>
+            <a routerLink="/" fragment="gallery" class="hover:text-brand-pink transition-colors">{{ i18n.translate()('nav.gallery') }}</a>
           </li>
         </ul>
       </div>

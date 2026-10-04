@@ -10,7 +10,7 @@
 
         <!-- Breadcrumb: Khóa Học › Tên khóa -->
         <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs sm:text-sm text-white/70 mb-6">
-          <a href="/#courses" class="font-semibold hover:text-white transition-colors">Khóa Học</a>
+          <a routerLink="/" fragment="courses" class="font-semibold hover:text-white transition-colors">Khóa Học</a>
           <app-icon name="chevron-right" size="xs" />
           <span class="font-bold text-white truncate" aria-current="page">{{ c.name }}</span>
         </nav>
@@ -200,7 +200,7 @@
             <span class="text-xs font-black uppercase tracking-wider text-brand-pink">MCC trong lớp học</span>
             <h2 id="moments-title" class="mt-1 font-display font-black text-2xl sm:text-3xl text-brand-navy dark:text-white">Học viên nói gì về MCC</h2>
           </div>
-          <a href="/#stories" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-pink hover:underline">
+          <a routerLink="/" fragment="stories" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-pink hover:underline">
             Xem thêm câu chuyện học viên
             <app-icon name="arrow-right" size="xs" />
           </a>
