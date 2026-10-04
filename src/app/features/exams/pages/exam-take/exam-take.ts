@@ -283,6 +283,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
   /** Mọi cách chuyển phần (chọn phần, trước / sau) đều đưa về đầu phần thi */
   setSection(index: number) {
+    this.leaveSectionAudio(index);
     this.activeSectionIndex.set(index);
     this.cdr.markForCheck();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -298,30 +299,59 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
   // Nhảy tới câu hỏi cụ thể trong trang
   scrollToQuestion(questionId: string, sectionIdx: number) {
+    this.leaveSectionAudio(sectionIdx);
     this.activeSectionIndex.set(sectionIdx);
     this.activeQuestionId.set(questionId);
     this.cdr.markForCheck();
 
     setTimeout(() => {
       const el = document.getElementById(`q-${questionId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!el) return;
+      // Đặt câu hỏi ngay dưới phần đang ghim (header, thanh audio, "Đề bài chung" của Part đó)
+      // thay vì căn giữa — trên điện thoại phần ghim che mất nửa trên màn hình
+      const barsBottom = Math.max(0, ...Array.from(document.querySelectorAll('[data-exam-topbar]'), b => b.getBoundingClientRect().bottom));
+      let stimulus: HTMLElement | null = null;
+      for (let node = el.parentElement; node && !stimulus; node = node.parentElement) {
+        stimulus = node.querySelector<HTMLElement>(':scope > .part-stimulus--sticky');
       }
+      // Khối "Đề bài chung" ghim ở vị trí `top` của nó (dưới header + thanh audio)
+      const covered = (stimulus ? parseFloat(getComputedStyle(stimulus).top) + stimulus.offsetHeight : barsBottom) + 12;
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - covered, behavior: 'smooth' });
     }, 100);
   }
 
+  /** Rời phần Nghe thì thẻ audio bị huỷ (tiếng dừng) — cập nhật nút phát ngay, không chờ sự kiện pause */
+  private leaveSectionAudio(nextIndex: number) {
+    if (nextIndex !== this.activeSectionIndex()) this.isAudioPlaying.set(false);
+  }
+
   // Audio Player Controls
+  /**
+   * Thanh phát chỉ tồn tại khi đang ở phần Nghe: rời phần thì thẻ <audio> bị huỷ (tiếng dừng).
+   * Trạng thái phát lấy từ sự kiện play/pause của chính thẻ audio; vị trí nghe được nhớ theo file
+   * để quay lại phần Nghe thì tiếp tục từ chỗ cũ.
+   */
+  private readonly audioPositions = new Map<string, number>();
+
   toggleAudio() {
     const audio = this.audioRef()?.nativeElement;
     if (!audio) return;
 
-    if (this.isAudioPlaying()) {
-      audio.pause();
-      this.isAudioPlaying.set(false);
-    } else {
+    if (audio.paused) {
       audio.play().catch(e => console.error('Audio play error:', e));
-      this.isAudioPlaying.set(true);
+    } else {
+      audio.pause();
     }
+  }
+
+  onAudioLoaded() {
+    const audio = this.audioRef()?.nativeElement;
+    if (!audio) return;
+    const saved = this.audioPositions.get(audio.currentSrc || audio.src) ?? 0;
+    if (saved > 0 && saved < audio.duration) audio.currentTime = saved;
+    this.isAudioPlaying.set(!audio.paused);
+    this.audioCurrentTime.set(audio.currentTime);
+    this.audioDuration.set(audio.duration || 0);
   }
 
   onAudioTimeUpdate() {
@@ -329,6 +359,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     if (audio) {
       this.audioCurrentTime.set(audio.currentTime);
       this.audioDuration.set(audio.duration || 0);
+      this.audioPositions.set(audio.currentSrc || audio.src, audio.currentTime);
     }
   }
 
