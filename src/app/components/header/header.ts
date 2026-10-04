@@ -51,6 +51,7 @@ export class HeaderComponent {
     { id: 'about' },
     { id: 'teachers' },
     { id: 'courses' },
+    { id: 'stories' },
     { id: 'gallery' },
     { id: 'contact' }
   ];
@@ -59,7 +60,7 @@ export class HeaderComponent {
     const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;
     this.isScrolled.set(scrollPos > 50);
 
-    const sections = ['home', 'about', 'teachers', 'courses', 'gallery', 'contact'];
+    const sections = ['home', 'about', 'teachers', 'courses', 'stories', 'gallery', 'contact'];
     for (const section of sections) {
       const el = document.getElementById(section);
       if (el) {
