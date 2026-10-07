@@ -9,7 +9,7 @@
         </p>
       </div>
       @if (auth.can('class.manage')) {
-        <button type="button" (click)="openCreate()" class="mcc-btn mcc-btn-primary !py-2.5">
+        <button type="button" (click)="openCreate()" [disabled]="loading()" class="mcc-btn mcc-btn-primary !py-2.5">
           <app-icon name="plus" size="xs" /> Tạo lớp
         </button>
       }
