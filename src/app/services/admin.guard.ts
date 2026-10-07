@@ -27,3 +27,16 @@ export function permissionGuard(permission: Permission): CanActivateFn {
     return auth.can(permission) || router.createUrlTree(['/admin/exams']);
   };
 }
+
+/** Khu học viên: cần tài khoản học viên; mật khẩu do giáo viên cấp phải đổi trước khi vào trang khác */
+export const studentGuard: CanActivateFn = async (route, state) => {
+  const injector = inject(Injector);
+  const router = inject(Router);
+  const auth = await loadAuth(injector);
+  const student = auth.student();
+  if (!student) return router.createUrlTree(['/dang-nhap'], { queryParams: { returnUrl: state.url } });
+  if (student.must_change_password && route.routeConfig?.path !== 'mat-khau') {
+    return router.createUrlTree(['/hoc-vien/mat-khau']);
+  }
+  return true;
+};

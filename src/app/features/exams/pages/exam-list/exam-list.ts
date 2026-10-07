@@ -9,7 +9,8 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { AuthService } from '../../../../services/auth.service';
-import { contentAccess, type ContentAccess } from '../../../../components/shared/visibility/content-visibility';
+import { contentAccess, isLockedAccess, type ContentAccess, type ContentViewer } from '../../../../components/shared/visibility/content-visibility';
+import { StudentService } from '../../../classes/services/student.service';
 
 @Component({
   selector: 'app-exam-list',
@@ -26,15 +27,18 @@ export class ExamListComponent implements OnInit {
 
   /** Đề công khai + nội bộ (cả 2 phiên bản) — lọc phía client để đếm theo cấp */
   private listedExams = signal<Exam[]>([]);
-  private isStaff = signal(false);
+  private readonly studentService = inject(StudentService);
+  private viewer = signal<ContentViewer>({ staff: false, student: false });
+  /** Đề được gợi ý cho lớp của học viên đang đăng nhập */
+  private suggestedIds = signal<Set<string>>(new Set());
 
-  /** Khách: đề nội bộ hiện "Sắp ra mắt"; nhân sự: làm được như đề công khai */
+  /** Khách: đề nội bộ hiện "Sắp ra mắt", đề học viên hiện nhãn "Học viên"; nhân sự: làm được như đề công khai */
   accessOf(exam: Exam): ContentAccess {
-    return contentAccess(exam.visibility, this.isStaff());
+    return contentAccess(exam.visibility, this.viewer(), this.suggestedIds().has(exam.id ?? ''));
   }
 
   /** Đề làm được — dùng để đếm và bật/tắt cấp độ */
-  private allExams = computed(() => this.listedExams().filter(e => this.accessOf(e) !== 'locked'));
+  private allExams = computed(() => this.listedExams().filter(e => !isLockedAccess(this.accessOf(e))));
   isLoading = signal<boolean>(true);
 
   // Grouped by version first (HSK 2.0 vs HSK 3.0)
@@ -69,11 +73,11 @@ export class ExamListComponent implements OnInit {
     const ver = this.selectedVersion();
     const lvl = this.selectedLevel();
     const list = this.listedExams().filter(e => e.hsk_version === ver && (lvl === 'all' || e.hsk_level === lvl));
-    const locked = (e: Exam) => (this.accessOf(e) === 'locked' ? 1 : 0);
+    const locked = (e: Exam) => (isLockedAccess(this.accessOf(e)) ? 1 : 0);
     return list.sort((a, b) => locked(a) - locked(b));
   });
 
-  openCount = computed(() => this.exams().filter(e => this.accessOf(e) !== 'locked').length);
+  openCount = computed(() => this.exams().filter(e => !isLockedAccess(this.accessOf(e))).length);
 
   ngOnInit() {
     this.loadExams();
@@ -83,7 +87,13 @@ export class ExamListComponent implements OnInit {
     this.isLoading.set(true);
     const [data] = await Promise.all([
       this.examService.getExams({ learner: true }),
-      this.auth.ready.then(() => this.isStaff.set(this.auth.can('content.read'))),
+      this.auth.ready.then(async () => {
+        this.viewer.set({ staff: this.auth.can('content.read'), student: this.auth.isStudent() });
+        if (this.auth.isStudent()) {
+          const suggestions = await this.studentService.mySuggestions();
+          this.suggestedIds.set(new Set(suggestions.flatMap(s => (s.exam_id ? [s.exam_id] : []))));
+        }
+      }),
     ]);
     this.listedExams.set(data);
     // Mở sẵn phiên bản có đề nếu phiên bản mặc định còn trống

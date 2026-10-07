@@ -127,9 +127,19 @@
                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-navy/5 dark:bg-white/5 text-brand-navy/40 dark:text-white/35">
                   {{ item.name }}
                 </span>
-                <app-coming-soon-badge />
+                @if (item.membersOnly) {
+                  <app-members-only-badge />
+                } @else {
+                  <app-coming-soon-badge />
+                }
               </div>
-              <p class="text-sm text-brand-navy/50 dark:text-white/40">Từ vựng cấp này đang được biên soạn.</p>
+              @if (item.membersOnly) {
+                <p class="text-sm text-brand-navy/50 dark:text-white/40">
+                  Dành cho học viên MCC. <a routerLink="/dang-nhap" class="font-bold text-brand-pink hover:underline">Đăng nhập</a>
+                </p>
+              } @else {
+                <p class="text-sm text-brand-navy/50 dark:text-white/40">Từ vựng cấp này đang được biên soạn.</p>
+              }
             </div>
           }
         }

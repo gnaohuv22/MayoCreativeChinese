@@ -12,7 +12,7 @@
     </span>
   </a>
 
-  <nav class="relative flex-1 px-3 pt-4 space-y-1" aria-label="Quản trị">
+  <nav class="relative flex-1 min-h-0 overflow-y-auto px-3 pt-4 pb-4 space-y-1" aria-label="Quản trị">
     <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Nội dung</p>
     @for (item of navItems; track item.route) {
       <a
@@ -28,6 +28,25 @@
           <span class="text-[11px] text-white/50 truncate">{{ item.hint }}</span>
         </span>
       </a>
+    }
+
+    @if (visibleClassItems().length) {
+      <p class="px-3 pt-5 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Lớp học</p>
+      @for (item of visibleClassItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="is-active"
+          class="shell-nav-link group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors hover:bg-white/5"
+        >
+          <span class="shell-nav-icon w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 transition-colors">
+            <app-icon [name]="item.icon" size="sm" />
+          </span>
+          <span class="flex flex-col min-w-0">
+            <span class="text-sm font-bold">{{ item.label }}</span>
+            <span class="text-[11px] text-white/50 truncate">{{ item.hint }}</span>
+          </span>
+        </a>
+      }
     }
 
     @if (visibleManageItems().length) {

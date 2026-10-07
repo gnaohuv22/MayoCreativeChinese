@@ -1,0 +1,41 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Học viên</h1>
+      <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+        {{ auth.can('class.all') ? 'Tài khoản học viên của mọi lớp.' : 'Học viên các lớp bạn phụ trách.' }}
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="relative flex-1 min-w-56">
+        <app-icon name="search" size="xs" customClass="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Tìm tên, tên đăng nhập, số điện thoại, email" class="mcc-input !pl-9 !py-2" aria-label="Tìm học viên" />
+      </div>
+      <select [ngModel]="classFilter()" (ngModelChange)="classFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc theo lớp">
+        <option value="">Mọi lớp</option>
+        @for (c of classes(); track c.id) {
+          <option [value]="c.id">{{ c.code }} – {{ c.name }}</option>
+        }
+        @if (hasUnassigned()) {
+          <option value="none">Chưa có lớp</option>
+        }
+      </select>
+      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc trạng thái">
+        <option value="all">Mọi trạng thái</option>
+        <option value="active">{{ statusLabels.active }}</option>
+        <option value="locked">{{ statusLabels.locked }}</option>
+        <option value="archived">{{ statusLabels.archived }}</option>
+      </select>
+    </div>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải danh sách học viên…</p>
+    } @else if (loadError()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được danh sách: {{ loadError() }}</p>
+    } @else {
+      <p class="text-xs font-bold text-zinc-500">{{ filtered().length }} / {{ students().length }} học viên</p>
+      <app-student-table [students]="filtered()" [showClass]="true" [classCodes]="classCodes()" (changed)="load()" />
+    }
+  </div>
+</div>

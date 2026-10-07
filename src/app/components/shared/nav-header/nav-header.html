@@ -104,6 +104,20 @@
         </a>
       }
 
+      <!-- Tài khoản học viên -->
+      @if (showNavLinks()) {
+        @if (presence.student(); as name) {
+          <a routerLink="/hoc-vien" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-brand-pink/10 text-brand-pink hover:bg-brand-pink/15 transition-colors max-w-40" [title]="name">
+            <app-icon name="users" size="xs" />
+            <span class="hidden sm:inline">Lớp của tôi</span>
+          </a>
+        } @else if (!presence.active()) {
+          <a routerLink="/dang-nhap" class="px-3 py-1.5 rounded-full text-xs font-bold text-brand-navy/70 dark:text-zinc-300 hover:bg-brand-navy/5 dark:hover:bg-white/5 transition-colors whitespace-nowrap">
+            Đăng nhập
+          </a>
+        }
+      }
+
       <!-- Reusable Circular Theme Toggle Component -->
       <app-theme-toggle />
     </div>

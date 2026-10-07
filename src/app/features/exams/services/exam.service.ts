@@ -62,7 +62,7 @@ export class ExamService {
       query = query.eq('hsk_version', filter.hsk_version);
     }
     if (filter?.learner) {
-      query = query.in('visibility', ['staff', 'public']);
+      query = query.in('visibility', ['staff', 'students', 'public']);
     } else if (filter?.visibility && filter.visibility !== 'all') {
       query = query.eq('visibility', filter.visibility);
     }

@@ -1,0 +1,158 @@
+<app-nav-header pageTitle="Lớp của tôi" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+  <div class="max-w-5xl mx-auto space-y-8">
+
+    <!-- Chào + tài khoản -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-brand-pink">Học viên MCC</p>
+        <h1 class="mt-1 text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
+          Xin chào, {{ auth.displayName() }}
+        </h1>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-mono">{{ auth.username() }}</p>
+      </div>
+      <div class="flex gap-2">
+        <a routerLink="/hoc-vien/mat-khau" class="mcc-btn mcc-btn-secondary">Đổi mật khẩu</a>
+        <button type="button" (click)="signOut()" class="mcc-btn mcc-btn-secondary"><app-icon name="logout" size="xs" /> Đăng xuất</button>
+      </div>
+    </div>
+
+    <!-- Lớp -->
+    @if (cls(); as c) {
+      <section class="mcc-card p-6 sm:p-7 grid md:grid-cols-[1fr_auto] gap-6">
+        <div class="space-y-3 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-mono text-sm font-black text-brand-pink">{{ c.code }}</span>
+            @if (c.hsk_level) {
+              <app-hsk-badge [level]="c.hsk_level" [version]="c.hsk_version ?? '2.0'" />
+            }
+            <span class="mcc-chip bg-brand-navy/5 text-brand-navy dark:bg-white/10 dark:text-white">{{ statusLabels[c.status] }}</span>
+          </div>
+          <h2 class="text-xl font-black font-display text-brand-navy dark:text-white">{{ c.name }}</h2>
+          <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            @if (courseName()) {
+              <div><dt class="text-xs text-zinc-500">Khoá học</dt><dd class="font-semibold">{{ courseName() }}</dd></div>
+            }
+            @if (c.schedule) {
+              <div><dt class="text-xs text-zinc-500">Lịch học</dt><dd class="font-semibold">{{ c.schedule }}</dd></div>
+            }
+            @if (c.start_date || c.end_date) {
+              <div>
+                <dt class="text-xs text-zinc-500">Thời gian</dt>
+                <dd class="font-semibold">{{ formatDate(c.start_date) }}{{ c.end_date ? ' – ' + formatDate(c.end_date) : '' }}</dd>
+              </div>
+            }
+            @if (c.study_mode) {
+              <div><dt class="text-xs text-zinc-500">Hình thức</dt><dd class="font-semibold">{{ modeLabels[c.study_mode] }}</dd></div>
+            }
+          </dl>
+        </div>
+        @if (c.staff.length) {
+          <ul class="space-y-2 md:min-w-52">
+            @for (s of c.staff; track s.full_name) {
+              <li class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-full bg-brand-pink/10 text-brand-pink flex items-center justify-center font-display font-black">{{ s.full_name[0] }}</span>
+                <span>
+                  <span class="block text-sm font-bold text-brand-navy dark:text-white">{{ s.full_name }}</span>
+                  <span class="block text-[11px] text-zinc-500">{{ roleLabels[s.role] }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    } @else {
+      <section class="mcc-card p-6 text-sm text-zinc-600 dark:text-zinc-300">
+        Tài khoản của bạn chưa được xếp vào lớp nào. Vui lòng liên hệ giáo viên.
+      </section>
+    }
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải…</p>
+    } @else {
+      <div class="grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8 items-start">
+        <div class="space-y-8">
+          <!-- Thông báo -->
+          <section class="space-y-3">
+            <h2 class="text-lg font-black font-display text-brand-navy dark:text-white">Thông báo</h2>
+            <ul class="space-y-3">
+              @for (a of announcements(); track a.id) {
+                <li class="mcc-card p-5" [class.!border-brand-pink/40]="a.pinned">
+                  <div class="flex flex-wrap items-center gap-2">
+                    @if (a.pinned) { <span class="mcc-chip bg-brand-pink/10 text-brand-pink">Ghim</span> }
+                    <h3 class="font-bold text-brand-navy dark:text-white">{{ a.title }}</h3>
+                  </div>
+                  <p class="text-[11px] text-zinc-500 mt-0.5">{{ formatDateTime(a.created_at) }}</p>
+                  @if (a.body) {
+                    <p class="mt-3 text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-line">{{ a.body }}</p>
+                  }
+                </li>
+              } @empty {
+                <li class="text-sm text-zinc-500 dark:text-zinc-400">Lớp chưa có thông báo.</li>
+              }
+            </ul>
+          </section>
+
+          <!-- Kết quả -->
+          <section class="space-y-3">
+            <h2 class="text-lg font-black font-display text-brand-navy dark:text-white">Bài thi đã làm</h2>
+            <ul class="mcc-card divide-y divide-brand-navy/5 dark:divide-white/5">
+              @for (a of attempts(); track a.id) {
+                <li class="flex items-center gap-4 p-4">
+                  <div class="flex-1 min-w-0">
+                    <a [routerLink]="['/exams', a.exam_id, 'take']" class="text-sm font-bold text-brand-navy dark:text-white hover:text-brand-pink truncate block">{{ a.exam?.title }}</a>
+                    <p class="text-[11px] text-zinc-500">{{ formatDateTime(a.submitted_at) }} · Đúng {{ a.correct_count }}/{{ a.question_count }}</p>
+                  </div>
+                  <span class="text-right shrink-0">
+                    <span class="text-base font-black" [class.text-emerald-600]="passed(a) === true" [class.text-red-600]="passed(a) === false">{{ a.score }}</span>
+                    <span class="text-xs text-zinc-400">/{{ a.total_score }}</span>
+                  </span>
+                </li>
+              } @empty {
+                <li class="p-4 text-sm text-zinc-500 dark:text-zinc-400">Bạn chưa nộp bài thi nào.</li>
+              }
+            </ul>
+          </section>
+        </div>
+
+        <!-- Gợi ý -->
+        <aside class="space-y-3">
+          <h2 class="text-lg font-black font-display text-brand-navy dark:text-white">Giáo viên gợi ý</h2>
+          @if (!examSuggestions().length && !vocabSuggestions().length) {
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Chưa có gợi ý.</p>
+          }
+          <ul class="space-y-3">
+            @for (s of examSuggestions(); track s.id) {
+              <li>
+                <a [routerLink]="['/exams', s.exam_id, 'take']" class="mcc-card flex items-center gap-3 p-4 hover:border-brand-pink/40 transition-colors">
+                  <span class="w-10 h-10 shrink-0 rounded-xl bg-brand-navy text-white flex items-center justify-center"><app-icon name="academic" size="sm" /></span>
+                  <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ s.exam!.title }}</span>
+                    <span class="block text-[11px] text-zinc-500">
+                      Đề thi thử
+                      @if (bestScores().has(s.exam_id!)) { · Điểm cao nhất {{ bestScores().get(s.exam_id!) }} }
+                    </span>
+                  </span>
+                  <app-icon name="arrow-right" size="xs" customClass="text-zinc-400" />
+                </a>
+              </li>
+            }
+            @for (s of vocabSuggestions(); track s.id) {
+              <li>
+                <a [routerLink]="vocabRoute(s)" class="mcc-card flex items-center gap-3 p-4 hover:border-brand-pink/40 transition-colors">
+                  <span class="w-10 h-10 shrink-0 rounded-xl bg-brand-pink text-white flex items-center justify-center"><app-icon name="book-open" size="sm" /></span>
+                  <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ vocabLabel(s) }}</span>
+                    <span class="block text-[11px] text-zinc-500">Flashcard từ vựng</span>
+                  </span>
+                  <app-icon name="arrow-right" size="xs" customClass="text-zinc-400" />
+                </a>
+              </li>
+            }
+          </ul>
+        </aside>
+      </div>
+    }
+  </div>
+</div>

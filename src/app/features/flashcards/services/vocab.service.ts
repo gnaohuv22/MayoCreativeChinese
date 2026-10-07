@@ -7,6 +7,7 @@ import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
 import { RequestCache } from '../../../services/request-cache';
 import { AuthService } from '../../../services/auth.service';
 import { contentAccess, strictestVisibility } from '../../../components/shared/visibility/content-visibility';
+import { StudentService } from '../../classes/services/student.service';
 import type { ContentAccess, ContentVisibility } from '../../../components/shared/visibility/content-visibility';
 
 /** Supabase trả tối đa 1000 dòng / request */
@@ -56,6 +57,7 @@ export class VocabService {
   private readonly supabase = getSupabase();
   private readonly cache = new RequestCache(CACHE_TTL_MS);
   private readonly auth = inject(AuthService);
+  private readonly studentService = inject(StudentService);
 
   /** Mức hiển thị của mọi (bộ, cấp) đã đặt */
   async getVisibility(): Promise<VocabVisibilityMap> {
@@ -75,8 +77,19 @@ export class VocabService {
   /** Hàm tra quyền xem của người đang xem cho từng cấp (trang học viên) */
   async accessResolver(): Promise<(collection: VocabCollection, levelParam: string) => ContentAccess> {
     const [map] = await Promise.all([this.getVisibility(), this.auth.ready]);
-    const isStaff = this.auth.can('content.read');
-    return (collection, levelParam) => contentAccess(levelVisibility(map, collection, levelParam), isStaff);
+    const viewer = { staff: this.auth.can('content.read'), student: this.auth.isStudent() };
+    // Cấp "Nội bộ" được gợi ý cho lớp → học viên lớp đó học được
+    const suggested = new Set(
+      (viewer.student ? await this.studentService.mySuggestions() : [])
+        .filter(s => s.kind === 'vocab' && s.collection)
+        .flatMap(s => (s.levels ?? []).map(l => `${s.collection}|${l}`)),
+    );
+    return (collection, levelParam) =>
+      contentAccess(
+        levelVisibility(map, collection, levelParam),
+        viewer,
+        parseLevelParam(levelParam).every(l => suggested.has(`${collection}|${l}`)),
+      );
   }
 
   /** Đổi mức hiển thị các cấp của 1 bộ (bộ HSK 1-9: cấp 7-9 đổi cùng nhau) */

@@ -1,0 +1,88 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <div class="flex flex-wrap items-end justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Lớp học</h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+          {{ auth.can('class.all') ? 'Mọi lớp của trung tâm.' : 'Các lớp bạn phụ trách.' }}
+        </p>
+      </div>
+      @if (auth.can('class.manage')) {
+        <button type="button" (click)="openCreate()" class="mcc-btn mcc-btn-primary !py-2.5">
+          <app-icon name="plus" size="xs" /> Tạo lớp
+        </button>
+      }
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-white/10" role="tablist">
+        <button type="button" role="tab" [attr.aria-selected]="!showArchived()" (click)="showArchived.set(false)"
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer"
+                [class]="!showArchived() ? 'bg-white dark:bg-white/20 shadow-xs text-brand-navy dark:text-white' : 'text-zinc-600 dark:text-zinc-300'">
+          Đang mở ({{ openCount() }})
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="showArchived()" (click)="showArchived.set(true)"
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer"
+                [class]="showArchived() ? 'bg-white dark:bg-white/20 shadow-xs text-brand-navy dark:text-white' : 'text-zinc-600 dark:text-zinc-300'">
+          Lưu trữ ({{ archivedCount() }})
+        </button>
+      </div>
+      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc trạng thái">
+        <option value="all">Mọi trạng thái</option>
+        <option value="planned">{{ statusLabels.planned }}</option>
+        <option value="active">{{ statusLabels.active }}</option>
+        <option value="finished">{{ statusLabels.finished }}</option>
+      </select>
+      <div class="relative flex-1 min-w-48">
+        <app-icon name="search" size="xs" customClass="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Tìm mã lớp, tên lớp, giáo viên" class="mcc-input !pl-9 !py-2" aria-label="Tìm lớp" />
+      </div>
+    </div>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải danh sách lớp…</p>
+    } @else if (loadError()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được danh sách: {{ loadError() }}</p>
+    } @else {
+      <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (c of filtered(); track c.id) {
+          <li>
+            <a [routerLink]="['/admin/classes', c.id]" class="mcc-card block p-5 h-full hover:border-brand-pink/40 hover:shadow-md transition-all">
+              <div class="flex items-start justify-between gap-2">
+                <span class="font-mono text-xs font-black text-brand-pink">{{ c.code }}</span>
+                <span class="mcc-chip" [class]="statusClass(c.status)">{{ statusLabels[c.status] }}</span>
+              </div>
+              <h2 class="mt-2 font-display font-bold text-brand-navy dark:text-white leading-snug line-clamp-2">{{ c.name }}</h2>
+              @if (teachers(c)) {
+                <p class="mt-1 text-xs text-zinc-600 dark:text-zinc-300 truncate">{{ teachers(c) }}</p>
+              }
+              <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                <span class="flex items-center gap-1">
+                  <app-icon name="users" size="xs" />
+                  {{ c.student_count }}{{ c.max_students ? '/' + c.max_students : '' }} học viên
+                </span>
+                @if (c.start_date) {
+                  <span class="flex items-center gap-1"><app-icon name="calendar" size="xs" /> {{ formatDate(c.start_date) }}</span>
+                }
+                @if (c.hsk_level) {
+                  <span>HSK {{ c.hsk_level }}{{ c.hsk_version ? ' · ' + c.hsk_version : '' }}</span>
+                }
+              </div>
+            </a>
+          </li>
+        } @empty {
+          <li class="sm:col-span-2 lg:col-span-3 py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            {{ classes().length ? 'Không có lớp phù hợp.' : 'Chưa có lớp nào.' }}
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>
+
+<dialog #formDialog (close)="formOpen.set(false)" aria-label="Tạo lớp" class="mcc-dialog max-w-2xl">
+  @if (formOpen()) {
+    <app-class-form [directory]="directory()" (saved)="onSaved($event)" (cancelled)="closeForm()" />
+  }
+</dialog>

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { permissionGuard, staffGuard } from './services/admin.guard';
+import { permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
 
 export const routes: Routes = [
   // Trang chủ do app.html tự dựng (không qua router-outlet); khai báo để không rơi vào route 404
@@ -20,6 +20,33 @@ export const routes: Routes = [
     path: 'admin/login',
     loadComponent: () =>
       import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
+  },
+  {
+    // Đăng nhập học viên — cùng component với trang quản trị, khác đối tượng
+    path: 'dang-nhap',
+    title: 'Đăng nhập học viên',
+    data: { audience: 'student' },
+    loadComponent: () =>
+      import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
+  },
+  {
+    // Khu học viên (tài khoản do nhân sự tạo theo lớp)
+    path: 'hoc-vien',
+    canActivateChild: [studentGuard],
+    children: [
+      {
+        path: '',
+        title: 'Lớp của tôi',
+        loadComponent: () =>
+          import('./features/classes/pages/student-home/student-home').then(m => m.StudentHomeComponent),
+      },
+      {
+        path: 'mat-khau',
+        title: 'Đổi mật khẩu',
+        loadComponent: () =>
+          import('./features/classes/pages/student-password/student-password').then(m => m.StudentPasswordComponent),
+      },
+    ],
   },
   {
     // Khu quản trị: layout riêng (thanh bên), tách hẳn khỏi trang học viên
@@ -44,6 +71,24 @@ export const routes: Routes = [
         path: 'exams/:id/edit',
         loadComponent: () =>
           import('./features/exams/pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
+      },
+      {
+        path: 'classes',
+        canActivate: [permissionGuard('class.manage')],
+        loadComponent: () =>
+          import('./features/classes/pages/class-list/class-list').then(m => m.ClassListComponent),
+      },
+      {
+        path: 'classes/:id',
+        canActivate: [permissionGuard('class.manage')],
+        loadComponent: () =>
+          import('./features/classes/pages/class-detail/class-detail').then(m => m.ClassDetailComponent),
+      },
+      {
+        path: 'students',
+        canActivate: [permissionGuard('student.manage')],
+        loadComponent: () =>
+          import('./features/classes/pages/student-list/student-list').then(m => m.StudentListComponent),
       },
       {
         path: 'profile',

@@ -1,0 +1,246 @@
+<!-- Thanh thao tác khi đã chọn -->
+@if (selectedStudents().length > 0) {
+  <div class="mb-3 flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-brand-navy text-white">
+    <span class="text-xs font-bold px-2">Đã chọn {{ selectedStudents().length }}</span>
+    <button type="button" (click)="openBulk('move')" class="mcc-btn bg-white/10 hover:bg-white/20">
+      <app-icon name="arrows-right-left" size="xs" /> Chuyển lớp
+    </button>
+    <button type="button" (click)="openBulk('locked')" class="mcc-btn bg-white/10 hover:bg-white/20">Khoá</button>
+    <button type="button" (click)="openBulk('active')" class="mcc-btn bg-white/10 hover:bg-white/20">Mở lại</button>
+    <button type="button" (click)="openBulk('archived')" class="mcc-btn bg-white/10 hover:bg-white/20">Lưu trữ</button>
+    @if (auth.can('student.delete')) {
+      <button type="button" (click)="openBulk('delete')" class="mcc-btn bg-red-500/80 hover:bg-red-500">
+        <app-icon name="trash" size="xs" /> Xoá
+      </button>
+    }
+    <button type="button" (click)="clearSelection()" class="ml-auto p-1.5 rounded-xl hover:bg-white/10 cursor-pointer" aria-label="Bỏ chọn">
+      <app-icon name="x-mark" size="sm" />
+    </button>
+  </div>
+}
+
+<div class="mcc-card overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 border-b border-brand-navy/10 dark:border-white/10">
+        <th class="w-10 px-4 py-3">
+          <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()" aria-label="Chọn tất cả" class="accent-brand-pink cursor-pointer" />
+        </th>
+        <th class="px-3 py-3 font-bold">Học viên</th>
+        <th class="px-3 py-3 font-bold">Tên đăng nhập</th>
+        @if (showClass()) {
+          <th class="px-3 py-3 font-bold">Lớp</th>
+        }
+        <th class="px-3 py-3 font-bold">Liên hệ</th>
+        <th class="px-3 py-3 font-bold">Trạng thái</th>
+        <th class="px-3 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (s of students(); track s.user_id) {
+        <tr class="border-b last:border-0 border-brand-navy/5 dark:border-white/5" [class.bg-brand-pink/5]="selected().has(s.user_id)">
+          <td class="px-4 py-3">
+            <input type="checkbox" [checked]="selected().has(s.user_id)" (change)="toggle(s.user_id)" [attr.aria-label]="'Chọn ' + s.full_name" class="accent-brand-pink cursor-pointer" />
+          </td>
+          <td class="px-3 py-3">
+            <p class="font-bold text-brand-navy dark:text-white">{{ s.full_name }}</p>
+            @if (s.birth_year) {
+              <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Sinh năm {{ s.birth_year }}</p>
+            }
+          </td>
+          <td class="px-3 py-3 font-mono text-xs whitespace-nowrap">{{ s.username }}</td>
+          @if (showClass()) {
+            <td class="px-3 py-3 text-xs font-bold whitespace-nowrap">
+              {{ s.class_id ? (classCodes().get(s.class_id) ?? '—') : 'Chưa có lớp' }}
+            </td>
+          }
+          <td class="px-3 py-3 text-xs text-zinc-600 dark:text-zinc-300">
+            @if (s.phone) { <p>{{ s.phone }}</p> }
+            @if (s.parent_phone) { <p>PH: {{ s.parent_phone }}</p> }
+            @if (s.email) { <p class="truncate max-w-48">{{ s.email }}</p> }
+          </td>
+          <td class="px-3 py-3">
+            <span class="mcc-chip" [class]="statusClass(s.status)">{{ statusLabels[s.status] }}</span>
+            @if (s.must_change_password && s.status === 'active') {
+              <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1">Chưa đổi mật khẩu</p>
+            }
+          </td>
+          <td class="px-3 py-3">
+            <div class="flex justify-end gap-1.5">
+              <button type="button" (click)="openEdit(s)" class="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" [attr.aria-label]="'Sửa ' + s.full_name" title="Sửa hồ sơ">
+                <app-icon name="pencil" size="xs" />
+              </button>
+              <button type="button" (click)="openPassword(s)" class="mcc-btn mcc-btn-secondary !px-3 !py-1.5 whitespace-nowrap">Đặt lại mật khẩu</button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="showClass() ? 7 : 6" class="px-4 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Chưa có học viên.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Sửa hồ sơ -->
+<dialog #editDialog aria-labelledby="edit-student-title" class="mcc-dialog max-w-lg">
+  @if (editing(); as s) {
+    <form (ngSubmit)="saveEdit()" class="p-6 sm:p-7 space-y-4">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="edit-student-title" class="text-lg font-black font-display">Sửa hồ sơ học viên</h2>
+          <p class="text-xs font-mono text-zinc-500 mt-1">{{ s.username }}</p>
+        </div>
+        <button type="button" (click)="editDialog.close()" class="p-1.5 rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
+          <app-icon name="x-mark" size="sm" />
+        </button>
+      </div>
+      <label class="block space-y-1.5">
+        <span class="mcc-label">Họ tên</span>
+        <input name="full_name" required [(ngModel)]="editForm.full_name" class="mcc-input" />
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block space-y-1.5">
+          <span class="mcc-label">Năm sinh</span>
+          <input name="birth_year" type="number" min="1900" max="2100" [(ngModel)]="editForm.birth_year" class="mcc-input" />
+        </label>
+        <label class="block space-y-1.5">
+          <span class="mcc-label">Số điện thoại</span>
+          <input name="phone" type="tel" [(ngModel)]="editForm.phone" class="mcc-input" />
+        </label>
+        <label class="block space-y-1.5">
+          <span class="mcc-label">Email</span>
+          <input name="email" type="email" [(ngModel)]="editForm.email" class="mcc-input" />
+        </label>
+        <label class="block space-y-1.5">
+          <span class="mcc-label">SĐT phụ huynh</span>
+          <input name="parent_phone" type="tel" [(ngModel)]="editForm.parent_phone" class="mcc-input" />
+        </label>
+      </div>
+      <label class="block space-y-1.5">
+        <span class="mcc-label">Ghi chú</span>
+        <textarea name="notes" rows="2" [(ngModel)]="editForm.notes" class="mcc-input"></textarea>
+      </label>
+      @if (editError()) {
+        <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ editError() }}</p>
+      }
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="editDialog.close()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+        <button type="submit" [disabled]="busy() || !editForm.full_name.trim()" class="mcc-btn mcc-btn-primary">{{ busy() ? 'Đang lưu…' : 'Lưu' }}</button>
+      </div>
+    </form>
+  }
+</dialog>
+
+<!-- Đặt lại mật khẩu -->
+<dialog #passwordDialog (close)="onPasswordClosed()" aria-labelledby="student-pw-title" class="mcc-dialog max-w-md">
+  @if (passwordTarget(); as s) {
+    <div class="p-6 sm:p-7 space-y-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="student-pw-title" class="text-lg font-black font-display">Đặt lại mật khẩu</h2>
+          <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-1">{{ s.full_name }} (<span class="font-mono">{{ s.username }}</span>)</p>
+        </div>
+        <button type="button" (click)="passwordDialog.close()" class="p-1.5 rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
+          <app-icon name="x-mark" size="sm" />
+        </button>
+      </div>
+
+      @if (issuedPassword(); as issued) {
+        <div class="space-y-4">
+          <div class="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+            <app-icon name="check-circle" size="sm" /> Đã đặt lại mật khẩu
+          </div>
+          <div class="space-y-1.5">
+            <span class="mcc-label">Mật khẩu mới (chỉ hiện một lần)</span>
+            <div class="flex gap-2">
+              <code class="flex-1 px-4 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 select-all">{{ issued }}</code>
+              <button type="button" (click)="copyPassword()" class="mcc-btn mcc-btn-secondary">{{ copied() ? 'Đã chép' : 'Sao chép' }}</button>
+            </div>
+          </div>
+          <p class="text-xs text-zinc-600 dark:text-zinc-300">Học viên sẽ được yêu cầu đổi mật khẩu khi đăng nhập.</p>
+          <div class="flex justify-end">
+            <button type="button" (click)="passwordDialog.close()" class="mcc-btn mcc-btn-primary">Xong</button>
+          </div>
+        </div>
+      } @else {
+        <form (ngSubmit)="submitPassword()" class="space-y-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="student-new-pw" class="mcc-label">Mật khẩu mới</label>
+              <button type="button" (click)="regeneratePassword()" class="flex items-center gap-1 text-xs font-bold text-brand-pink hover:underline cursor-pointer">
+                <app-icon name="arrow-path" size="xs" /> Tạo ngẫu nhiên
+              </button>
+            </div>
+            <input id="student-new-pw" name="pw" autocomplete="off" spellcheck="false" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event); passwordError.set(null)" class="mcc-input font-mono" />
+            <ul class="flex flex-wrap gap-x-4 gap-y-1 pt-1">
+              @for (rule of passwordRules; track rule.label) {
+                <li class="flex items-center gap-1.5 text-[11px]" [class.text-emerald-600]="rule.test(newPassword())" [class.text-zinc-500]="!rule.test(newPassword())">
+                  <app-icon [name]="rule.test(newPassword()) ? 'check-circle' : 'x-circle'" size="xs" /> {{ rule.label }}
+                </li>
+              }
+            </ul>
+          </div>
+          <p class="text-xs text-zinc-600 dark:text-zinc-300">Học viên sẽ bị đăng xuất khỏi mọi thiết bị.</p>
+          @if (passwordError()) {
+            <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ passwordError() }}</p>
+          }
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="passwordDialog.close()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+            <button type="submit" [disabled]="busy() || !passwordOk()" class="mcc-btn mcc-btn-primary">{{ busy() ? 'Đang đặt lại…' : 'Đặt lại mật khẩu' }}</button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</dialog>
+
+<!-- Chuyển lớp / khoá / lưu trữ / xoá -->
+<dialog #bulkDialog aria-labelledby="bulk-title" class="mcc-dialog max-w-md">
+  @if (bulkAction(); as action) {
+    <div class="p-6 sm:p-7 space-y-4">
+      <h2 id="bulk-title" class="text-lg font-black font-display">
+        {{ action === 'move' ? 'Chuyển lớp' : bulkText()?.title }} · {{ selectedStudents().length }} học viên
+      </h2>
+      <ul class="max-h-40 overflow-y-auto text-xs space-y-1 text-zinc-600 dark:text-zinc-300">
+        @for (s of selectedStudents(); track s.user_id) {
+          <li>{{ s.full_name }} <span class="font-mono text-zinc-400">{{ s.username }}</span></li>
+        }
+      </ul>
+
+      @if (action === 'move') {
+        <label class="block space-y-1.5">
+          <span class="mcc-label">Lớp mới</span>
+          <select [ngModel]="moveTarget()" (ngModelChange)="moveTarget.set($event)" class="mcc-input">
+            <option value="" disabled>Chọn lớp</option>
+            @for (c of classOptions(); track c.id) {
+              <option [value]="c.id">{{ c.code }} – {{ c.name }}</option>
+            }
+          </select>
+        </label>
+      } @else if (action === 'delete') {
+        <p class="text-sm text-red-600 dark:text-red-400 font-semibold">Tài khoản, kết quả bài thi và tiến độ flashcard sẽ bị xoá vĩnh viễn.</p>
+      } @else if (action !== 'active') {
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">Học viên không đăng nhập được cho đến khi được mở lại.</p>
+      }
+
+      @if (bulkError()) {
+        <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ bulkError() }}</p>
+      }
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="bulkDialog.close()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+        <button
+          type="button"
+          (click)="submitBulk()"
+          [disabled]="busy() || (action === 'move' && !moveTarget())"
+          class="mcc-btn"
+          [class.mcc-btn-danger]="action === 'delete'"
+          [class.mcc-btn-primary]="action !== 'delete'"
+        >
+          {{ busy() ? 'Đang xử lý…' : action === 'move' ? 'Chuyển lớp' : bulkText()?.verb }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>

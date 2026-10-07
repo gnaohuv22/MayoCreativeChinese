@@ -17,6 +17,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ExamService } from '../../services/exam.service';
 import { ThemeService } from '../../../../services/theme.service';
 import { AuthService } from '../../../../services/auth.service';
+import { ToastService } from '../../../../services/toast.service';
+import { StudentService } from '../../../classes/services/student.service';
 import { hasPartStimulus, partOptionLabels } from '../../models/exam.model';
 import { parseOrderingTokens, type OrderingToken } from '../../models/exam-ordering';
 import { OrderingAnswerComponent } from '../../components/ordering-answer/ordering-answer';
@@ -43,9 +45,11 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   }
 
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  protected readonly router = inject(Router);
   private readonly examService = inject(ExamService);
   private readonly auth = inject(AuthService);
+  private readonly studentService = inject(StudentService);
+  private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   protected readonly theme = inject(ThemeService);
 
@@ -54,6 +58,8 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(true);
   /** Đề nội bộ mở bằng link khi chưa đăng nhập */
   comingSoon = signal<boolean>(false);
+  /** Đề dành cho học viên MCC, người xem chưa đăng nhập tài khoản học viên */
+  membersOnly = signal<boolean>(false);
 
   // Trạng thái phiên thi
   isExamStarted = signal<boolean>(false);
@@ -158,13 +164,12 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   async loadExam(id: string) {
     this.isLoading.set(true);
     let data = await this.examService.getExamWithDetails(id);
-    // Đề nội bộ: khách đọc được tên đề nhưng không có câu hỏi → coi như sắp ra mắt
-    if (data && data.visibility !== 'public') {
+    // Đề nội bộ / học viên mà người xem không được làm: đọc được tên đề nhưng RLS không trả câu hỏi
+    if (data && data.visibility !== 'public' && !data.sections?.length) {
       await this.auth.ready;
-      if (!this.auth.can('content.read')) {
-        data = null;
-        this.comingSoon.set(true);
-      }
+      this.membersOnly.set(data.visibility === 'students' && !this.auth.isStudent());
+      this.comingSoon.set(!this.membersOnly());
+      data = null;
     }
     this.exam.set(data);
     if (data) {
@@ -436,6 +441,12 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
     const timeSpent = this.initialDurationSeconds() - this.timeRemainingSeconds();
     const submission = this.examService.gradeExam(ex, this.answers(), Math.max(0, timeSpent));
+
+    // Học viên: lưu bài lên tài khoản để giáo viên xem (nhân sự / khách: chỉ lưu trên máy)
+    if (this.auth.isStudent()) {
+      const saved = await this.studentService.submitAttempt(submission, this.answers());
+      if (saved.error) this.toast.error('Chưa lưu được bài lên tài khoản. Kết quả vẫn hiển thị bình thường.');
+    }
 
     // Xoá nháp sau khi nộp
     this.clearDraft(ex.id || '');

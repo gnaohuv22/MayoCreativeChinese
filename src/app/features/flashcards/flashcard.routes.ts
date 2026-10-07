@@ -3,6 +3,7 @@ import { CanActivateFn, Router, Routes } from '@angular/router';
 import { VOCAB_COLLECTIONS, parseLevelParam } from './models/vocab-card.model';
 import type { VocabCollection } from './models/vocab-card.model';
 import { VocabService } from './services/vocab.service';
+import { isLockedAccess } from '../../components/shared/visibility/content-visibility';
 
 /** Cấp không hợp lệ / bản nháp / nội bộ / chưa có dữ liệu mở bằng link → về trang chọn cấp (hiện "Sắp ra mắt") */
 const levelOpenGuard: CanActivateFn = async route => {
@@ -25,7 +26,7 @@ const levelOpenGuard: CanActivateFn = async route => {
   ]);
 
   const levelAccess = access(collection, levelParam);
-  if (levelAccess === 'locked') {
+  if (isLockedAccess(levelAccess)) {
     return router.createUrlTree(['/flashcards', collection]);
   }
 

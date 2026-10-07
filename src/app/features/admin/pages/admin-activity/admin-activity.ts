@@ -12,17 +12,25 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   delete: { label: 'Xoá', tone: 'red' },
   publish: { label: 'Công khai', tone: 'emerald' },
   staff_only: { label: 'Nội bộ', tone: 'sky' },
+  students_only: { label: 'Học viên', tone: 'violet' },
   unpublish: { label: 'Chuyển nháp', tone: 'amber' },
   login: { label: 'Đăng nhập', tone: 'zinc' },
   password_change: { label: 'Đổi mật khẩu', tone: 'violet' },
   password_reset: { label: 'Đặt lại mật khẩu', tone: 'violet' },
   password_reset_failed: { label: 'Sai mật khẩu xác nhận', tone: 'red' },
+  archive: { label: 'Lưu trữ', tone: 'amber' },
+  restore: { label: 'Khôi phục', tone: 'emerald' },
+  move: { label: 'Chuyển lớp', tone: 'sky' },
+  lock: { label: 'Khoá', tone: 'red' },
+  unlock: { label: 'Mở khoá', tone: 'emerald' },
 };
 
 const ENTITIES: Record<string, { label: string; icon: IconName }> = {
   exam: { label: 'Đề thi', icon: 'academic' },
   vocab: { label: 'Từ vựng', icon: 'book-open' },
   staff: { label: 'Nhân sự', icon: 'users' },
+  class: { label: 'Lớp học', icon: 'calendar' },
+  student: { label: 'Học viên', icon: 'users' },
   auth: { label: 'Tài khoản', icon: 'cog' },
 };
 

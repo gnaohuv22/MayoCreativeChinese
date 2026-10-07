@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppIconComponent } from '../icon/app-icon';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
+import { AdminPresence } from '../../../services/admin-presence';
 
 @Component({
   selector: 'app-nav-header',
@@ -20,4 +21,7 @@ export class NavHeaderComponent {
   showBack = input<boolean>(false);
   showNavLinks = input<boolean>(true);
   showDevBadge = input<boolean>(false);
+
+  /** Học viên / nhân sự đang đăng nhập (cờ nhẹ, không kéo supabase-js vào bundle) */
+  protected readonly presence = inject(AdminPresence);
 }

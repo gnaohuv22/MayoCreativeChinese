@@ -1,0 +1,134 @@
+<form (ngSubmit)="submit()" class="p-6 sm:p-7 space-y-5">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-lg font-black font-display">{{ cls() ? 'Sửa lớp ' + cls()!.code : 'Tạo lớp mới' }}</h2>
+    <button type="button" (click)="cancelled.emit()" class="p-1.5 rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
+      <app-icon name="x-mark" size="sm" />
+    </button>
+  </div>
+
+  <div class="grid sm:grid-cols-3 gap-3">
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Mã lớp</span>
+      <input name="code" required maxlength="40" [(ngModel)]="form.code" placeholder="HSK3-2610" class="mcc-input uppercase" />
+    </label>
+    <label class="block space-y-1.5 sm:col-span-2">
+      <span class="mcc-label">Tên lớp</span>
+      <input name="name" required maxlength="200" [(ngModel)]="form.name" placeholder="HSK 3 tối 2-4-6" class="mcc-input" />
+    </label>
+  </div>
+
+  <div class="grid sm:grid-cols-2 gap-3">
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Khoá học</span>
+      <select name="course" [(ngModel)]="form.course_slug" class="mcc-input">
+        <option [ngValue]="null">—</option>
+        @for (c of courses; track c.slug) {
+          <option [ngValue]="c.slug">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block space-y-1.5">
+        <span class="mcc-label">Giáo trình HSK</span>
+        <select name="hsk_version" [(ngModel)]="form.hsk_version" class="mcc-input">
+          <option [ngValue]="null">—</option>
+          <option value="2.0">HSK 2.0</option>
+          <option value="3.0">HSK 3.0</option>
+        </select>
+      </label>
+      <label class="block space-y-1.5">
+        <span class="mcc-label">Cấp</span>
+        <select name="hsk_level" [(ngModel)]="form.hsk_level" class="mcc-input">
+          <option [ngValue]="null">—</option>
+          @for (l of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track l) {
+            <option [ngValue]="l">{{ l }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Hình thức</span>
+      <select name="study_mode" [(ngModel)]="form.study_mode" class="mcc-input">
+        <option [ngValue]="null">—</option>
+        <option value="offline">Offline</option>
+        <option value="online">Online</option>
+      </select>
+    </label>
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Trạng thái</span>
+      <select name="status" [(ngModel)]="form.status" class="mcc-input">
+        @for (o of statusOptions; track o[0]) {
+          <option [value]="o[0]">{{ o[1] }}</option>
+        }
+      </select>
+    </label>
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Khai giảng</span>
+      <input name="start_date" type="date" [(ngModel)]="form.start_date" class="mcc-input" />
+    </label>
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Kết thúc</span>
+      <input name="end_date" type="date" [(ngModel)]="form.end_date" class="mcc-input" />
+    </label>
+  </div>
+
+  <div class="grid sm:grid-cols-3 gap-3">
+    <label class="block space-y-1.5 sm:col-span-2">
+      <span class="mcc-label">Lịch học</span>
+      <input name="schedule" [(ngModel)]="form.schedule" placeholder="Tối thứ 2-4-6, 19:30–21:00" class="mcc-input" />
+    </label>
+    <label class="block space-y-1.5">
+      <span class="mcc-label">Sĩ số tối đa</span>
+      <input name="max_students" type="number" min="1" [(ngModel)]="form.max_students" class="mcc-input" />
+    </label>
+  </div>
+
+  <div class="space-y-2">
+    <span class="mcc-label">Giáo viên & trợ giảng</span>
+    <ul class="space-y-2">
+      @for (s of staff(); track s.user_id) {
+        <li class="flex items-center gap-2 p-2 pl-3.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10">
+          <span class="flex-1 text-sm font-semibold truncate">{{ nameOf(s.user_id) }}</span>
+          <select [ngModel]="s.role" (ngModelChange)="setRole(s.user_id, $event)" [ngModelOptions]="{ standalone: true }" class="mcc-input !w-auto !py-1.5 !text-xs" [attr.aria-label]="'Vai trò của ' + nameOf(s.user_id)">
+            <option value="teacher">{{ roleLabels.teacher }}</option>
+            <option value="assistant">{{ roleLabels.assistant }}</option>
+          </select>
+          <button type="button" (click)="removeStaff(s.user_id)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 cursor-pointer" [attr.aria-label]="'Bỏ ' + nameOf(s.user_id)">
+            <app-icon name="x-mark" size="xs" />
+          </button>
+        </li>
+      }
+    </ul>
+    @if (availableStaff().length) {
+      <div class="flex gap-2">
+        <select [ngModel]="addStaffId()" (ngModelChange)="addStaffId.set($event)" [ngModelOptions]="{ standalone: true }" class="mcc-input" aria-label="Thêm nhân sự">
+          <option value="">Thêm giáo viên / trợ giảng…</option>
+          @for (d of availableStaff(); track d.user_id) {
+            <option [value]="d.user_id">{{ d.full_name || d.username }} ({{ d.username }})</option>
+          }
+        </select>
+        <button type="button" (click)="addStaff()" [disabled]="!addStaffId()" class="mcc-btn mcc-btn-secondary shrink-0">
+          <app-icon name="plus" size="xs" /> Thêm
+        </button>
+      </div>
+    }
+  </div>
+
+  <label class="block space-y-1.5">
+    <span class="mcc-label">Ghi chú nội bộ</span>
+    <textarea name="notes" rows="2" [(ngModel)]="form.notes" class="mcc-input"></textarea>
+  </label>
+
+  @if (error()) {
+    <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ error() }}</p>
+  }
+  <div class="flex justify-end gap-2">
+    <button type="button" (click)="cancelled.emit()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+    <button type="submit" [disabled]="saving() || !form.code.trim() || !form.name.trim()" class="mcc-btn mcc-btn-primary">
+      {{ saving() ? 'Đang lưu…' : cls() ? 'Lưu thay đổi' : 'Tạo lớp' }}
+    </button>
+  </div>
+</form>

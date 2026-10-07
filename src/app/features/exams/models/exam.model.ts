@@ -99,7 +99,7 @@ export interface ExamFilter {
   hsk_level?: number | 'all';
   hsk_version?: HskVersion | 'all';
   visibility?: ContentVisibility | 'all';
-  /** Trang học viên: đề nội bộ + công khai */
+  /** Trang học viên: đề nội bộ + học viên + công khai */
   learner?: boolean;
   searchQuery?: string;
 }

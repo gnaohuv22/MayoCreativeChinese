@@ -81,3 +81,38 @@ html.dark body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Ô nhập / nút / hộp thoại dùng chung trong khu quản trị lớp học & khu học viên */
+@layer components {
+  .mcc-label {
+    @apply text-xs font-bold text-brand-navy dark:text-white;
+  }
+  .mcc-input {
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-pink/40;
+  }
+  .mcc-btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .mcc-btn-primary {
+    @apply bg-brand-pink hover:bg-brand-pink/90 text-white shadow-md shadow-brand-pink/20;
+  }
+  .mcc-btn-secondary {
+    @apply bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 text-brand-navy dark:text-white;
+  }
+  .mcc-btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+  }
+  .mcc-card {
+    @apply rounded-2xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xs;
+  }
+  .mcc-dialog {
+    @apply w-[calc(100%-2rem)] m-auto p-0 rounded-3xl bg-white dark:bg-brand-dark text-brand-navy dark:text-white shadow-2xl border border-brand-navy/10 dark:border-white/10;
+  }
+  .mcc-dialog::backdrop {
+    background: rgb(30 30 69 / 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .mcc-chip {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap;
+  }
+}

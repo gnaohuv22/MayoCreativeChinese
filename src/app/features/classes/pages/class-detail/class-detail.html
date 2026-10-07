@@ -1,0 +1,350 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <a routerLink="/admin/classes" class="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-brand-pink">
+      <app-icon name="arrow-left" size="xs" /> Lớp học
+    </a>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải lớp…</p>
+    } @else if (notFound()) {
+      <p class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Không tìm thấy lớp, hoặc bạn không phụ trách lớp này.</p>
+    } @else if (cls(); as c) {
+      <!-- Tiêu đề -->
+      <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-mono text-sm font-black text-brand-pink">{{ c.code }}</span>
+            <span class="mcc-chip" [class]="statusClass(c.status)">{{ statusLabels[c.status] }}</span>
+            @if (c.archived_at) {
+              <span class="mcc-chip bg-zinc-200 text-zinc-700 dark:bg-white/15 dark:text-zinc-200">Đã lưu trữ</span>
+            }
+          </div>
+          <h1 class="mt-1 text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">{{ c.name }}</h1>
+          <p class="mt-1 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
+            {{ activeStudents().length }}{{ c.max_students ? '/' + c.max_students : '' }} học viên
+            @if (c.schedule) { · {{ c.schedule }} }
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" (click)="openEdit()" class="mcc-btn mcc-btn-secondary"><app-icon name="pencil" size="xs" /> Sửa lớp</button>
+          @if (c.archived_at) {
+            <button type="button" (click)="openConfirm('restore')" class="mcc-btn mcc-btn-secondary">Khôi phục</button>
+          } @else {
+            <button type="button" (click)="openConfirm('archive')" class="mcc-btn mcc-btn-secondary">Lưu trữ</button>
+          }
+          @if (auth.can('class.delete')) {
+            <button type="button" (click)="openConfirm('delete')" class="mcc-btn mcc-btn-secondary !text-red-600"><app-icon name="trash" size="xs" /> Xoá</button>
+          }
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 overflow-x-auto border-b border-brand-navy/10 dark:border-white/10" role="tablist">
+        @for (t of [
+          { key: 'students', label: 'Học viên' },
+          { key: 'announcements', label: 'Thông báo' },
+          { key: 'suggestions', label: 'Gợi ý học' },
+          { key: 'results', label: 'Kết quả' },
+          { key: 'info', label: 'Thông tin' }
+        ]; track t.key) {
+          <button type="button" role="tab" [attr.aria-selected]="tab() === t.key" (click)="tab.set($any(t.key))"
+                  class="px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 -mb-px cursor-pointer transition-colors"
+                  [class]="tab() === t.key ? 'border-brand-pink text-brand-pink' : 'border-transparent text-zinc-500 hover:text-brand-navy dark:hover:text-white'">
+            {{ t.label }}
+          </button>
+        }
+      </div>
+
+      @switch (tab()) {
+        <!-- Học viên -->
+        @case ('students') {
+          <div class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="text-sm font-bold text-brand-navy dark:text-white">{{ activeStudents().length }} học viên</p>
+              @if (auth.can('student.manage') && !c.archived_at) {
+                <button type="button" (click)="openImport()" class="mcc-btn mcc-btn-primary"><app-icon name="plus" size="xs" /> Thêm học viên</button>
+              }
+            </div>
+            <app-student-table [students]="activeStudents()" (changed)="onStudentsChanged()" />
+            @if (archivedStudents().length) {
+              <button type="button" (click)="showArchivedStudents.set(!showArchivedStudents())" class="text-xs font-bold text-zinc-500 hover:text-brand-pink cursor-pointer">
+                {{ showArchivedStudents() ? 'Ẩn' : 'Hiện' }} {{ archivedStudents().length }} tài khoản đã lưu trữ
+              </button>
+              @if (showArchivedStudents()) {
+                <app-student-table [students]="archivedStudents()" (changed)="onStudentsChanged()" />
+              }
+            }
+          </div>
+        }
+
+        <!-- Thông báo -->
+        @case ('announcements') {
+          <div class="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-6 items-start">
+            <form (ngSubmit)="saveAnnouncement()" class="mcc-card p-5 space-y-3">
+              <h2 class="font-display font-bold">{{ editingAnnouncement() ? 'Sửa thông báo' : 'Thông báo mới' }}</h2>
+              <label class="block space-y-1.5">
+                <span class="mcc-label">Tiêu đề</span>
+                <input name="title" required maxlength="200" [(ngModel)]="announcementForm.title" class="mcc-input" />
+              </label>
+              <label class="block space-y-1.5">
+                <span class="mcc-label">Nội dung</span>
+                <textarea name="body" rows="5" [(ngModel)]="announcementForm.body" class="mcc-input"></textarea>
+              </label>
+              <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                <input type="checkbox" name="pinned" [(ngModel)]="announcementForm.pinned" class="accent-brand-pink" /> Ghim lên đầu
+              </label>
+              <div class="flex justify-end gap-2">
+                @if (editingAnnouncement()) {
+                  <button type="button" (click)="resetAnnouncement()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+                }
+                <button type="submit" [disabled]="busy() || !announcementForm.title.trim()" class="mcc-btn mcc-btn-primary">
+                  {{ editingAnnouncement() ? 'Lưu' : 'Đăng' }}
+                </button>
+              </div>
+            </form>
+
+            <ul class="space-y-3">
+              @for (a of announcements(); track a.id) {
+                <li class="mcc-card p-5">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <h3 class="font-bold text-brand-navy dark:text-white flex items-center gap-2">
+                        @if (a.pinned) { <span class="mcc-chip bg-brand-pink/10 text-brand-pink">Ghim</span> }
+                        {{ a.title }}
+                      </h3>
+                      <p class="text-[11px] text-zinc-500 mt-0.5">{{ authorName(a.created_by) }} · {{ formatDateTime(a.created_at) }}</p>
+                    </div>
+                    <div class="flex gap-1 shrink-0">
+                      <button type="button" (click)="editAnnouncement(a)" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Sửa thông báo"><app-icon name="pencil" size="xs" /></button>
+                      <button type="button" (click)="deleteAnnouncement(a)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer" aria-label="Xoá thông báo"><app-icon name="trash" size="xs" /></button>
+                    </div>
+                  </div>
+                  @if (a.body) {
+                    <p class="mt-3 text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-line">{{ a.body }}</p>
+                  }
+                </li>
+              } @empty {
+                <li class="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Chưa có thông báo.</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- Gợi ý -->
+        @case ('suggestions') {
+          <div class="grid lg:grid-cols-2 gap-6 items-start">
+            <section class="mcc-card p-5 space-y-4">
+              <h2 class="font-display font-bold flex items-center gap-2"><app-icon name="academic" size="sm" /> Đề thi thử</h2>
+              <div class="flex gap-2">
+                <select [ngModel]="examToSuggest()" (ngModelChange)="examToSuggest.set($event)" class="mcc-input" aria-label="Chọn đề thi">
+                  <option value="">Chọn đề…</option>
+                  @for (e of unsuggestedExams(); track e.id) {
+                    <option [value]="e.id">{{ e.title }} ({{ visibilityLabels[e.visibility] }})</option>
+                  }
+                </select>
+                <button type="button" (click)="addExamSuggestion()" [disabled]="!examToSuggest()" class="mcc-btn mcc-btn-primary shrink-0"><app-icon name="plus" size="xs" /> Gợi ý</button>
+              </div>
+              <ul class="space-y-2">
+                @for (s of suggestedExams(); track s.id) {
+                  <li class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-white/5">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold truncate">{{ s.exam!.title }}</p>
+                      <p class="text-[11px] text-zinc-500">HSK {{ s.exam!.hsk_level }} · {{ s.exam!.hsk_version }}</p>
+                    </div>
+                    <span class="mcc-chip" [class]="visibilityChipClass(s.exam!.visibility)">{{ visibilityLabels[s.exam!.visibility] }}</span>
+                    <button type="button" (click)="removeSuggestion(s)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 cursor-pointer" aria-label="Bỏ gợi ý"><app-icon name="x-mark" size="xs" /></button>
+                  </li>
+                } @empty {
+                  <li class="text-sm text-zinc-500 dark:text-zinc-400">Chưa gợi ý đề nào.</li>
+                }
+              </ul>
+            </section>
+
+            <section class="mcc-card p-5 space-y-4">
+              <h2 class="font-display font-bold flex items-center gap-2"><app-icon name="book-open" size="sm" /> Từ vựng</h2>
+              <div class="flex flex-wrap gap-2">
+                <select [ngModel]="vocabCollection()" (ngModelChange)="setVocabCollection($event)" class="mcc-input !w-auto" aria-label="Bộ từ vựng">
+                  @for (col of collections; track col.key) {
+                    <option [value]="col.key">{{ col.label }}</option>
+                  }
+                </select>
+                <select [ngModel]="vocabParam()" (ngModelChange)="vocabParam.set($event)" class="mcc-input !w-auto flex-1" aria-label="Cấp">
+                  <option value="">Chọn cấp…</option>
+                  @for (p of vocabParams(); track p) {
+                    <option [value]="p">{{ levelLabel(vocabCollection(), p) }}</option>
+                  }
+                </select>
+                <button type="button" (click)="addVocabSuggestion()" [disabled]="!vocabParam()" class="mcc-btn mcc-btn-primary shrink-0"><app-icon name="plus" size="xs" /> Gợi ý</button>
+              </div>
+              <ul class="space-y-2">
+                @for (s of suggestedVocab(); track s.id) {
+                  <li class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-white/5">
+                    <p class="flex-1 text-sm font-bold">{{ vocabLabel(s) }}</p>
+                    <span class="mcc-chip" [class]="visibilityChipClass(vocabVisibilityOf(s))">{{ visibilityLabels[vocabVisibilityOf(s)] }}</span>
+                    <button type="button" (click)="removeSuggestion(s)" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 cursor-pointer" aria-label="Bỏ gợi ý"><app-icon name="x-mark" size="xs" /></button>
+                  </li>
+                } @empty {
+                  <li class="text-sm text-zinc-500 dark:text-zinc-400">Chưa gợi ý bộ từ nào.</li>
+                }
+              </ul>
+            </section>
+          </div>
+        }
+
+        <!-- Kết quả -->
+        @case ('results') {
+          <div class="space-y-6">
+            <div class="mcc-card overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 border-b border-brand-navy/10 dark:border-white/10">
+                    <th class="px-4 py-3 font-bold">Học viên</th>
+                    @for (s of suggestedExams(); track s.id) {
+                      <th class="px-3 py-3 font-bold normal-case max-w-36" [title]="s.exam!.title"><span class="line-clamp-2">{{ s.exam!.title }}</span></th>
+                    }
+                    <th class="px-3 py-3 font-bold whitespace-nowrap">Lượt làm bài</th>
+                    <th class="px-3 py-3 font-bold whitespace-nowrap">Từ đã học</th>
+                    <th class="px-3 py-3 font-bold whitespace-nowrap">Đã thuộc</th>
+                    <th class="px-3 py-3 font-bold whitespace-nowrap">Học gần nhất</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of resultRows(); track row.student.user_id) {
+                    <tr class="border-b last:border-0 border-brand-navy/5 dark:border-white/5">
+                      <td class="px-4 py-3 font-bold whitespace-nowrap">{{ row.student.full_name }}</td>
+                      @for (s of suggestedExams(); track s.id) {
+                        <td class="px-3 py-3 whitespace-nowrap">
+                          @if (row.best.get(s.exam_id!); as cell) {
+                            <span class="font-bold" [class]="scoreClass(cell)">{{ cell.score }}</span><span class="text-zinc-400">/{{ cell.total }}</span>
+                            @if (cell.count > 1) { <span class="text-[10px] text-zinc-400"> ×{{ cell.count }}</span> }
+                          } @else {
+                            <span class="text-zinc-300 dark:text-zinc-600">—</span>
+                          }
+                        </td>
+                      }
+                      <td class="px-3 py-3">{{ row.attempts }}</td>
+                      <td class="px-3 py-3">{{ row.vocab?.reviewed ?? 0 }}</td>
+                      <td class="px-3 py-3">{{ row.vocab?.mastered ?? 0 }}</td>
+                      <td class="px-3 py-3 text-xs text-zinc-500 whitespace-nowrap">{{ formatDate(row.vocab?.last_reviewed) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td [attr.colspan]="suggestedExams().length + 5" class="px-4 py-10 text-center text-sm text-zinc-500">Chưa có học viên.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <section class="space-y-3">
+              <h2 class="font-display font-bold">Bài đã nộp</h2>
+              <div class="mcc-card overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-left text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 border-b border-brand-navy/10 dark:border-white/10">
+                      <th class="px-4 py-3 font-bold">Thời gian</th>
+                      <th class="px-3 py-3 font-bold">Học viên</th>
+                      <th class="px-3 py-3 font-bold">Đề</th>
+                      <th class="px-3 py-3 font-bold">Điểm</th>
+                      <th class="px-3 py-3 font-bold">Đúng</th>
+                      <th class="px-3 py-3 font-bold">Làm trong</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of attempts(); track a.id) {
+                      <tr class="border-b last:border-0 border-brand-navy/5 dark:border-white/5">
+                        <td class="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">{{ formatDateTime(a.submitted_at) }}</td>
+                        <td class="px-3 py-3 font-bold whitespace-nowrap">{{ studentNames().get(a.student_id) ?? '—' }}</td>
+                        <td class="px-3 py-3">{{ a.exam?.title }}</td>
+                        <td class="px-3 py-3 whitespace-nowrap">
+                          <span class="font-bold" [class]="scoreClass({ score: +a.score, passing: a.passing_score == null ? null : +a.passing_score })">{{ a.score }}</span><span class="text-zinc-400">/{{ a.total_score }}</span>
+                        </td>
+                        <td class="px-3 py-3 whitespace-nowrap">{{ a.correct_count }}/{{ a.question_count }}</td>
+                        <td class="px-3 py-3 text-xs whitespace-nowrap">{{ formatDuration(a.time_spent_secs) }}</td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="6" class="px-4 py-10 text-center text-sm text-zinc-500">Học viên chưa nộp bài nào.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        }
+
+        <!-- Thông tin -->
+        @case ('info') {
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <dl class="mcc-card p-5 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm">
+              <dt class="text-zinc-500">Khoá học</dt><dd class="font-semibold">{{ courseName() || '—' }}</dd>
+              <dt class="text-zinc-500">Giáo trình</dt>
+              <dd class="font-semibold">{{ c.hsk_level ? 'HSK ' + c.hsk_level : '—' }}{{ c.hsk_version ? ' · ' + c.hsk_version : '' }}</dd>
+              <dt class="text-zinc-500">Hình thức</dt><dd class="font-semibold">{{ c.study_mode ? modeLabels[c.study_mode] : '—' }}</dd>
+              <dt class="text-zinc-500">Khai giảng</dt><dd class="font-semibold">{{ formatDate(c.start_date) || '—' }}</dd>
+              <dt class="text-zinc-500">Kết thúc</dt><dd class="font-semibold">{{ formatDate(c.end_date) || '—' }}</dd>
+              <dt class="text-zinc-500">Lịch học</dt><dd class="font-semibold">{{ c.schedule || '—' }}</dd>
+              <dt class="text-zinc-500">Sĩ số tối đa</dt><dd class="font-semibold">{{ c.max_students ?? '—' }}</dd>
+              @if (c.notes) {
+                <dt class="text-zinc-500">Ghi chú</dt><dd class="whitespace-pre-line">{{ c.notes }}</dd>
+              }
+            </dl>
+            <section class="mcc-card p-5 space-y-3">
+              <h2 class="font-display font-bold">Giáo viên & trợ giảng</h2>
+              <ul class="space-y-2">
+                @for (s of staffList(); track s.user_id) {
+                  <li class="flex items-center justify-between text-sm">
+                    <span class="font-semibold">{{ s.name }}</span>
+                    <span class="mcc-chip bg-brand-navy/5 text-brand-navy dark:bg-white/10 dark:text-white">{{ roleLabels[s.role] }}</span>
+                  </li>
+                } @empty {
+                  <li class="text-sm text-zinc-500">Chưa phân công.</li>
+                }
+              </ul>
+            </section>
+          </div>
+        }
+      }
+
+      <!-- Hộp thoại -->
+      <dialog #formDialog (close)="formOpen.set(false)" aria-label="Sửa lớp" class="mcc-dialog max-w-2xl">
+        @if (formOpen()) {
+          <app-class-form [cls]="c" [directory]="directory()" (saved)="onSaved()" (cancelled)="closeEdit()" />
+        }
+      </dialog>
+
+      <dialog #importDialog (close)="onImportClosed()" aria-label="Thêm học viên" class="mcc-dialog max-w-4xl">
+        @if (importOpen()) {
+          <app-student-import
+            [classId]="c.id"
+            [classCode]="c.code"
+            [maxStudents]="c.max_students"
+            [currentCount]="activeStudents().length"
+            (created)="onStudentsChanged()"
+            (closed)="closeImport()"
+          />
+        }
+      </dialog>
+
+      <dialog #confirmDialog aria-labelledby="confirm-class-title" class="mcc-dialog max-w-md">
+        @if (confirmAction(); as action) {
+          <div class="p-6 sm:p-7 space-y-4">
+            <h2 id="confirm-class-title" class="text-lg font-black font-display">
+              {{ action === 'delete' ? 'Xoá vĩnh viễn' : action === 'archive' ? 'Lưu trữ' : 'Khôi phục' }} lớp {{ c.code }}?
+            </h2>
+            @if (action === 'delete') {
+              <p class="text-sm text-red-600 dark:text-red-400 font-semibold">
+                Thông báo và gợi ý của lớp bị xoá. {{ students().length }} học viên chuyển về "Chưa có lớp"; tài khoản và kết quả bài thi được giữ.
+              </p>
+            } @else if (action === 'archive') {
+              <p class="text-sm text-zinc-600 dark:text-zinc-300">Lớp ẩn khỏi danh sách đang mở và không thêm được học viên mới. Học viên vẫn đăng nhập bình thường.</p>
+            }
+            <div class="flex justify-end gap-2">
+              <button type="button" (click)="confirmDialog.close()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+              <button type="button" (click)="runConfirm()" [disabled]="busy()" class="mcc-btn" [class.mcc-btn-danger]="action === 'delete'" [class.mcc-btn-primary]="action !== 'delete'">
+                {{ busy() ? 'Đang xử lý…' : action === 'delete' ? 'Xoá vĩnh viễn' : action === 'archive' ? 'Lưu trữ' : 'Khôi phục' }}
+              </button>
+            </div>
+          </div>
+        }
+      </dialog>
+    }
+  </div>
+</div>

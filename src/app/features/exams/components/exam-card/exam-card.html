@@ -13,6 +13,8 @@
           [disabled]="savingVisibility()"
           (changed)="visibilityChange.emit({ exam: exam(), visibility: $event })"
         />
+      } @else if (access() === 'members') {
+        <app-members-only-badge />
       } @else if (access() === 'locked') {
         <app-coming-soon-badge />
       } @else if (access() === 'staff') {
@@ -78,7 +80,11 @@
   </div>
 
   <!-- Bottom Actions -->
-  @if (locked()) {
+  @if (locked() && access() === 'members') {
+    <a routerLink="/dang-nhap" class="w-full py-3 rounded-2xl border border-dashed border-violet-500/30 text-violet-700 dark:text-violet-300 hover:bg-violet-500/5 font-bold text-xs text-center transition-colors">
+      Đăng nhập học viên để làm bài
+    </a>
+  } @else if (locked()) {
     <div class="w-full py-3 rounded-2xl border border-dashed border-brand-navy/15 dark:border-white/15 text-brand-navy/45 dark:text-white/40 font-bold text-xs text-center">
       Đề thi đang được biên soạn
     </div>
