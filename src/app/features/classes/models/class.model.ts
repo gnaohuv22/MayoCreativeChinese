@@ -101,6 +101,8 @@ export interface Student {
   notes: string;
   class_id: string | null;
   status: StudentStatus;
+  /** guest = khách tự đăng ký bằng số điện thoại (migration 021) */
+  account_type: 'student' | 'guest';
   must_change_password: boolean;
   created_at: string;
 }

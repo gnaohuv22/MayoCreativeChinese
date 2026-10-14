@@ -1,4 +1,4 @@
-<app-nav-header pageTitle="Lớp của tôi" />
+<app-nav-header [pageTitle]="auth.isGuest() ? 'Tài khoản của tôi' : 'Lớp của tôi'" />
 
 <div class="min-h-screen bg-brand-light dark:bg-brand-dark py-8 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors">
   <div class="max-w-5xl mx-auto space-y-8">
@@ -6,7 +6,7 @@
     <!-- Chào + tài khoản -->
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="text-xs font-bold uppercase tracking-widest text-brand-pink">Học viên MCC</p>
+        <p class="text-xs font-bold uppercase tracking-widest text-brand-pink">{{ auth.isGuest() ? 'Tài khoản khách' : 'Học viên MCC' }}</p>
         <h1 class="mt-1 text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">
           Xin chào, {{ auth.displayName() }}
         </h1>
@@ -62,6 +62,14 @@
           </ul>
         }
       </section>
+    } @else if (auth.isGuest()) {
+      <section class="mcc-card p-6 flex flex-wrap items-center justify-between gap-4">
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tiến độ flashcard và bài thi của bạn được lưu vào tài khoản này.</p>
+        <div class="flex gap-2">
+          <a routerLink="/flashcards" class="mcc-btn mcc-btn-primary"><app-icon name="book-open" size="xs" /> Flashcard</a>
+          <a routerLink="/exams" class="mcc-btn mcc-btn-secondary"><app-icon name="academic" size="xs" /> Đề thi HSK</a>
+        </div>
+      </section>
     } @else {
       <section class="mcc-card p-6 text-sm text-zinc-600 dark:text-zinc-300">
         Tài khoản của bạn chưa được xếp vào lớp nào. Vui lòng liên hệ giáo viên.
@@ -71,8 +79,9 @@
     @if (loading()) {
       <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải…</p>
     } @else {
-      <div class="grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8 items-start">
+      <div [class]="auth.isGuest() ? 'grid gap-8 items-start max-w-3xl' : 'grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8 items-start'">
         <div class="space-y-8">
+          @if (!auth.isGuest()) {
           <!-- Thông báo -->
           <section class="space-y-3">
             <h2 class="text-lg font-black font-display text-brand-navy dark:text-white">Thông báo</h2>
@@ -93,6 +102,7 @@
               }
             </ul>
           </section>
+          }
 
           <!-- Kết quả -->
           <section class="space-y-3">
@@ -116,6 +126,7 @@
           </section>
         </div>
 
+        @if (!auth.isGuest()) {
         <!-- Gợi ý -->
         <aside class="space-y-3">
           <h2 class="text-lg font-black font-display text-brand-navy dark:text-white">Giáo viên gợi ý</h2>
@@ -152,6 +163,7 @@
             }
           </ul>
         </aside>
+        }
       </div>
     }
   </div>

@@ -30,6 +30,13 @@ export const routes: Routes = [
       import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
   },
   {
+    // Khách tự đăng ký bằng số điện thoại (migration 021)
+    path: 'dang-ky',
+    title: 'Đăng ký tài khoản',
+    loadComponent: () =>
+      import('./features/classes/pages/guest-register/guest-register').then(m => m.GuestRegisterComponent),
+  },
+  {
     // Khu học viên (tài khoản do nhân sự tạo theo lớp)
     path: 'hoc-vien',
     canActivateChild: [studentGuard],

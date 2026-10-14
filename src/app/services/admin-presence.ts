@@ -10,4 +10,6 @@ export class AdminPresence {
   readonly active = signal(false);
   /** Họ tên học viên đang đăng nhập (null = không phải học viên) */
   readonly student = signal<string | null>(null);
+  /** Người học đang đăng nhập là khách tự đăng ký (không thuộc lớp) */
+  readonly guest = signal(false);
 }

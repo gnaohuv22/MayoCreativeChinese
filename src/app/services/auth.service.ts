@@ -8,6 +8,17 @@ import { RequestCache } from './request-cache';
 const LOGIN_EMAIL_DOMAIN = 'mayocreativechinese.edu.vn';
 /** Tài khoản học viên (migration 019, create_students) */
 const STUDENT_EMAIL_DOMAIN = 'hocvien.mayocreativechinese.edu.vn';
+/** Khách tự đăng ký bằng số điện thoại (migration 021, register_guest) */
+const GUEST_EMAIL_DOMAIN = 'khach.mayocreativechinese.edu.vn';
+
+/** "0912 345 678", "+84912345678" → "0912345678"; null nếu không phải số di động VN (khớp normalize_vn_phone) */
+export function normalizeVnPhone(input: string): string | null {
+  let digits = input.replace(/\D/g, '');
+  if (/^84\d{9}$/.test(digits)) digits = `0${digits.slice(2)}`;
+  return /^0[35789]\d{8}$/.test(digits) ? digits : null;
+}
+
+export type GuestRegisterError = 'invalid_phone' | 'missing_name' | 'weak_password' | 'no_consent' | 'phone_taken' | 'rate_limited';
 
 /** Khớp bảng public.role_permissions (migration 013) */
 export type Permission =
@@ -38,6 +49,8 @@ export interface StaffContext {
 export interface StudentContext {
   username: string;
   full_name: string;
+  /** guest = khách tự đăng ký (không thuộc lớp), student = học viên lớp */
+  account_type: 'student' | 'guest';
   must_change_password: boolean;
   class: StudentClassInfo | null;
 }
@@ -114,8 +127,11 @@ export class AuthService {
   readonly roleDescription = computed(() => this.context()?.role_description ?? '');
   /** Có hồ sơ nhân sự = được vào khu quản trị */
   readonly isStaff = computed(() => this.context() !== null);
-  /** Có hồ sơ học viên đang hoạt động */
-  readonly isStudent = computed(() => this.studentContext() !== null);
+  /** Người học đã đăng nhập (học viên lớp hoặc khách): lưu tiến độ, bài thi */
+  readonly isLearner = computed(() => this.studentContext() !== null);
+  /** Học viên lớp: mở nội dung "Học viên" */
+  readonly isStudent = computed(() => this.studentContext()?.account_type === 'student');
+  readonly isGuest = computed(() => this.studentContext()?.account_type === 'guest');
   readonly student = this.studentContext.asReadonly();
   readonly userId = computed(() => this.session()?.user.id ?? null);
 
@@ -149,6 +165,7 @@ export class AuthService {
     const presence = inject(AdminPresence);
     effect(() => presence.active.set(this.isStaff()));
     effect(() => presence.student.set(this.studentContext()?.full_name ?? null));
+    effect(() => presence.guest.set(this.isGuest()));
     // Dữ liệu đã cache theo quyền cũ (khách / nhân sự / học viên) không còn đúng
     let lastViewer = 'visitor';
     effect(() => {
@@ -190,11 +207,13 @@ export class AuthService {
     return {};
   }
 
-  /** Đăng nhập học viên (trang /dang-nhap) — tài khoản do nhân sự tạo theo lớp */
+  /** Đăng nhập người học (trang /dang-nhap): tên đăng nhập học viên lớp, hoặc số điện thoại của khách */
   async signInStudent(username: string, password: string): Promise<{ error?: string }> {
     const login = username.trim().toLowerCase();
     if (!login || login.includes('@')) return { error: 'Invalid login credentials' };
-    const { error } = await this.supabase.auth.signInWithPassword({ email: `${login}@${STUDENT_EMAIL_DOMAIN}`, password });
+    const phone = /^[+\d][\d\s.-]*$/.test(login) ? normalizeVnPhone(login) : null;
+    const email = phone ? `${phone}@${GUEST_EMAIL_DOMAIN}` : `${login}@${STUDENT_EMAIL_DOMAIN}`;
+    const { error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.code === 'user_banned') return { error: 'Tài khoản đã bị khoá. Vui lòng liên hệ giáo viên của lớp.' };
       return { error: error.message };
@@ -206,6 +225,22 @@ export class AuthService {
       return { error: 'Tài khoản này không phải tài khoản học viên.' };
     }
     return {};
+  }
+
+  /** Khách tự đăng ký rồi đăng nhập luôn */
+  async registerGuest(input: { phone: string; password: string; fullName: string; consent: boolean }): Promise<{ error?: GuestRegisterError | string }> {
+    const phone = normalizeVnPhone(input.phone);
+    if (!phone) return { error: 'invalid_phone' };
+    const { data, error } = await this.supabase.rpc('register_guest', {
+      p_phone: phone,
+      p_password: input.password,
+      p_full_name: input.fullName.trim(),
+      p_consent: input.consent,
+    });
+    if (error) return { error: error.message };
+    const result = data as { ok: boolean; error?: GuestRegisterError };
+    if (!result.ok) return { error: result.error ?? 'unknown' };
+    return this.signInStudent(phone, input.password);
   }
 
   /** Học viên tự đổi mật khẩu (chính sách nhẹ hơn nhân sự, đổi qua RPC) */

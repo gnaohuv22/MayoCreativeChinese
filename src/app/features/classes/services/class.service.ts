@@ -21,7 +21,7 @@ import type { VocabCollection } from '../../flashcards/models/vocab-card.model';
 const CLASS_COLUMNS =
   'id, code, name, course_slug, hsk_level, hsk_version, study_mode, start_date, end_date, schedule, max_students, notes, status, archived_at, created_at, updated_at, staff:class_staff(user_id, role), students:student_profiles(count)';
 const STUDENT_COLUMNS =
-  'user_id, username, full_name, birth_year, phone, email, parent_phone, notes, class_id, status, must_change_password, created_at';
+  'user_id, username, full_name, birth_year, phone, email, parent_phone, notes, class_id, status, account_type, must_change_password, created_at';
 const SUGGESTION_COLUMNS =
   'id, class_id, kind, exam_id, collection, levels, note, created_at, exam:exams(id, title, hsk_level, hsk_version, visibility)';
 export const ATTEMPT_COLUMNS =

@@ -1,23 +1,25 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
 /** Đối tượng đăng nhập — đặt qua route data `audience` (mặc định nhân sự) */
 type LoginAudience = 'staff' | 'student';
 
-const AUDIENCE_TEXT: Record<LoginAudience, { pageTitle: string; badge: string; intro: string; home: string }> = {
+const AUDIENCE_TEXT: Record<LoginAudience, { pageTitle: string; badge: string; intro: string; account: string; home: string }> = {
   staff: {
     pageTitle: 'Đăng nhập quản trị',
     badge: 'Admin & Ops',
     intro: 'Chỉ dành cho quản trị viên quản lý đề thi và từ vựng.',
+    account: 'Tài khoản',
     home: '/admin/exams',
   },
   student: {
-    pageTitle: 'Đăng nhập học viên',
+    pageTitle: 'Đăng nhập',
     badge: 'Học viên MCC',
-    intro: 'Dùng tài khoản giáo viên đã cấp cho lớp của bạn.',
+    intro: 'Học viên dùng tài khoản giáo viên cấp; khách dùng số điện thoại đã đăng ký.',
+    account: 'Tên đăng nhập hoặc số điện thoại',
     home: '/hoc-vien',
   },
 };
@@ -26,7 +28,7 @@ const AUDIENCE_TEXT: Record<LoginAudience, { pageTitle: string; badge: string; i
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [FormsModule, NavHeaderComponent],
+  imports: [FormsModule, RouterLink, NavHeaderComponent],
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,10 +56,16 @@ export class AdminLoginComponent {
   }
 
   private signedIn(): boolean {
-    return this.audience === 'student' ? this.auth.isStudent() : this.auth.isStaff();
+    return this.audience === 'student' ? this.auth.isLearner() : this.auth.isStaff();
   }
 
   /** Chỉ cho phép quay lại đường dẫn nội bộ */
+  /** Giữ returnUrl khi chuyển sang trang đăng ký */
+  readonly returnQuery = (() => {
+    const url = this.route.snapshot.queryParamMap.get('returnUrl');
+    return url ? { returnUrl: url } : {};
+  })();
+
   private returnUrl(): string {
     const url = this.route.snapshot.queryParamMap.get('returnUrl');
     return url?.startsWith('/') && !url.startsWith('//') ? url : this.text.home;

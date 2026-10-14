@@ -442,8 +442,8 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     const timeSpent = this.initialDurationSeconds() - this.timeRemainingSeconds();
     const submission = this.examService.gradeExam(ex, this.answers(), Math.max(0, timeSpent));
 
-    // Học viên: lưu bài lên tài khoản để giáo viên xem (nhân sự / khách: chỉ lưu trên máy)
-    if (this.auth.isStudent()) {
+    // Người học đã đăng nhập: lưu bài lên tài khoản (giáo viên lớp xem được); nhân sự / chưa đăng nhập: chỉ lưu trên máy
+    if (this.auth.isLearner()) {
       const saved = await this.studentService.submitAttempt(submission, this.answers());
       if (saved.error) this.toast.error('Chưa lưu được bài lên tài khoản. Kết quả vẫn hiển thị bình thường.');
     }

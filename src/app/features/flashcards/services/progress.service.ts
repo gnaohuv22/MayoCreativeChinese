@@ -33,7 +33,7 @@ export class ProgressService {
   /** id học viên đang đăng nhập (null = dùng IndexedDB) */
   private async studentId(): Promise<string | null> {
     await this.auth.ready;
-    return this.auth.isStudent() ? this.auth.userId() : null;
+    return this.auth.isLearner() ? this.auth.userId() : null;
   }
 
   /** Học viên: có tiến độ cũ trên máy này (từ trước khi đăng nhập) để đưa lên tài khoản */

@@ -20,6 +20,9 @@
         @if (hasUnassigned()) {
           <option value="none">Chưa có lớp</option>
         }
+        @if (hasGuests()) {
+          <option value="guest">Khách tự đăng ký</option>
+        }
       </select>
       <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc trạng thái">
         <option value="all">Mọi trạng thái</option>

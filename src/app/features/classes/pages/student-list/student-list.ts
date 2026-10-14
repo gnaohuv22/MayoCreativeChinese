@@ -26,12 +26,13 @@ export class StudentListComponent {
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly search = signal('');
-  /** '' = mọi lớp, 'none' = chưa có lớp */
+  /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký */
   readonly classFilter = signal('');
   readonly statusFilter = signal<StudentStatus | 'all'>('active');
 
   readonly classCodes = computed(() => new Map(this.classes().map(c => [c.id, c.code])));
-  readonly hasUnassigned = computed(() => this.students().some(s => !s.class_id));
+  readonly hasUnassigned = computed(() => this.students().some(s => !s.class_id && s.account_type === 'student'));
+  readonly hasGuests = computed(() => this.students().some(s => s.account_type === 'guest'));
 
   readonly filtered = computed(() => {
     const q = stripVietnamese(this.search().trim().toLowerCase());
@@ -39,7 +40,10 @@ export class StudentListComponent {
     const status = this.statusFilter();
     return this.students().filter(s =>
       (status === 'all' || s.status === status)
-      && (!cls || (cls === 'none' ? !s.class_id : s.class_id === cls))
+      && (!cls
+        || (cls === 'guest' ? s.account_type === 'guest'
+          : cls === 'none' ? !s.class_id && s.account_type === 'student'
+          : s.class_id === cls))
       && (!q
         || stripVietnamese(s.full_name.toLowerCase()).includes(q)
         || s.username.toLowerCase().includes(q)

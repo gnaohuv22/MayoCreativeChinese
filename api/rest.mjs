@@ -48,6 +48,9 @@ async function handler(request) {
   }
   const secret = process.env['SUPABASE_PROXY_SECRET'];
   if (secret) headers.set('x-mcc-proxy', secret);
+  // IP do Vercel gắn (người dùng không tự đặt được) — DB dùng để giới hạn đăng ký khách (migration 021)
+  const clientIp = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (clientIp) headers.set('x-mcc-client-ip', clientIp);
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
   let upstream;

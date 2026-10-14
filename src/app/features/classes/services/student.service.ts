@@ -53,7 +53,7 @@ export class StudentService {
 
   /** Lưu bài nộp lên tài khoản (chỉ học viên; nhân sự làm bài thì không lưu) */
   async submitAttempt(submission: ExamSubmission, answers: UserAnswers): Promise<{ error?: string }> {
-    if (!this.auth.isStudent()) return {};
+    if (!this.auth.isLearner()) return {};
     const { error } = await this.supabase.rpc('submit_exam_attempt', {
       p_attempt: {
         exam_id: submission.examId,
