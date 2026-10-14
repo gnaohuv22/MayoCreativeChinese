@@ -38,6 +38,7 @@ export class AdminShellComponent {
 
   private readonly manageItems: AdminNavItem[] = [
     { label: 'Nhân sự', hint: 'Tài khoản, đặt lại mật khẩu', route: '/admin/staff', icon: 'users', permission: 'staff.manage' },
+    { label: 'Vai trò & quyền', hint: 'Vai trò, quyền của nhân sự', route: '/admin/roles', icon: 'cog', permission: 'role.manage' },
     { label: 'Nhật ký hoạt động', hint: 'Ai đã làm gì, khi nào', route: '/admin/activity', icon: 'clock', permission: 'activity.read' },
   ];
   readonly visibleManageItems = computed(() => this.manageItems.filter(i => !i.permission || this.auth.can(i.permission)));
@@ -46,7 +47,7 @@ export class AdminShellComponent {
   readonly mobileTabs = computed<AdminNavItem[]>(() => [
     ...this.navItems,
     ...this.visibleClassItems(),
-    ...this.visibleManageItems().map(i => ({ ...i, label: i.route === '/admin/activity' ? 'Nhật ký' : i.label })),
+    ...this.visibleManageItems().map(i => ({ ...i, label: i.route === '/admin/activity' ? 'Nhật ký' : i.route === '/admin/roles' ? 'Vai trò' : i.label })),
     { ...this.accountItem, label: 'Hồ sơ' },
   ]);
 

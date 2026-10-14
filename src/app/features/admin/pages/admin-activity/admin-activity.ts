@@ -29,6 +29,7 @@ const ENTITIES: Record<string, { label: string; icon: IconName }> = {
   exam: { label: 'Đề thi', icon: 'academic' },
   vocab: { label: 'Từ vựng', icon: 'book-open' },
   staff: { label: 'Nhân sự', icon: 'users' },
+  role: { label: 'Vai trò', icon: 'cog' },
   class: { label: 'Lớp học', icon: 'calendar' },
   student: { label: 'Học viên', icon: 'users' },
   auth: { label: 'Tài khoản', icon: 'cog' },

@@ -102,6 +102,12 @@ export const routes: Routes = [
           import('./features/admin/pages/admin-staff/admin-staff').then(m => m.AdminStaffComponent),
       },
       {
+        path: 'roles',
+        canActivate: [permissionGuard('role.manage')],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-roles/admin-roles').then(m => m.AdminRolesComponent),
+      },
+      {
         path: 'activity',
         canActivate: [permissionGuard('activity.read')],
         loadComponent: () =>

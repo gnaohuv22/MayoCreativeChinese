@@ -17,6 +17,7 @@ export type Permission =
   | 'content.delete'
   | 'staff.manage'
   | 'activity.read'
+  | 'role.manage'
   | 'class.manage'
   | 'class.all'
   | 'class.delete'
@@ -108,6 +109,7 @@ export class AuthService {
 
   readonly username = computed(() => this.context()?.username ?? this.studentContext()?.username ?? '');
   readonly displayName = computed(() => this.context()?.full_name || this.studentContext()?.full_name || this.username());
+  readonly roleId = computed(() => this.context()?.role ?? '');
   readonly roleLabel = computed(() => this.context()?.role_label ?? '');
   readonly roleDescription = computed(() => this.context()?.role_description ?? '');
   /** Có hồ sơ nhân sự = được vào khu quản trị */
@@ -175,7 +177,10 @@ export class AuthService {
     const login = username.trim().toLowerCase();
     const email = login.includes('@') ? login : `${login}@${LOGIN_EMAIL_DOMAIN}`;
     const { error } = await this.supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    if (error) {
+      if (error.code === 'user_banned') return { error: 'Tài khoản đã bị khoá. Vui lòng liên hệ quản trị viên.' };
+      return { error: error.message };
+    }
     this.sessionLost.set(false);
     if (!(await this.loadContext())) {
       await this.supabase.auth.signOut();

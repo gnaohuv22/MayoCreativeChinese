@@ -1,0 +1,122 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-8">
+
+    <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Vai trò & quyền</h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">Quyền của vai trò áp dụng cho mọi nhân sự giữ vai trò đó.</p>
+      </div>
+      <button type="button" (click)="openCreate()" class="mcc-btn mcc-btn-primary">
+        <app-icon name="plus" size="xs" />
+        <span>Thêm vai trò</span>
+      </button>
+    </div>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải vai trò…</p>
+    } @else if (loadError()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được vai trò: {{ loadError() }}</p>
+    } @else {
+      <ul class="grid md:grid-cols-2 gap-4">
+        @for (role of roles(); track role.id) {
+          <li class="mcc-card p-5 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-base font-black font-display text-brand-navy dark:text-white flex items-center gap-2">
+                  <span class="truncate">{{ role.label }}</span>
+                  @if (isOwnRole(role.id)) {
+                    <span class="mcc-chip bg-brand-pink/10 text-brand-pink">Vai trò của bạn</span>
+                  }
+                </p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{{ role.staff_count }} nhân sự</p>
+              </div>
+              <div class="flex gap-1.5 shrink-0">
+                <button type="button" (click)="openEdit(role)" class="mcc-btn mcc-btn-secondary">
+                  <app-icon name="pencil" size="xs" />
+                  <span>Sửa</span>
+                </button>
+                @if (role.staff_count === 0 && role.id !== 'admin') {
+                  <button type="button" (click)="remove(role)" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá vai trò ' + role.label">
+                    <app-icon name="trash" size="xs" />
+                  </button>
+                }
+              </div>
+            </div>
+            @if (role.description) {
+              <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ role.description }}</p>
+            }
+            <div class="flex flex-wrap gap-1.5">
+              @for (p of role.permissions; track p) {
+                <span class="mcc-chip bg-brand-navy/5 text-brand-navy dark:bg-white/10 dark:text-white">{{ permissionLabel(p) }}</span>
+              } @empty {
+                <span class="text-xs text-zinc-500">Chưa có quyền nào</span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>
+
+<dialog #roleDialog (close)="draft.set(null)" aria-labelledby="role-title" class="mcc-dialog max-w-2xl">
+  @if (draft(); as d) {
+    <form (ngSubmit)="save()" class="p-6 sm:p-7 space-y-5">
+      <div class="flex items-start justify-between gap-4">
+        <h2 id="role-title" class="text-lg font-black font-display">{{ d.create ? 'Thêm vai trò' : 'Sửa vai trò' }}</h2>
+        <button type="button" (click)="closeDialog()" class="p-1.5 rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
+          <app-icon name="x-mark" size="sm" />
+        </button>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label for="role-label" class="mcc-label">Tên vai trò</label>
+          <input id="role-label" name="label" maxlength="60" required [ngModel]="d.label" (ngModelChange)="patch({ label: $event })" class="mcc-input" />
+        </div>
+        <div class="space-y-1.5">
+          <label for="role-desc" class="mcc-label">Mô tả</label>
+          <input id="role-desc" name="description" maxlength="200" [ngModel]="d.description" (ngModelChange)="patch({ description: $event })" class="mcc-input" />
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        @for (g of groups(); track g.grp) {
+          <fieldset>
+            <legend class="mcc-label mb-2">{{ g.label }}</legend>
+            <div class="grid sm:grid-cols-2 gap-2">
+              @for (p of g.items; track p.id) {
+                <label
+                  class="flex items-start gap-2.5 p-3 rounded-xl border border-brand-navy/10 dark:border-white/10 cursor-pointer has-[:checked]:border-brand-pink/40 has-[:checked]:bg-brand-pink/5"
+                  [class.opacity-60]="lockedPermission(p.id, d)"
+                >
+                  <input
+                    type="checkbox"
+                    class="mt-0.5 accent-brand-pink"
+                    [name]="'perm-' + p.id"
+                    [checked]="d.permissions.has(p.id)"
+                    [disabled]="lockedPermission(p.id, d)"
+                    (change)="toggle(p.id, $any($event.target).checked)"
+                  />
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold">{{ p.label }}</span>
+                    <span class="block text-xs text-zinc-500 dark:text-zinc-400 leading-snug">{{ p.description }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </fieldset>
+        }
+      </div>
+
+      @if (formError()) {
+        <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="closeDialog()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+        <button type="submit" [disabled]="saving()" class="mcc-btn mcc-btn-primary">{{ saving() ? 'Đang lưu…' : 'Lưu' }}</button>
+      </div>
+    </form>
+  }
+</dialog>

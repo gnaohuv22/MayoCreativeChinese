@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { getSupabase } from '../../../services/supabase.client';
+import type { Permission } from '../../../services/auth.service';
 
 export interface StaffMember {
   user_id: string;
@@ -7,8 +8,41 @@ export interface StaffMember {
   full_name: string;
   role_id: string;
   role: { label: string } | null;
+  status: 'active' | 'locked';
   /** Vai trò có quyền staff.manage (không được đặt lại mật khẩu cho nhau) */
   is_admin: boolean;
+}
+
+/** Danh mục quyền (bảng public.permissions, migration 020) */
+export interface PermissionInfo {
+  id: Permission;
+  label: string;
+  description: string;
+  grp: string;
+}
+
+export interface RoleInfo {
+  id: string;
+  label: string;
+  description: string;
+  sort_order: number;
+  permissions: Permission[];
+  staff_count: number;
+}
+
+export interface RoleInput {
+  id: string;
+  label: string;
+  description: string;
+  permissions: Permission[];
+  create: boolean;
+}
+
+export interface NewStaffInput {
+  username: string;
+  full_name: string;
+  role_id: string;
+  password: string;
 }
 
 export interface ActivityEntry {
@@ -59,7 +93,7 @@ export class AdminService {
     const [staff, adminRoles] = await Promise.all([
       this.supabase
         .from('staff_profiles')
-        .select('user_id, username, full_name, role_id, role:roles(label, sort_order)')
+        .select('user_id, username, full_name, role_id, status, role:roles(label, sort_order)')
         .order('username'),
       this.supabase.from('role_permissions').select('role_id').eq('permission', 'staff.manage'),
     ]);
@@ -69,6 +103,50 @@ export class AdminService {
       .map(s => ({ ...s, is_admin: admins.has(s.role_id) }))
       .sort((a, b) => (a.role?.sort_order ?? 99) - (b.role?.sort_order ?? 99) || a.username.localeCompare(b.username));
     return { data };
+  }
+
+  async listRoles(): Promise<{ roles: RoleInfo[]; permissions: PermissionInfo[]; error?: string }> {
+    const [roles, perms, staff] = await Promise.all([
+      this.supabase.from('roles').select('id, label, description, sort_order, role_permissions(permission)').order('sort_order'),
+      this.supabase.from('permissions').select('id, label, description, grp').order('sort_order'),
+      this.supabase.from('staff_profiles').select('role_id'),
+    ]);
+    const error = roles.error ?? perms.error ?? staff.error;
+    if (error) return { roles: [], permissions: [], error: error.message };
+    const counts = new Map<string, number>();
+    for (const s of staff.data ?? []) counts.set(s.role_id, (counts.get(s.role_id) ?? 0) + 1);
+    const data = (roles.data as unknown as (Omit<RoleInfo, 'permissions' | 'staff_count'> & { role_permissions: { permission: Permission }[] })[])
+      .map(({ role_permissions, ...r }) => ({
+        ...r,
+        permissions: role_permissions.map(p => p.permission),
+        staff_count: counts.get(r.id) ?? 0,
+      }));
+    return { roles: data, permissions: (perms.data ?? []) as PermissionInfo[] };
+  }
+
+  async saveRole(input: RoleInput): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('save_role', { p_role: input });
+    return error ? { error: error.message } : {};
+  }
+
+  async deleteRole(id: string): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('delete_role', { p_id: id });
+    return error ? { error: error.message } : {};
+  }
+
+  async setStaffRole(userId: string, roleId: string): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('set_staff_role', { p_user: userId, p_role: roleId });
+    return error ? { error: error.message } : {};
+  }
+
+  async setStaffStatus(userId: string, status: 'active' | 'locked'): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('set_staff_status', { p_user: userId, p_status: status });
+    return error ? { error: error.message } : {};
+  }
+
+  async createStaff(input: NewStaffInput): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('create_staff', { p_data: input });
+    return error ? { error: error.message } : {};
   }
 
   async resetStaffPassword(targetUserId: string, adminPassword: string, newPassword: string): Promise<{ error?: ResetPasswordError | string }> {
