@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output, signal, effect } from '@angular/core';
 import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
 import type { ValidatedImportRow, VocabCollection } from '../../models/vocab-card.model';
 
@@ -7,6 +7,7 @@ import type { ValidatedImportRow, VocabCollection } from '../../models/vocab-car
   standalone: true,
   templateUrl: './import-preview.html',
   styleUrl: './import-preview.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImportPreviewComponent {
   rows = input.required<ValidatedImportRow[]>();

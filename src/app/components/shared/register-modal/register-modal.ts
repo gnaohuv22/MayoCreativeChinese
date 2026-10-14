@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect } from '@angular/core';
 import { RegisterModalService } from '../../../services/register-modal.service';
 import { RegistrationService } from '../../../services/registration.service';
 import { I18nService } from '../../../services/i18n.service';
@@ -7,9 +7,11 @@ import { I18nService } from '../../../services/i18n.service';
   selector: 'app-register-modal',
   imports: [],
   templateUrl: './register-modal.html',
+  styleUrl: './register-modal.css',
   host: {
     '(document:keydown.escape)': 'onEscapeKey()'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterModalComponent {
   protected readonly modalService = inject(RegisterModalService);

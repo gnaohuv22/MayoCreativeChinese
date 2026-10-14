@@ -19,6 +19,7 @@ import { vocabSuggestionLabel, vocabSuggestionParam } from '../../utils/suggesti
   standalone: true,
   imports: [RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent],
   templateUrl: './student-home.html',
+  styleUrl: './student-home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentHomeComponent {

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { I18nService } from '../../services/i18n.service';
 
@@ -17,7 +17,8 @@ interface Teacher {
   selector: 'app-teachers',
   imports: [NgOptimizedImage],
   templateUrl: './teachers.html',
-  styleUrl: './teachers.css'
+  styleUrl: './teachers.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeachersComponent {
   protected readonly i18n = inject(I18nService);

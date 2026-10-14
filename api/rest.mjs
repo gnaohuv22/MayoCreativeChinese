@@ -9,6 +9,8 @@ const SUPABASE_URL = 'https://animyjihwiyqsxvikxxg.supabase.co';
 /** Thêm tên miền thật vào đây khi mua (và đổi trong index.html, robots.txt, sitemap.xml) */
 const ALLOWED_ORIGINS = new Set([
   'https://mayo-creative-chinese.vercel.app',
+  // Bản preview: chính địa chỉ của bản deploy đó (biến hệ thống của Vercel)
+  ...[process.env['VERCEL_URL'], process.env['VERCEL_BRANCH_URL']].filter(Boolean).map(host => `https://${host}`),
 ]);
 
 /** Chỉ chuyển tiếp header PostgREST cần (header hệ thống của Vercel làm fetch báo lỗi) */

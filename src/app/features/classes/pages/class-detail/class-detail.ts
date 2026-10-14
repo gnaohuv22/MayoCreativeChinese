@@ -46,6 +46,7 @@ interface ResultRow {
   standalone: true,
   imports: [FormsModule, RouterLink, AppIconComponent, ClassFormComponent, StudentTableComponent, StudentImportComponent],
   templateUrl: './class-detail.html',
+  styleUrl: './class-detail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassDetailComponent {

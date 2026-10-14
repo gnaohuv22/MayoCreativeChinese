@@ -35,6 +35,7 @@ function roleIdFromLabel(label: string, taken: Set<string>): string {
   standalone: true,
   imports: [FormsModule, AppIconComponent],
   templateUrl: './admin-roles.html',
+  styleUrl: './admin-roles.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminRolesComponent {

@@ -20,6 +20,7 @@ import {
   standalone: true,
   imports: [FormsModule, AppIconComponent],
   templateUrl: './class-form.html',
+  styleUrl: './class-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassFormComponent implements OnInit {

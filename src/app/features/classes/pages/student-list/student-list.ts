@@ -13,6 +13,7 @@ import { STUDENT_STATUS_LABELS, type SchoolClass, type Student, type StudentStat
   standalone: true,
   imports: [FormsModule, AppIconComponent, StudentTableComponent],
   templateUrl: './student-list.html',
+  styleUrl: './student-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentListComponent {

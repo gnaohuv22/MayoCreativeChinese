@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
@@ -30,6 +30,7 @@ export interface CollectionCardItem {
   imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent],
   templateUrl: './flashcard-hub.html',
   styleUrl: './flashcard-hub.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlashcardHubComponent implements OnInit {
   private vocabService = inject(VocabService);

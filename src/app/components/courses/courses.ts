@@ -1,4 +1,4 @@
-import { Component, inject, signal, ElementRef, viewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, ElementRef, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
 
@@ -22,7 +22,8 @@ interface Course {
   selector: 'app-courses',
   imports: [RouterLink],
   templateUrl: './courses.html',
-  styleUrl: './courses.css'
+  styleUrl: './courses.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CoursesComponent {
   protected readonly i18n = inject(I18nService);

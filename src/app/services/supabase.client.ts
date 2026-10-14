@@ -10,11 +10,25 @@ const SUPABASE_ANON_KEY = 'sb_publishable_ipJ6WbMASU_-LFDIWNyMkg_1404EDZJ';
 const REST_PREFIX = `${SUPABASE_URL}/rest/v1/`;
 const REST_PROXY = '/api/rest';
 
-function proxiedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+export async function proxiedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-  if (!url.startsWith(REST_PREFIX) || input instanceof Request) return fetch(input, init);
+  if (!url.startsWith(REST_PREFIX)) return fetch(input, init);
+  const restPath = url.slice(SUPABASE_URL.length);
+  if (input instanceof Request) {
+    // Đọc lại method / header / body từ Request để vẫn đi qua proxy
+    const request = new Request(input, init);
+    const headers = new Headers(request.headers);
+    headers.set('x-rest-path', restPath);
+    const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+    return fetch(REST_PROXY, {
+      method: request.method,
+      headers,
+      body: hasBody ? await request.arrayBuffer() : undefined,
+      signal: request.signal,
+    });
+  }
   const headers = new Headers(init?.headers);
-  headers.set('x-rest-path', url.slice(SUPABASE_URL.length));
+  headers.set('x-rest-path', restPath);
   return fetch(REST_PROXY, { ...init, headers });
 }
 

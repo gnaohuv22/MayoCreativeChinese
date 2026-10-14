@@ -27,6 +27,7 @@ const BULK_CONFIRM: Record<Exclude<BulkAction, 'move'>, { title: string; verb: s
   standalone: true,
   imports: [FormsModule, AppIconComponent],
   templateUrl: './student-table.html',
+  styleUrl: './student-table.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentTableComponent {

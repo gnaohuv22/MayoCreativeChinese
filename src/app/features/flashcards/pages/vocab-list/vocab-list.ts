@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -18,6 +18,7 @@ import { NO_TOPIC_PARAM, scopeLevelLabel, scopeRoutes } from '../../utils/vocab-
   imports: [CommonModule, FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, SpeakButtonComponent, VocabExamplesComponent],
   templateUrl: './vocab-list.html',
   styleUrl: './vocab-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VocabListComponent implements OnInit {
   private route = inject(ActivatedRoute);

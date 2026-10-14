@@ -20,6 +20,7 @@ const ERRORS: Record<GuestRegisterError, string> = {
   standalone: true,
   imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent],
   templateUrl: './guest-register.html',
+  styleUrl: './guest-register.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GuestRegisterComponent {

@@ -19,6 +19,7 @@ const ERRORS: Record<StudentPasswordError, string> = {
   standalone: true,
   imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent],
   templateUrl: './student-password.html',
+  styleUrl: './student-password.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentPasswordComponent {

@@ -14,6 +14,7 @@ import { classStatusClass, formatDate, staffNames } from '../../utils/class-disp
   standalone: true,
   imports: [FormsModule, RouterLink, AppIconComponent, ClassFormComponent],
   templateUrl: './class-list.html',
+  styleUrl: './class-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassListComponent {

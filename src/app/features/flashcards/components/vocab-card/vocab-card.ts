@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output } from '@angular/core';
 import { SpeakButtonComponent } from '../speak-button/speak-button';
 import { VocabExamplesComponent } from '../vocab-examples/vocab-examples';
 import { splitExamples } from '../../models/vocab-card.model';
@@ -10,7 +10,8 @@ import type { VocabCard, CardProgress } from '../../models/vocab-card.model';
   standalone: true,
   imports: [SpeakButtonComponent, VocabExamplesComponent],
   templateUrl: './vocab-card.html',
-  styleUrl: './vocab-card.css'
+  styleUrl: './vocab-card.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VocabCardComponent {
   card = input.required<VocabCard>();

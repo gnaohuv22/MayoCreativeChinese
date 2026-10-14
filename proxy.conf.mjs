@@ -35,6 +35,8 @@ export default {
         proxyReq.removeHeader('origin');
         proxyReq.removeHeader('referer');
         if (secret) proxyReq.setHeader('x-mcc-proxy', secret);
+        // Như api/rest.mjs: IP để DB giới hạn đăng ký khách (migration 021)
+        proxyReq.setHeader('x-mcc-client-ip', req.socket.remoteAddress ?? '127.0.0.1');
       });
     },
   },

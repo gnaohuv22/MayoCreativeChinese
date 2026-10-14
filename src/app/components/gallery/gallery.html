@@ -43,8 +43,9 @@
     </div>
 
     <!-- Zoom Hint -->
-    <p class="text-[10px] text-brand-navy/40 dark:text-white/40 font-bold uppercase tracking-wider text-center mb-6">
-      🔍 {{ i18n.translate()('gallery.zoom_hint') }}
+    <p class="flex items-center justify-center gap-1.5 text-[10px] text-brand-navy/40 dark:text-white/40 font-bold uppercase tracking-wider text-center mb-6">
+      <app-icon name="search" size="xs" />
+      <span>{{ i18n.translate()('gallery.zoom_hint') }}</span>
     </p>
 
     <!-- Image Grid -->

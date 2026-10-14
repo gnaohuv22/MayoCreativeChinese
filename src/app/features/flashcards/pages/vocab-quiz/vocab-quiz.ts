@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
@@ -28,6 +28,7 @@ const COUNT_OPTIONS = [10, 20, 30, 0];
   imports: [RouterLink, NavHeaderComponent, AppIconComponent, SpeakButtonComponent],
   templateUrl: './vocab-quiz.html',
   styleUrl: './vocab-quiz.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VocabQuizComponent implements OnInit {
   private route = inject(ActivatedRoute);

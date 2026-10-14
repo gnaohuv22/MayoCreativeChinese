@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
+import { AppIconComponent } from '../shared/icon/app-icon';
 import { I18nService } from '../../services/i18n.service';
 import { ThemeService } from '../../services/theme.service';
 
@@ -12,11 +13,13 @@ interface GalleryItem {
 
 @Component({
   selector: 'app-gallery',
-  imports: [NgOptimizedImage],
+  imports: [NgOptimizedImage, AppIconComponent],
   templateUrl: './gallery.html',
+  styleUrl: './gallery.css',
   host: {
     '(document:keydown)': 'handleKeyboardEvent($event)'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GalleryComponent {
   protected readonly i18n = inject(I18nService);

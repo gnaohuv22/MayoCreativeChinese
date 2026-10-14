@@ -2,8 +2,12 @@ import { Routes } from '@angular/router';
 import { permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
 
 export const routes: Routes = [
-  // Trang chủ do app.html tự dựng (không qua router-outlet); khai báo để không rơi vào route 404
-  { path: '', pathMatch: 'full', children: [] },
+  {
+    // Trang chủ (landing) — chunk riêng, các trang khác không tải kèm
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./features/landing/landing').then(m => m.LandingComponent),
+  },
   {
     // Trang chi tiết khóa học (nội dung từ brief — scripts/course-brief-to-ts.py)
     path: 'khoa-hoc/:slug',

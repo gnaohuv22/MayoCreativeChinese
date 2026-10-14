@@ -23,6 +23,7 @@ type Step = 'input' | 'preview' | 'done';
   standalone: true,
   imports: [FormsModule, AppIconComponent],
   templateUrl: './student-import.html',
+  styleUrl: './student-import.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentImportComponent {

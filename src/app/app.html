@@ -1,19 +1,4 @@
-@if (isLandingPage()) {
-  <app-header />
-  <main class="relative">
-    <app-hero />
-    <app-about />
-    <app-teachers />
-    <app-courses />
-    <app-student-stories />
-    <app-gallery />
-  </main>
-  <app-footer />
-  <app-scroll-to-top />
-  <app-register-modal />
-} @else {
-  <router-outlet />
-}
+<router-outlet />
 
 <!-- Lối vào khu quản trị (chỉ hiện khi đã đăng nhập) -->
 @defer (on idle) {

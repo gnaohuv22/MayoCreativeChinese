@@ -4,7 +4,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'app-coming-soon-badge',
   standalone: true,
-  template: `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25">Sắp ra mắt</span>`,
+  templateUrl: './coming-soon-badge.html',
+  styleUrl: './coming-soon-badge.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComingSoonBadgeComponent {}

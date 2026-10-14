@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VocabService, type NewVocabCard } from '../../services/vocab.service';
 import { ImportPreviewComponent } from '../../components/import-preview/import-preview';
@@ -28,6 +28,7 @@ interface DupDialogState {
   imports: [FormsModule, ImportPreviewComponent, DuplicateConfirmComponent, AppIconComponent, VocabVisibilityComponent],
   templateUrl: './flashcard-manage.html',
   styleUrl: './flashcard-manage.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlashcardManageComponent implements OnInit {
   protected readonly vocabCardLevelLabel = vocabCardLevelLabel;

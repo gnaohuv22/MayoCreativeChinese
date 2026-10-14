@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal, HostListener } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabCardComponent } from '../../components/vocab-card/vocab-card';
@@ -16,6 +16,7 @@ import { scopeFromRoute, scopeLevelLabel, scopeRoutes, scopeTitle } from '../../
   imports: [NavHeaderComponent, VocabCardComponent, RouterLink, AppIconComponent],
   templateUrl: './flashcard-study.html',
   styleUrl: './flashcard-study.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlashcardStudyComponent implements OnInit {
   readonly scopeLevelLabel = scopeLevelLabel;

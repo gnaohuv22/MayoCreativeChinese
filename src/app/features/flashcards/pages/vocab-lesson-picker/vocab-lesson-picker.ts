@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
@@ -20,6 +20,7 @@ interface GroupCard extends VocabGroupInfo {
   imports: [RouterLink, NavHeaderComponent, AppIconComponent],
   templateUrl: './vocab-lesson-picker.html',
   styleUrl: './vocab-lesson-picker.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VocabLessonPickerComponent implements OnInit {
   private route = inject(ActivatedRoute);

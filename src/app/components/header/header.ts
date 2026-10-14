@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, input, signal } from '@angular/core';
 import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18nService, Lang } from '../../services/i18n.service';
@@ -8,11 +8,13 @@ import { ThemeService } from '../../services/theme.service';
   selector: 'app-header',
   imports: [NgOptimizedImage, NgTemplateOutlet, RouterLink],
   templateUrl: './header.html',
+  styleUrl: './header.css',
   host: {
     '(window:scroll)': 'onWindowScroll()',
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closeMenus()',
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
   protected readonly i18n = inject(I18nService);

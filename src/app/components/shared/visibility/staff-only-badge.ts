@@ -4,7 +4,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'app-staff-only-badge',
   standalone: true,
-  template: `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide whitespace-nowrap bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/25">Nội bộ</span>`,
+  templateUrl: './staff-only-badge.html',
+  styleUrl: './staff-only-badge.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StaffOnlyBadgeComponent {}

@@ -26,6 +26,7 @@ interface CollectionRows {
   standalone: true,
   imports: [VisibilityPickerComponent],
   templateUrl: './vocab-visibility.html',
+  styleUrl: './vocab-visibility.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VocabVisibilityComponent implements OnInit {

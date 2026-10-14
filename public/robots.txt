@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /admin
 Disallow: /api/
+Disallow: /hoc-vien
 
 Sitemap: https://mayo-creative-chinese.vercel.app/sitemap.xml

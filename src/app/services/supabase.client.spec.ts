@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { SESSION_EXPIRED_MESSAGE, writeErrorMessage } from './supabase.client';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SESSION_EXPIRED_MESSAGE, proxiedFetch, writeErrorMessage } from './supabase.client';
 
 describe('writeErrorMessage', () => {
   it('turns RLS rejections into the session-expired message', () => {
@@ -11,5 +11,44 @@ describe('writeErrorMessage', () => {
 
   it('keeps other errors as they are', () => {
     expect(writeErrorMessage({ code: '23505', message: 'duplicate key value' })).toBe('duplicate key value');
+  });
+});
+
+describe('proxiedFetch', () => {
+  const REST = 'https://animyjihwiyqsxvikxxg.supabase.co/rest/v1/exams?select=id';
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  function stubFetch() {
+    const calls: { input: RequestInfo | URL; init?: RequestInit }[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ input, init });
+      return new Response('[]');
+    });
+    return calls;
+  }
+
+  it('sends REST calls given as a URL string through the proxy', async () => {
+    const calls = stubFetch();
+    await proxiedFetch(REST, { headers: { apikey: 'k' } });
+    expect(calls[0].input).toBe('/api/rest');
+    const headers = new Headers(calls[0].init?.headers);
+    expect(headers.get('x-rest-path')).toBe('/rest/v1/exams?select=id');
+    expect(headers.get('apikey')).toBe('k');
+  });
+
+  it('sends REST calls given as a Request through the proxy, keeping method and body', async () => {
+    const calls = stubFetch();
+    await proxiedFetch(new Request(REST, { method: 'POST', body: '{"a":1}', headers: { apikey: 'k' } }));
+    expect(calls[0].input).toBe('/api/rest');
+    expect(calls[0].init?.method).toBe('POST');
+    expect(new TextDecoder().decode(calls[0].init?.body as ArrayBuffer)).toBe('{"a":1}');
+    expect(new Headers(calls[0].init?.headers).get('x-rest-path')).toBe('/rest/v1/exams?select=id');
+  });
+
+  it('leaves auth and storage calls alone', async () => {
+    const calls = stubFetch();
+    await proxiedFetch('https://animyjihwiyqsxvikxxg.supabase.co/auth/v1/token');
+    expect(calls[0].input).toBe('https://animyjihwiyqsxvikxxg.supabase.co/auth/v1/token');
   });
 });

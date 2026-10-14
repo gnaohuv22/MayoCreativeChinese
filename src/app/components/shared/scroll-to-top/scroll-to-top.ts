@@ -1,12 +1,14 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, input, signal } from '@angular/core';
 import { AdminPresence } from '../../../services/admin-presence';
 
 @Component({
   selector: 'app-scroll-to-top',
   templateUrl: './scroll-to-top.html',
+  styleUrl: './scroll-to-top.css',
   host: {
     '(window:scroll)': 'onWindowScroll()'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScrollToTopComponent {
   readonly isVisible = signal(false);

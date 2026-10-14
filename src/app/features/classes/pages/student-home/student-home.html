@@ -32,19 +32,19 @@
           <h2 class="text-xl font-black font-display text-brand-navy dark:text-white">{{ c.name }}</h2>
           <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             @if (courseName()) {
-              <div><dt class="text-xs text-zinc-500">Khoá học</dt><dd class="font-semibold">{{ courseName() }}</dd></div>
+              <div><dt class="text-xs text-zinc-500 dark:text-zinc-400">Khoá học</dt><dd class="font-semibold">{{ courseName() }}</dd></div>
             }
             @if (c.schedule) {
-              <div><dt class="text-xs text-zinc-500">Lịch học</dt><dd class="font-semibold">{{ c.schedule }}</dd></div>
+              <div><dt class="text-xs text-zinc-500 dark:text-zinc-400">Lịch học</dt><dd class="font-semibold">{{ c.schedule }}</dd></div>
             }
             @if (c.start_date || c.end_date) {
               <div>
-                <dt class="text-xs text-zinc-500">Thời gian</dt>
+                <dt class="text-xs text-zinc-500 dark:text-zinc-400">Thời gian</dt>
                 <dd class="font-semibold">{{ formatDate(c.start_date) }}{{ c.end_date ? ' – ' + formatDate(c.end_date) : '' }}</dd>
               </div>
             }
             @if (c.study_mode) {
-              <div><dt class="text-xs text-zinc-500">Hình thức</dt><dd class="font-semibold">{{ modeLabels[c.study_mode] }}</dd></div>
+              <div><dt class="text-xs text-zinc-500 dark:text-zinc-400">Hình thức</dt><dd class="font-semibold">{{ modeLabels[c.study_mode] }}</dd></div>
             }
           </dl>
         </div>
@@ -55,7 +55,7 @@
                 <span class="w-9 h-9 rounded-full bg-brand-pink/10 text-brand-pink flex items-center justify-center font-display font-black">{{ s.full_name[0] }}</span>
                 <span>
                   <span class="block text-sm font-bold text-brand-navy dark:text-white">{{ s.full_name }}</span>
-                  <span class="block text-[11px] text-zinc-500">{{ roleLabels[s.role] }}</span>
+                  <span class="block text-[11px] text-zinc-500 dark:text-zinc-400">{{ roleLabels[s.role] }}</span>
                 </span>
               </li>
             }
@@ -92,7 +92,7 @@
                     @if (a.pinned) { <span class="mcc-chip bg-brand-pink/10 text-brand-pink">Ghim</span> }
                     <h3 class="font-bold text-brand-navy dark:text-white">{{ a.title }}</h3>
                   </div>
-                  <p class="text-[11px] text-zinc-500 mt-0.5">{{ formatDateTime(a.created_at) }}</p>
+                  <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{{ formatDateTime(a.created_at) }}</p>
                   @if (a.body) {
                     <p class="mt-3 text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-line">{{ a.body }}</p>
                   }
@@ -112,11 +112,11 @@
                 <li class="flex items-center gap-4 p-4">
                   <div class="flex-1 min-w-0">
                     <a [routerLink]="['/exams', a.exam_id, 'take']" class="text-sm font-bold text-brand-navy dark:text-white hover:text-brand-pink truncate block">{{ a.exam?.title }}</a>
-                    <p class="text-[11px] text-zinc-500">{{ formatDateTime(a.submitted_at) }} · Đúng {{ a.correct_count }}/{{ a.question_count }}</p>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ formatDateTime(a.submitted_at) }} · Đúng {{ a.correct_count }}/{{ a.question_count }}</p>
                   </div>
                   <span class="text-right shrink-0">
                     <span class="text-base font-black" [class.text-emerald-600]="passed(a) === true" [class.text-red-600]="passed(a) === false">{{ a.score }}</span>
-                    <span class="text-xs text-zinc-400">/{{ a.total_score }}</span>
+                    <span class="text-xs text-zinc-400 dark:text-zinc-400">/{{ a.total_score }}</span>
                   </span>
                 </li>
               } @empty {
@@ -140,7 +140,7 @@
                   <span class="w-10 h-10 shrink-0 rounded-xl bg-brand-navy text-white flex items-center justify-center"><app-icon name="academic" size="sm" /></span>
                   <span class="flex-1 min-w-0">
                     <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ s.exam!.title }}</span>
-                    <span class="block text-[11px] text-zinc-500">
+                    <span class="block text-[11px] text-zinc-500 dark:text-zinc-400">
                       Đề thi thử
                       @if (bestScores().has(s.exam_id!)) { · Điểm cao nhất {{ bestScores().get(s.exam_id!) }} }
                     </span>
@@ -155,7 +155,7 @@
                   <span class="w-10 h-10 shrink-0 rounded-xl bg-brand-pink text-white flex items-center justify-center"><app-icon name="book-open" size="sm" /></span>
                   <span class="flex-1 min-w-0">
                     <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ vocabLabel(s) }}</span>
-                    <span class="block text-[11px] text-zinc-500">Flashcard từ vựng</span>
+                    <span class="block text-[11px] text-zinc-500 dark:text-zinc-400">Flashcard từ vựng</span>
                   </span>
                   <app-icon name="arrow-right" size="xs" customClass="text-zinc-400" />
                 </a>
