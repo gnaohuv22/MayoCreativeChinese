@@ -54,3 +54,12 @@ docs/
 
 # Local secrets (vercel env pull)
 .env*.local
+
+# Private / internal docs (kept locally, not published)
+AGENT.md
+scripts/google-apps-script/
+scripts/course-brief-to-ts.py
+accounts.csv
+*.pdf
+*.docx
+*.xlsx
