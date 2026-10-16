@@ -18,10 +18,10 @@ export class VisibilityPickerComponent {
   protected readonly options = VISIBILITY_OPTIONS;
   protected readonly activeClass: Record<ContentVisibility, string> = {
     private: 'bg-white dark:bg-white/20 text-zinc-700 dark:text-white shadow-xs',
-    staff: 'bg-sky-500 text-white shadow-xs',
-    students: 'bg-violet-500 text-white shadow-xs',
-    paid: 'bg-amber-500 text-white shadow-xs',
-    members: 'bg-teal-600 text-white shadow-xs',
-    public: 'bg-emerald-500 text-white shadow-xs',
+    staff: 'bg-sky-700 text-white shadow-xs',
+    students: 'bg-violet-600 text-white shadow-xs',
+    paid: 'bg-amber-700 text-white shadow-xs',
+    members: 'bg-teal-700 text-white shadow-xs',
+    public: 'bg-emerald-700 text-white shadow-xs',
   };
 }
