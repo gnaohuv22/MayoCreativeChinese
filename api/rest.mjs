@@ -13,6 +13,40 @@ const ALLOWED_ORIGINS = new Set([
   ...[process.env['VERCEL_URL'], process.env['VERCEL_BRANCH_URL']].filter(Boolean).map(host => `https://${host}`),
 ]);
 
+/**
+ * Thao tác cần token Cloudflare Turnstile (action của widget phía trình duyệt).
+ * Khoá theo tên hàm xuất hiện ở bất kỳ đâu trong đường dẫn đã giải mã — không lách được bằng //, %xx hay chữ hoa.
+ * Chưa đặt biến môi trường TURNSTILE_SECRET thì bỏ qua kiểm tra (đăng ký chạy như trước).
+ */
+const TURNSTILE_ACTIONS = [{ pattern: /register_guest/i, action: 'signup' }];
+
+/**
+ * Hỏi Cloudflare token có hợp lệ, đúng thao tác và đúng tên miền của trang hay không.
+ * Lỗi mạng / phản hồi lạ đều coi là không hợp lệ.
+ */
+async function verifyTurnstile(token, action, clientIp) {
+  const secret = process.env['TURNSTILE_SECRET'];
+  if (!secret) return true;
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return false;
+  const expectedHostnames = new Set([...ALLOWED_ORIGINS].map(origin => new URL(origin).hostname));
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (clientIp) body.set('remoteip', clientIp);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal: AbortSignal.timeout(10_000),
+      body,
+    });
+    if (!r.ok) throw new Error(`siteverify ${r.status}`);
+    const result = await r.json();
+    return result.success === true && result.action === action && expectedHostnames.has(result.hostname);
+  } catch (err) {
+    console.error('Turnstile siteverify failed:', err);
+    return false;
+  }
+}
+
 /** Chỉ chuyển tiếp header PostgREST cần (header hệ thống của Vercel làm fetch báo lỗi) */
 const FORWARD_REQUEST_HEADERS = ['apikey', 'authorization', 'accept', 'accept-profile', 'content-profile', 'content-type', 'prefer', 'range', 'x-client-info'];
 const SKIP_RESPONSE_HEADERS = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'set-cookie']);
@@ -43,6 +77,20 @@ async function handler(request) {
     return new Response('Bad Request', { status: 400, headers: cors });
   }
 
+  // IP do Vercel gắn (người dùng không tự đặt được) — DB dùng để giới hạn đăng ký khách (migration 021)
+  const clientIp = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(path);
+  } catch {
+    return new Response('Bad Request', { status: 400, headers: cors });
+  }
+  const guarded = TURNSTILE_ACTIONS.find(g => g.pattern.test(decodedPath));
+  if (guarded && !(await verifyTurnstile(request.headers.get('x-turnstile-token'), guarded.action, clientIp))) {
+    return Response.json({ message: 'captcha_failed' }, { status: 403, headers: cors });
+  }
+
   const headers = new Headers();
   for (const key of FORWARD_REQUEST_HEADERS) {
     const value = request.headers.get(key);
@@ -50,8 +98,6 @@ async function handler(request) {
   }
   const secret = process.env['SUPABASE_PROXY_SECRET'];
   if (secret) headers.set('x-mcc-proxy', secret);
-  // IP do Vercel gắn (người dùng không tự đặt được) — DB dùng để giới hạn đăng ký khách (migration 021)
-  const clientIp = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   if (clientIp) headers.set('x-mcc-client-ip', clientIp);
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';

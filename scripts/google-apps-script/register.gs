@@ -6,12 +6,19 @@
  * → Deploy › Manage deployments › (bút chì) › Version: New version › Deploy
  * (giữ nguyên URL; nếu chọn "New deployment" thì URL đổi và phải cập nhật registration.service.ts).
  *
+ * Chống bot (Cloudflare Turnstile): Project Settings › Script Properties › thêm TURNSTILE_SECRET
+ * = secret key của widget. Chưa có thuộc tính này thì bỏ qua kiểm tra (form chạy như trước).
+ *
  * Cột: A Thời gian · B Họ tên · C Năm sinh · D SĐT · E Email
  *      F Khóa quan tâm · G Hình thức · H Loại đăng ký   (F–H thêm 09/2026 cho trang /khoa-hoc)
  */
 
 const SHEET_ID = '1lw0sjyzDUvu7GamJ2dEXLm_OD70iGMM1MXbHmvqDg0k';
 const SECURITY_KEY = 'mcc_secret_token_2026_xyz';
+
+/** Tên miền trang web được phép gửi form (khớp tên miền đăng ký trên widget Turnstile) */
+const TURNSTILE_HOSTNAMES = ['mayo-creative-chinese.vercel.app'];
+const TURNSTILE_ACTION = 'course_register';
 
 const HEADERS = ['Thời gian', 'Họ tên', 'Năm sinh', 'SĐT / Zalo', 'Email', 'Khóa quan tâm', 'Hình thức', 'Loại đăng ký'];
 
@@ -35,6 +42,9 @@ function doPost(e) {
   if (!p.fullName || !p.phoneNumber) {
     return json_({ status: 'error', message: 'Missing required fields' });
   }
+  if (!verifyTurnstile_(p.turnstileToken)) {
+    return json_({ status: 'error', message: 'captcha_failed' });
+  }
 
   // Tránh 2 người gửi cùng lúc ghi đè dòng của nhau
   const lock = LockService.getScriptLock();
@@ -57,6 +67,28 @@ function doPost(e) {
   }
 
   return json_({ status: 'success' });
+}
+
+/** Hỏi Cloudflare token có hợp lệ, đúng thao tác, đúng tên miền; lỗi mạng coi là không hợp lệ */
+function verifyTurnstile_(token) {
+  const secret = PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
+  if (!secret) return true;
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return false;
+  try {
+    const res = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'post',
+      payload: { secret: secret, response: token },
+      muteHttpExceptions: true,
+    });
+    if (res.getResponseCode() !== 200) return false;
+    const result = JSON.parse(res.getContentText());
+    return result.success === true
+      && result.action === TURNSTILE_ACTION
+      && TURNSTILE_HOSTNAMES.indexOf(result.hostname) !== -1;
+  } catch (err) {
+    console.error('Turnstile siteverify failed: ' + err);
+    return false;
+  }
 }
 
 /** Thêm tiêu đề cột còn thiếu (không ghi đè tiêu đề đã có) */

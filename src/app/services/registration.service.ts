@@ -13,6 +13,8 @@ export interface RegistrationData {
   studyMode?: string;
   /** 'register' | 'trial' */
   intent?: string;
+  /** Token Cloudflare Turnstile — Apps Script kiểm tra trước khi ghi Sheet */
+  turnstileToken?: string | null;
 }
 
 @Injectable({
@@ -39,6 +41,7 @@ export class RegistrationService {
       .set('course', data.course ?? '')
       .set('studyMode', data.studyMode ?? '')
       .set('intent', data.intent ?? 'register')
+      .set('turnstileToken', data.turnstileToken ?? '')
       .set('securityKey', 'mcc_secret_token_2026_xyz');
 
     const headers = new HttpHeaders({

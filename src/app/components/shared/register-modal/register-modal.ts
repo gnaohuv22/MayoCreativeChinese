@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, viewChild } from '@angular/core';
 import { RegisterModalService } from '../../../services/register-modal.service';
 import { RegistrationService } from '../../../services/registration.service';
 import { I18nService } from '../../../services/i18n.service';
+import { TurnstileComponent, turnstileEnabled } from '../turnstile/turnstile';
 
 @Component({
   selector: 'app-register-modal',
-  imports: [],
+  imports: [TurnstileComponent],
   templateUrl: './register-modal.html',
   styleUrl: './register-modal.css',
   host: {
@@ -40,6 +41,10 @@ export class RegisterModalComponent {
   readonly isSubmitting = signal(false);
   readonly isSuccess = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly turnstileToken = signal<string | null>(null);
+  private readonly turnstile = viewChild(TurnstileComponent);
+  /** Còn chờ bước xác minh chống bot */
+  readonly awaitingTurnstile = computed(() => turnstileEnabled() && !this.turnstileToken());
 
   // Dynamically populated birth years (from 1940 to 2026)
   readonly currentYear = 2026;
@@ -126,7 +131,7 @@ export class RegisterModalComponent {
     this.emailTouched.set(true);
     this.consentTouched.set(true);
 
-    if (!this.isFormValid() || this.isSubmitting()) {
+    if (!this.isFormValid() || this.isSubmitting() || this.awaitingTurnstile()) {
       return;
     }
 
@@ -141,14 +146,22 @@ export class RegisterModalComponent {
       course: this.modalService.context()?.course,
       studyMode: this.modalService.context() ? this.studyMode() : undefined,
       intent: this.modalService.context()?.trial ? 'trial' : 'register',
+      turnstileToken: this.turnstileToken(),
     }).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
+        if (response?.status === 'error') {
+          // Token đã dùng — lấy token mới để gửi lại
+          this.turnstile()?.reset();
+          this.errorMessage.set(this.i18n.translate()('register.error_msg'));
+          return;
+        }
         this.isSuccess.set(true);
       },
       error: (err) => {
         console.error('Registration failed:', err);
         this.isSubmitting.set(false);
+        this.turnstile()?.reset();
         
         // Note: For Google Apps Script redirect behavior, sometimes a status of 0 or CORS block error is returned
         // even though Google Sheet has successfully recorded the data. We handle this case gracefully.
@@ -178,6 +191,7 @@ export class RegisterModalComponent {
     this.isSubmitting.set(false);
     this.isSuccess.set(false);
     this.errorMessage.set(null);
+    this.turnstileToken.set(null);
   }
 
   // Close modal

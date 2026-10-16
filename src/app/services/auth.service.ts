@@ -18,7 +18,7 @@ export function normalizeVnPhone(input: string): string | null {
   return /^0[35789]\d{8}$/.test(digits) ? digits : null;
 }
 
-export type GuestRegisterError = 'invalid_phone' | 'missing_name' | 'weak_password' | 'no_consent' | 'phone_taken' | 'rate_limited';
+export type GuestRegisterError = 'invalid_phone' | 'missing_name' | 'weak_password' | 'no_consent' | 'phone_taken' | 'rate_limited' | 'captcha_required' | 'captcha_failed';
 
 /** Khớp bảng public.role_permissions (migration 013) */
 export type Permission =
@@ -228,15 +228,17 @@ export class AuthService {
   }
 
   /** Khách tự đăng ký rồi đăng nhập luôn */
-  async registerGuest(input: { phone: string; password: string; fullName: string; consent: boolean }): Promise<{ error?: GuestRegisterError | string }> {
+  async registerGuest(input: { phone: string; password: string; fullName: string; consent: boolean; turnstileToken: string | null }): Promise<{ error?: GuestRegisterError | string }> {
     const phone = normalizeVnPhone(input.phone);
     if (!phone) return { error: 'invalid_phone' };
-    const { data, error } = await this.supabase.rpc('register_guest', {
+    const call = this.supabase.rpc('register_guest', {
       p_phone: phone,
       p_password: input.password,
       p_full_name: input.fullName.trim(),
       p_consent: input.consent,
     });
+    // Proxy (api/rest.mjs) kiểm tra token Turnstile trước khi chuyển tới DB
+    const { data, error } = await (input.turnstileToken ? call.setHeader('x-turnstile-token', input.turnstileToken) : call);
     if (error) return { error: error.message };
     const result = data as { ok: boolean; error?: GuestRegisterError };
     if (!result.ok) return { error: result.error ?? 'unknown' };

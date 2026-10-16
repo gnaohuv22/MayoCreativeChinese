@@ -34,6 +34,8 @@ export default {
         proxyReq.removeHeader('x-rest-path');
         proxyReq.removeHeader('origin');
         proxyReq.removeHeader('referer');
+        // Local dùng khoá Turnstile thử của Cloudflare; chỉ api/rest.mjs (Vercel) kiểm tra token
+        proxyReq.removeHeader('x-turnstile-token');
         if (secret) proxyReq.setHeader('x-mcc-proxy', secret);
         // Như api/rest.mjs: IP để DB giới hạn đăng ký khách (migration 021)
         proxyReq.setHeader('x-mcc-client-ip', req.socket.remoteAddress ?? '127.0.0.1');

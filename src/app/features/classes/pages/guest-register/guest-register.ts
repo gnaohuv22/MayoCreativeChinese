@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, computed, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, STUDENT_PASSWORD_RULES, normalizeVnPhone, type GuestRegisterError } from '../../../../services/auth.service';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { TurnstileComponent, turnstileEnabled } from '../../../../components/shared/turnstile/turnstile';
 
 const ERRORS: Record<GuestRegisterError, string> = {
   invalid_phone: 'Số điện thoại chưa đúng (số di động Việt Nam, 10 chữ số).',
@@ -12,13 +13,15 @@ const ERRORS: Record<GuestRegisterError, string> = {
   no_consent: 'Vui lòng đồng ý để MCC lưu thông tin tài khoản.',
   phone_taken: 'Số điện thoại này đã có tài khoản. Hãy đăng nhập, hoặc liên hệ MCC nếu quên mật khẩu.',
   rate_limited: 'Có quá nhiều lượt đăng ký từ mạng này. Vui lòng thử lại sau ít phút.',
+  captcha_required: 'Vui lòng chờ bước xác minh bên dưới hoàn tất.',
+  captcha_failed: 'Xác minh không thành công. Vui lòng thử lại.',
 };
 
 /** /dang-ky — khách tự tạo tài khoản bằng số điện thoại (migration 021) */
 @Component({
   selector: 'app-guest-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent],
+  imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, TurnstileComponent],
   templateUrl: './guest-register.html',
   styleUrl: './guest-register.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +38,8 @@ export class GuestRegisterComponent {
   readonly consent = signal(false);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
+  readonly turnstileToken = signal<string | null>(null);
+  private readonly turnstile = viewChild(TurnstileComponent);
 
   readonly rules = computed(() => STUDENT_PASSWORD_RULES.map(rule => ({ label: rule.label, ok: rule.test(this.password()) })));
   readonly phoneValid = computed(() => normalizeVnPhone(this.phone()) !== null);
@@ -62,6 +67,7 @@ export class GuestRegisterComponent {
       : !this.phoneValid() ? 'invalid_phone'
       : !this.rules().every(r => r.ok) ? 'weak_password'
       : !this.consent() ? 'no_consent'
+      : turnstileEnabled() && !this.turnstileToken() ? 'captcha_required'
       : null;
     if (problem) {
       this.error.set(ERRORS[problem]);
@@ -74,7 +80,10 @@ export class GuestRegisterComponent {
       password: this.password(),
       fullName: this.fullName(),
       consent: this.consent(),
+      turnstileToken: this.turnstileToken(),
     });
+    // Token đã dùng — lấy token mới cho lần gửi lại
+    this.turnstile()?.reset();
     this.submitting.set(false);
     if (res.error) {
       this.error.set(ERRORS[res.error as GuestRegisterError] ?? res.error);
