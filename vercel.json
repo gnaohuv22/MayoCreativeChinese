@@ -3,11 +3,34 @@
   "headers": [
     {
       "source": "/(chunk|main|polyfills|styles)-(.*)\\.(js|css)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/(.*)\\.(png|jpg|jpeg|JPG|JPEG|webp|gif|svg|ico|HEIC|MOV|mp4)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path((?!api/).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "mayo-creative-chinese.vercel.app"
+        }
+      ],
+      "destination": "https://www.mayochinese.com/:path",
+      "permanent": true
     }
   ]
 }
