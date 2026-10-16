@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal } from '@angular/core';
+import { AuthService } from '../../../../services/auth.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
@@ -62,6 +63,9 @@ export class VocabLevelPickerComponent implements OnInit {
   };
 
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
+  private readonly auth = inject(AuthService);
+  /** Khách chưa đăng nhập: nội dung Trả phí mời đăng nhập trước */
+  readonly signedIn = computed(() => this.auth.isLearner() || this.auth.isStaff());
 
   async ngOnInit() {
     this.route.data.subscribe(async data => {

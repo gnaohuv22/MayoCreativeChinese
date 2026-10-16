@@ -88,6 +88,10 @@
     <a routerLink="/dang-nhap" [queryParams]="{ returnUrl: '/exams/' + exam().id + '/take' }" class="w-full py-3 rounded-2xl border border-dashed border-teal-500/35 text-teal-700 dark:text-teal-300 hover:bg-teal-500/5 font-bold text-xs text-center transition-colors">
       Đăng nhập để làm bài
     </a>
+  } @else if (locked() && access() === 'paid' && needsLogin()) {
+    <a routerLink="/dang-nhap" [queryParams]="{ returnUrl: '/exams' }" class="w-full py-3 rounded-2xl border border-dashed border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/5 font-bold text-xs text-center transition-colors">
+      Đăng nhập để mở khoá
+    </a>
   } @else if (locked() && access() === 'paid') {
     <a [href]="unlockUrl" target="_blank" rel="noopener" class="w-full py-3 rounded-2xl border border-dashed border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/5 font-bold text-xs text-center transition-colors">
       Liên hệ để mở khoá
