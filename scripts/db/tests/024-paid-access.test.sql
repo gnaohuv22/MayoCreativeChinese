@@ -135,6 +135,8 @@ begin
   assert v_exp between now() + interval '6 days 23 hours' and now() + interval '7 days 1 hour', 'hết hạn rồi → tính từ bây giờ';
   perform public.grant_access(array[v_guest], array['exams']);
   assert (select expires_at from public.access_grants where user_id = v_guest and module = 'exams') is null, 'không thời hạn';
+  perform public.grant_access(array[v_guest], array['exams'], null, interval '1 month');
+  assert (select expires_at from public.access_grants where user_id = v_guest and module = 'exams') is null, 'cộng thời lượng không rút ngắn quyền không thời hạn';
   perform public.grant_access(array[v_guest], array['exams'], date_trunc('day', now()) + interval '90 days');
   assert (select expires_at from public.access_grants where user_id = v_guest and module = 'exams')
          = date_trunc('day', now()) + interval '90 days', 'ngày cụ thể';

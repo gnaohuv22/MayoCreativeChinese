@@ -65,6 +65,8 @@ export class StudentHomeComponent {
   });
 
   constructor() {
+    // Quyền Trả phí có thể vừa được cấp trong lúc đang đăng nhập
+    this.auth.loadContext();
     this.load();
   }
 

@@ -282,7 +282,7 @@ $$;
 -- Cấp / gia hạn / thu hồi
 -- ------------------------------------------------------------------------------
 -- p_until: hạn cụ thể; p_duration: cộng thêm, tính từ hạn hiện tại nếu còn hạn, không thì từ bây giờ;
--- cả hai null = không thời hạn.
+-- cả hai null = không thời hạn. Quyền đang không thời hạn thì cộng thời lượng vẫn giữ không thời hạn.
 create or replace function public.grant_access(
   p_students uuid[], p_modules text[], p_until timestamptz default null, p_duration interval default null, p_note text default ''
 )
@@ -328,6 +328,7 @@ begin
     expires_at = case
       when p_until is not null then p_until
       when p_duration is null then null
+      when g.expires_at is null then null
       when g.expires_at > now() then g.expires_at + p_duration
       else now() + p_duration end,
     note = case when v_note = '' then g.note else v_note end,
