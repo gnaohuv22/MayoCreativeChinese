@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 const SITE_NAME = 'Mayo Creative Chinese';
-const BASE_URL = 'https://mayo-creative-chinese.vercel.app';
+const BASE_URL = 'https://www.mayochinese.com';
 const DEFAULT_OG_TITLE = 'Mayo Creative Chinese - Tiên phong Tiếng Trung Ứng Dụng';
 const DEFAULT_DESC = 'Mayo Creative Chinese (MCC) - Trung tâm đào tạo Tiếng Trung ứng dụng thực tiễn & chuẩn hóa HSK hàng đầu tại Hà Nội. Phương pháp học thông minh và sáng tạo.';
 

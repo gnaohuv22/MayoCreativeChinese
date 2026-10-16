@@ -103,7 +103,7 @@ export class CourseDetailComponent {
         const desc = c.goal || c.lead?.[0]?.text || 'Khóa học tiếng Trung tại Mayo Creative Chinese';
         const url = typeof window !== 'undefined'
           ? window.location.href
-          : `https://mayo-creative-chinese.vercel.app/khoa-hoc/${c.slug}`;
+          : `https://www.mayochinese.com/khoa-hoc/${c.slug}`;
 
         this.title.setTitle(fullTitle);
         this.meta.updateTag({ name: 'description', content: desc });

@@ -57,7 +57,7 @@ export class StoryDetailComponent {
         const desc = s.excerpt || 'Câu chuyện học viên tại Mayo Creative Chinese';
         const url = typeof window !== 'undefined'
           ? window.location.href
-          : `https://mayo-creative-chinese.vercel.app/bai-viet/${s.slug}`;
+          : `https://www.mayochinese.com/bai-viet/${s.slug}`;
 
         this.title.setTitle(fullTitle);
         this.meta.updateTag({ name: 'description', content: desc });

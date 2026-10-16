@@ -17,7 +17,7 @@ const SHEET_ID = '1lw0sjyzDUvu7GamJ2dEXLm_OD70iGMM1MXbHmvqDg0k';
 const SECURITY_KEY = 'mcc_secret_token_2026_xyz';
 
 /** Tên miền trang web được phép gửi form (khớp tên miền đăng ký trên widget Turnstile) */
-const TURNSTILE_HOSTNAMES = ['mayo-creative-chinese.vercel.app'];
+const TURNSTILE_HOSTNAMES = ['www.mayochinese.com', 'mayochinese.com', 'mayo-creative-chinese.vercel.app'];
 const TURNSTILE_ACTION = 'course_register';
 
 const HEADERS = ['Thời gian', 'Họ tên', 'Năm sinh', 'SĐT / Zalo', 'Email', 'Khóa quan tâm', 'Hình thức', 'Loại đăng ký'];
