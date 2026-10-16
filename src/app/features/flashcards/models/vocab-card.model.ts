@@ -213,6 +213,18 @@ export function vocabEntryKey(card: KeyCard & { pinyin: string; meaning: string 
   ].join('|');
 }
 
+/**
+ * Key "bộ + Hán tự + pinyin" — nhận ra cùng 1 từ ở các cấp của bộ tích luỹ (HSK 2.0),
+ * nơi nghĩa ghi ở mỗi cấp hơi khác nhau. Pinyin giữ dấu thanh để tách 得 de / dé / děi.
+ */
+export function vocabWordKey(card: { collection?: VocabCollection | null; hanzi: string; pinyin: string }): string {
+  return [
+    card.collection || 'hsk2',
+    normalizeText(card.hanzi),
+    normalizeText(card.pinyin).toLowerCase().replace(/\s+/g, ''),
+  ].join('|');
+}
+
 /** Key "bộ + cấp + Hán tự" — dùng để hỏi xác nhận khi cùng chữ nhưng khác nghĩa */
 export function vocabHanziKey(card: KeyCard): string {
   return [card.collection || 'hsk2', card.hsk_level, normalizeText(card.hanzi)].join('|');

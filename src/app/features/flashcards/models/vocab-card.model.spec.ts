@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitExamples } from './vocab-card.model';
+import { splitExamples, vocabWordKey } from './vocab-card.model';
 
 describe('splitExamples', () => {
   it('pairs line N of example / pinyin / meaning and drops typed numbering', () => {
@@ -32,5 +32,15 @@ describe('splitExamples', () => {
 
   it('returns nothing for empty examples', () => {
     expect(splitExamples({ example: null, example_pinyin: '', example_meaning: undefined })).toEqual([]);
+  });
+});
+
+describe('vocabWordKey', () => {
+  it('matches the same word across levels regardless of meaning, case and spacing', () => {
+    expect(vocabWordKey({ collection: 'hsk2', hanzi: '喜欢', pinyin: 'Xǐ huan' })).toBe(vocabWordKey({ collection: 'hsk2', hanzi: '喜欢 ', pinyin: 'xǐhuan' }));
+  });
+
+  it('keeps tones so 得 de / dé / děi stay separate', () => {
+    expect(vocabWordKey({ collection: 'hsk2', hanzi: '得', pinyin: 'de' })).not.toBe(vocabWordKey({ collection: 'hsk2', hanzi: '得', pinyin: 'dé' }));
   });
 });

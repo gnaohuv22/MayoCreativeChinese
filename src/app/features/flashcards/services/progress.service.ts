@@ -1,11 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { db } from '../db/progress.db';
+import { VOCAB_COLLECTIONS, vocabWordKey } from '../models/vocab-card.model';
 import type { CardProgress, LevelStats, HskVersion, VocabCard } from '../models/vocab-card.model';
 import { AuthService } from '../../../services/auth.service';
 import { RemoteProgressStore } from './remote-progress.store';
+import { VocabService } from './vocab.service';
 
-/** Thông tin tối thiểu của 1 thẻ để tra cứu tiến độ học */
-export type ProgressCardRef = Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'>;
+/** Thông tin tối thiểu của 1 thẻ để tra cứu tiến độ học (có pinyin thì dùng chung được tiến độ giữa các cấp) */
+export type ProgressCardRef = Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'> & Partial<Pick<VocabCard, 'pinyin'>>;
 
 /**
  * Bản ghi cũ (chưa có cardId, chỉ lưu Hán tự + cấp) có từ trước khi tách 4 bộ,
@@ -13,6 +15,47 @@ export type ProgressCardRef = Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'co
  */
 function acceptsLegacy(card: ProgressCardRef): boolean {
   return !card.collection || card.collection === 'hsk2';
+}
+
+/** Thẻ thuộc bộ tích luỹ: cùng 1 từ có mặt lại ở mọi cấp sau, mỗi cấp 1 id riêng */
+function sharesAcrossLevels(card: ProgressCardRef): boolean {
+  return card.id != null && !!card.pinyin && !!VOCAB_COLLECTIONS[card.collection ?? 'hsk2']?.cumulative;
+}
+
+/** Tiến độ đang hiện cho thẻ là của cùng từ ở cấp khác (chưa có bản ghi riêng) */
+function isSharedProgress(card: ProgressCardRef, p: CardProgress | undefined): boolean {
+  return p?.cardId != null && card.id != null && p.cardId !== card.id;
+}
+
+/**
+ * Bộ tích luỹ (HSK 2.0): từ đã học ở cấp này tính là đã học ở các cấp khác của bộ.
+ * Thẻ chưa có tiến độ riêng nhận bản ghi ôn gần nhất của cùng từ (cùng Hán tự + pinyin) ở cấp khác.
+ * `wordKeys` = vocabWordKey theo cardId của các bản ghi.
+ */
+export function shareProgressAcrossLevels(
+  cards: ProgressCardRef[],
+  map: Map<string, CardProgress>,
+  records: CardProgress[],
+  wordKeys: Map<number, string>,
+): void {
+  const latest = new Map<string, CardProgress>();
+  for (const p of records) {
+    const key = p.cardId != null ? wordKeys.get(p.cardId) : undefined;
+    if (!key) continue;
+    const best = latest.get(key);
+    if (!best || isNewer(p, best)) latest.set(key, p);
+  }
+  for (const card of cards) {
+    if (!sharesAcrossLevels(card) || map.has(progressKey(card))) continue;
+    const hit = latest.get(vocabWordKey({ collection: card.collection, hanzi: card.hanzi, pinyin: card.pinyin! }));
+    if (hit) map.set(progressKey(card), { ...hit, hanzi: card.hanzi });
+  }
+}
+
+function isNewer(a: CardProgress, b: CardProgress): boolean {
+  const at = a.lastReviewed ?? 0;
+  const bt = b.lastReviewed ?? 0;
+  return at !== bt ? at > bt : a.reviewCount > b.reviewCount;
 }
 
 /** Key duy nhất cho 1 thẻ trong progress map (id nếu có, fallback Hán tự + level) */
@@ -29,6 +72,7 @@ export function progressKey(card: ProgressCardRef): string {
 export class ProgressService {
   private readonly auth = inject(AuthService);
   private readonly remote = inject(RemoteProgressStore);
+  private readonly vocab = inject(VocabService);
 
   /** id học viên đang đăng nhập (null = dùng IndexedDB) */
   private async studentId(): Promise<string | null> {
@@ -60,6 +104,26 @@ export class ProgressService {
    * Ưu tiên khớp theo cardId; nếu chưa có thì dùng bản ghi cũ (chỉ lưu hanzi) chưa gắn cardId.
    */
   async getCardProgress(card: ProgressCardRef, hskVersion?: HskVersion): Promise<CardProgress | undefined> {
+    const own = await this.getOwnCardProgress(card, hskVersion);
+    if (own || !sharesAcrossLevels(card)) return own;
+    return (await this.addSharedProgress([card], new Map())).get(progressKey(card));
+  }
+
+  /** Thẻ chưa có tiến độ riêng nhận tiến độ của cùng từ ở cấp khác (bộ tích luỹ) */
+  private async addSharedProgress(cards: ProgressCardRef[], map: Map<string, CardProgress>): Promise<Map<string, CardProgress>> {
+    const pending = cards.filter(c => sharesAcrossLevels(c) && !map.has(progressKey(c)));
+    if (pending.length === 0) return map;
+    const versions = new Set(pending.map(c => VOCAB_COLLECTIONS[c.collection ?? 'hsk2'].version));
+    const sid = await this.studentId();
+    const records = (sid ? [...(await this.remote.all(sid)).values()] : await db.progress.toArray())
+      .filter(p => p.cardId != null && (!p.hskVersion || versions.has(p.hskVersion)));
+    if (records.length === 0) return map;
+    const wordKeys = await this.vocab.getWordKeys(records.map(p => p.cardId!));
+    shareProgressAcrossLevels(pending, map, records, wordKeys);
+    return map;
+  }
+
+  private async getOwnCardProgress(card: ProgressCardRef, hskVersion?: HskVersion): Promise<CardProgress | undefined> {
     const sid = await this.studentId();
     if (sid) {
       const hit = card.id != null ? (await this.remote.all(sid)).get(card.id) : undefined;
@@ -95,7 +159,7 @@ export class ProgressService {
       });
       return;
     }
-    if (existing) {
+    if (existing && !isSharedProgress(card, existing)) {
       await db.progress.update(existing.id!, {
         confidence,
         cardId: card.id ?? existing.cardId,
@@ -110,9 +174,9 @@ export class ProgressService {
         hskLevel: card.hsk_level,
         hskVersion,
         confidence,
-        reviewCount: 1,
+        reviewCount: (existing?.reviewCount ?? 0) + 1,
         lastReviewed: Date.now(),
-        bookmarked: false,
+        bookmarked: existing?.bookmarked ?? false,
       });
     }
   }
@@ -135,7 +199,7 @@ export class ProgressService {
       });
       return bookmarked;
     }
-    if (existing) {
+    if (existing && !isSharedProgress(card, existing)) {
       const newVal = !existing.bookmarked;
       await db.progress.update(existing.id!, {
         bookmarked: newVal,
@@ -144,16 +208,18 @@ export class ProgressService {
       });
       return newVal;
     } else {
+      const bookmarked = !(existing?.bookmarked ?? false);
       await db.progress.add({
         cardId: card.id,
         hanzi: card.hanzi,
         hskLevel: card.hsk_level,
         hskVersion,
-        confidence: 0,
-        reviewCount: 0,
-        bookmarked: true,
+        confidence: existing?.confidence ?? 0,
+        reviewCount: existing?.reviewCount ?? 0,
+        lastReviewed: existing?.lastReviewed,
+        bookmarked,
       });
-      return true;
+      return bookmarked;
     }
   }
 
@@ -182,7 +248,7 @@ export class ProgressService {
         const hit = card.id != null ? all.get(card.id) : undefined;
         if (hit) map.set(progressKey(card), { ...hit, hanzi: card.hanzi });
       }
-      return map;
+      return this.addSharedProgress(cards, map);
     }
     const levels = [...new Set(cards.map(c => c.hsk_level))];
     const all = (await db.progress.where('hskLevel').anyOf(levels).toArray())
@@ -210,7 +276,7 @@ export class ProgressService {
         legacy.delete(legacyKey);
       }
     }
-    return map;
+    return this.addSharedProgress(cards, map);
   }
 
   /** Export toàn bộ progress dưới dạng JSON */

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
-import { VOCAB_COLLECTIONS, collectionLevels, parseLevelParam, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
+import { VOCAB_COLLECTIONS, collectionLevels, parseLevelParam, vocabEntryKey, vocabHanziKey, vocabWordKey } from '../models/vocab-card.model';
 import type { VocabCard, VocabCollection, VocabGroupInfo, VocabScope } from '../models/vocab-card.model';
 import type { ExistingVocabKeys } from '../utils/file-parser.util';
 import { NO_TOPIC_PARAM, scopeLevels } from '../utils/vocab-scope.util';
@@ -161,8 +161,41 @@ export class VocabService {
   }
 
   /** Thông tin tối thiểu để tính tiến độ học (không tải cả ví dụ) */
-  async getCardRefsForScope(scope: VocabScope): Promise<Pick<VocabCard, 'id' | 'hanzi' | 'hsk_level' | 'collection'>[]> {
-    return this.cachedRows(`refs:${scopeKey(scope)}`, () => this.scopedQuery(scope, 'id, hanzi, hsk_level, collection').order('id'));
+  async getCardRefsForScope(scope: VocabScope): Promise<Pick<VocabCard, 'id' | 'hanzi' | 'pinyin' | 'hsk_level' | 'collection'>[]> {
+    return this.cachedRows(`refs:${scopeKey(scope)}`, () => this.scopedQuery(scope, 'id, hanzi, pinyin, hsk_level, collection').order('id'));
+  }
+
+  /** vocabWordKey theo id thẻ — Hán tự / pinyin gần như không đổi nên giữ suốt phiên */
+  private readonly wordKeys = new Map<number, string>();
+  /** Các lần tra nối đuôi nhau để những trang gọi song song không tải trùng id */
+  private wordKeyQueue: Promise<void> = Promise.resolve();
+
+  /** Key "bộ + Hán tự + pinyin" của các thẻ theo id (id không đọc được thì không có trong kết quả) */
+  async getWordKeys(ids: number[]): Promise<Map<number, string>> {
+    this.wordKeyQueue = this.wordKeyQueue.then(async () => {
+      const missing = [...new Set(ids)].filter(id => !this.wordKeys.has(id));
+      // Danh sách id đi trong header x-rest-path của proxy — chia nhỏ để header không quá dài
+      for (let i = 0; i < missing.length; i += 300) {
+        const { data, error } = await this.supabase
+          .from('vocab_cards')
+          .select('id, collection, hanzi, pinyin')
+          .in('id', missing.slice(i, i + 300));
+        if (error) {
+          console.error('Vocab query failed:', error);
+          return;
+        }
+        for (const row of (data ?? []) as Pick<VocabCard, 'id' | 'collection' | 'hanzi' | 'pinyin'>[]) {
+          this.wordKeys.set(row.id!, vocabWordKey(row));
+        }
+      }
+    });
+    await this.wordKeyQueue;
+    const result = new Map<number, string>();
+    for (const id of ids) {
+      const key = this.wordKeys.get(id);
+      if (key) result.set(id, key);
+    }
+    return result;
   }
 
   /** Toàn bộ số từ theo từng cấp cho cả 4 bộ, gom trong 1 query và cache chung */

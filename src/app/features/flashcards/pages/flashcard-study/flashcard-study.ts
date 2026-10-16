@@ -148,7 +148,10 @@ export class FlashcardStudyComponent implements OnInit {
       const existing = this.progressMap().get(key);
       const updated: CardProgress = existing
         ? {
+            // Có thể là tiến độ dùng chung từ cấp khác — từ giờ thẻ này có bản ghi riêng
             ...existing,
+            cardId: card.id,
+            hskLevel,
             confidence,
             reviewCount: existing.reviewCount + 1,
             lastReviewed: Date.now(),
@@ -211,7 +214,7 @@ export class FlashcardStudyComponent implements OnInit {
 
       const existing = this.progressMap().get(key);
       const updated: CardProgress = existing
-        ? { ...existing, bookmarked: newBookmarked }
+        ? { ...existing, cardId: card.id, hskLevel, bookmarked: newBookmarked }
         : {
             cardId: card.id,
             hanzi: card.hanzi,
