@@ -4,7 +4,7 @@ import { Component, ChangeDetectionStrategy, ElementRef, OnDestroy, afterNextRen
  * Site key Cloudflare Turnstile (công khai, không phải bí mật). Để trống = tắt kiểm tra chống bot.
  * Chạy local dùng khoá thử của Cloudflare (luôn qua) để không cần đăng ký localhost.
  */
-const SITE_KEY = '';
+const SITE_KEY = '0x4AAAAAAFYKdgtT-RaoMLcJ';
 const TEST_SITE_KEY = '1x00000000000000000000AA';
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
