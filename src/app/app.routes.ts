@@ -41,6 +41,18 @@ export const routes: Routes = [
       import('./features/classes/pages/guest-register/guest-register').then(m => m.GuestRegisterComponent),
   },
   {
+    path: 'chinh-sach-bao-mat',
+    title: 'Chính sách bảo mật',
+    data: { doc: 'privacy' },
+    loadComponent: () => import('./features/legal/pages/legal-page/legal-page').then(m => m.LegalPageComponent),
+  },
+  {
+    path: 'dieu-khoan-su-dung',
+    title: 'Điều khoản sử dụng',
+    data: { doc: 'terms' },
+    loadComponent: () => import('./features/legal/pages/legal-page/legal-page').then(m => m.LegalPageComponent),
+  },
+  {
     path: 'quen-mat-khau',
     title: 'Quên mật khẩu',
     loadComponent: () =>

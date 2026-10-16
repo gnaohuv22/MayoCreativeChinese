@@ -2,11 +2,12 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, v
 import { RegisterModalService } from '../../../services/register-modal.service';
 import { RegistrationService } from '../../../services/registration.service';
 import { I18nService } from '../../../services/i18n.service';
+import { RouterLink } from '@angular/router';
 import { TurnstileComponent, turnstileEnabled } from '../turnstile/turnstile';
 
 @Component({
   selector: 'app-register-modal',
-  imports: [TurnstileComponent],
+  imports: [RouterLink, TurnstileComponent],
   templateUrl: './register-modal.html',
   styleUrl: './register-modal.css',
   host: {

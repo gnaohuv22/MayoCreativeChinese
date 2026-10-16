@@ -1,0 +1,41 @@
+<app-header />
+<main class="bg-brand-light dark:bg-brand-dark transition-colors duration-300 pt-28 pb-16">
+  <article class="max-w-3xl mx-auto px-4 sm:px-6">
+    <header class="mb-8">
+      <h1 class="font-display font-black text-3xl sm:text-4xl text-brand-navy dark:text-white tracking-tight">{{ doc.title }}</h1>
+      <p class="mt-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Có hiệu lực từ ngày {{ doc.effectiveDate }}</p>
+      <p class="mt-5 text-sm sm:text-base leading-relaxed text-brand-navy/80 dark:text-white/80">{{ doc.intro }}</p>
+    </header>
+
+    @for (section of doc.sections; track section.heading) {
+      <section class="legal-section">
+        <h2>{{ section.heading }}</h2>
+        @for (p of section.paragraphs ?? []; track $index) {
+          <p>{{ p }}</p>
+        }
+        @if (section.items?.length) {
+          <ul>
+            @for (item of section.items; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
+        @for (p of section.closing ?? []; track $index) {
+          <p>{{ p }}</p>
+        }
+      </section>
+    }
+
+    <nav class="mt-10 pt-6 border-t border-brand-navy/10 dark:border-white/10 flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+      @if (key === 'privacy') {
+        <a routerLink="/dieu-khoan-su-dung" class="text-brand-pink hover:underline">Điều khoản sử dụng</a>
+      } @else {
+        <a routerLink="/chinh-sach-bao-mat" class="text-brand-pink hover:underline">Chính sách bảo mật</a>
+      }
+      <a [href]="'mailto:' + company.email" class="text-brand-navy/70 dark:text-white/70 hover:text-brand-pink">{{ company.email }}</a>
+      <a [href]="company.phoneHref" class="text-brand-navy/70 dark:text-white/70 hover:text-brand-pink">{{ company.phone }}</a>
+    </nav>
+  </article>
+</main>
+<app-footer />
+<app-register-modal />

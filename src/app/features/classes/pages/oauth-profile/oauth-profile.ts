@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, type OauthProfileError } from '../../../../services/auth.service';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 
@@ -17,7 +17,7 @@ const ERRORS: Record<OauthProfileError, string> = {
 @Component({
   selector: 'app-oauth-profile',
   standalone: true,
-  imports: [FormsModule, NavHeaderComponent],
+  imports: [FormsModule, RouterLink, NavHeaderComponent],
   templateUrl: './oauth-profile.html',
   styleUrl: './oauth-profile.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
