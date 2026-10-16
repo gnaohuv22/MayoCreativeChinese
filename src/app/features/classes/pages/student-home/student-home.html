@@ -76,6 +76,30 @@
           <a routerLink="/exams" class="mcc-btn mcc-btn-secondary"><app-icon name="academic" size="xs" /> Đề thi HSK</a>
         </div>
       </section>
+
+      <section class="mcc-card p-6 space-y-4" aria-labelledby="paid-access-title">
+        <h2 id="paid-access-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Nội dung trả phí</h2>
+        <ul class="grid sm:grid-cols-2 gap-3">
+          @for (m of paidModules(); track m.module) {
+            <li class="flex items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
+              <span class="text-sm font-bold text-brand-navy dark:text-white">{{ m.label }}</span>
+              @if (!m.open) {
+                <span class="mcc-chip bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300">Chưa mở</span>
+              } @else if (m.expiresAt) {
+                <span class="mcc-chip bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Đến {{ formatDate(m.expiresAt) }}</span>
+              } @else {
+                <span class="mcc-chip bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Không thời hạn</span>
+              }
+            </li>
+          }
+        </ul>
+        @if (hasClosedModule()) {
+          <p class="text-sm text-zinc-600 dark:text-zinc-300">
+            Muốn mở khoá đề thi và từ vựng trả phí?
+            <a [href]="unlockUrl" target="_blank" rel="noopener" class="font-bold text-brand-pink hover:underline">Liên hệ MCC</a>
+          </p>
+        }
+      </section>
     } @else {
       <section class="mcc-card p-6 text-sm text-zinc-600 dark:text-zinc-300">
         Tài khoản của bạn chưa được xếp vào lớp nào. Vui lòng liên hệ giáo viên.

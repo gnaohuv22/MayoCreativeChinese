@@ -19,18 +19,5 @@
         }
       ]
     }
-  ],
-  "redirects": [
-    {
-      "source": "/((?!api/).*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "mayo-creative-chinese.vercel.app"
-        }
-      ],
-      "destination": "https://www.mayochinese.com/$1",
-      "permanent": true
-    }
   ]
 }

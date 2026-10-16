@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { VISIBILITY_OPTIONS, type ContentVisibility } from './content-visibility';
 
-/** Chọn 1 trong 4 mức hiển thị: Bản nháp · Nội bộ · Học viên · Công khai */
+/** Chọn 1 trong 6 mức hiển thị: Bản nháp · Nội bộ · Học viên · Trả phí · Thành viên · Công khai */
 @Component({
   selector: 'app-visibility-picker',
   standalone: true,
@@ -20,6 +20,8 @@ export class VisibilityPickerComponent {
     private: 'bg-white dark:bg-white/20 text-zinc-700 dark:text-white shadow-xs',
     staff: 'bg-sky-500 text-white shadow-xs',
     students: 'bg-violet-500 text-white shadow-xs',
+    paid: 'bg-amber-500 text-white shadow-xs',
+    members: 'bg-teal-600 text-white shadow-xs',
     public: 'bg-emerald-500 text-white shadow-xs',
   };
 }

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { accountGuard } from '../../services/admin.guard';
 
 export const examRoutes: Routes = [
   {
@@ -10,6 +11,7 @@ export const examRoutes: Routes = [
   { path: 'manage', redirectTo: '/admin/exams', pathMatch: 'full' },
   {
     path: ':id/take',
+    canActivate: [accountGuard],
     loadComponent: () =>
       import('./pages/exam-take/exam-take').then(m => m.ExamTakeComponent),
   },

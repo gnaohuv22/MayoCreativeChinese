@@ -29,6 +29,8 @@ export class ExamListComponent implements OnInit {
   private listedExams = signal<Exam[]>([]);
   private readonly studentService = inject(StudentService);
   private viewer = signal<ContentViewer>({ staff: false, student: false });
+  /** Chưa đăng nhập: nút làm bài chuyển sang đăng nhập */
+  readonly signedIn = signal(false);
   /** Đề được gợi ý cho lớp của học viên đang đăng nhập */
   private suggestedIds = signal<Set<string>>(new Set());
 
@@ -88,7 +90,8 @@ export class ExamListComponent implements OnInit {
     const [data] = await Promise.all([
       this.examService.getExams({ learner: true }),
       this.auth.ready.then(async () => {
-        this.viewer.set({ staff: this.auth.can('content.read'), student: this.auth.isStudent() });
+        this.viewer.set(this.auth.viewer('exams'));
+        this.signedIn.set(this.auth.isStaff() || this.auth.isLearner());
         if (this.auth.isStudent()) {
           const suggestions = await this.studentService.mySuggestions();
           this.suggestedIds.set(new Set(suggestions.flatMap(s => (s.exam_id ? [s.exam_id] : []))));

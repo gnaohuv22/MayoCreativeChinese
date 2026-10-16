@@ -28,6 +28,21 @@ export function permissionGuard(permission: Permission): CanActivateFn {
   };
 }
 
+/** Làm đề thi: cần đăng nhập (nhân sự hoặc tài khoản học viên) */
+export const accountGuard: CanActivateFn = async (_route, state) => {
+  const injector = inject(Injector);
+  const router = inject(Router);
+  const auth = await loadAuth(injector);
+  if (auth.isStaff()) return true;
+  const student = auth.student();
+  if (!student && auth.needsOauthProfile()) {
+    return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: { returnUrl: state.url } });
+  }
+  if (!student) return router.createUrlTree(['/dang-nhap'], { queryParams: { returnUrl: state.url } });
+  if (student.must_change_password) return router.createUrlTree(['/hoc-vien/mat-khau']);
+  return true;
+};
+
 /** Khu học viên: cần tài khoản học viên; mật khẩu do giáo viên cấp phải đổi trước khi vào trang khác */
 export const studentGuard: CanActivateFn = async (route, state) => {
   const injector = inject(Injector);

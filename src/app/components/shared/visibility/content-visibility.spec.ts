@@ -3,7 +3,9 @@ import { contentAccess, strictestVisibility, type ContentViewer } from './conten
 
 const VISITOR: ContentViewer = { staff: false, student: false };
 const STAFF: ContentViewer = { staff: true, student: false };
-const STUDENT: ContentViewer = { staff: false, student: true };
+const STUDENT: ContentViewer = { staff: false, student: true, learner: true };
+const GUEST: ContentViewer = { staff: false, student: false, learner: true };
+const PAID_GUEST: ContentViewer = { staff: false, student: false, learner: true, paid: true };
 
 describe('contentAccess', () => {
   it('opens public content to everyone', () => {
@@ -33,7 +35,30 @@ describe('contentAccess', () => {
   });
 });
 
+describe('members and paid levels', () => {
+  it('opens members content to any learner account, asks visitors to log in', () => {
+    expect(contentAccess('members', VISITOR)).toBe('login');
+    expect(contentAccess('members', GUEST)).toBe('open');
+    expect(contentAccess('members', STUDENT)).toBe('open');
+    expect(contentAccess('members', STAFF)).toBe('open');
+  });
+
+  it('opens paid content to class students, staff and granted accounts only', () => {
+    expect(contentAccess('paid', VISITOR)).toBe('paid');
+    expect(contentAccess('paid', GUEST)).toBe('paid');
+    expect(contentAccess('paid', PAID_GUEST)).toBe('open');
+    expect(contentAccess('paid', STUDENT)).toBe('open');
+    expect(contentAccess('paid', STAFF)).toBe('open');
+  });
+});
+
 describe('strictestVisibility', () => {
+  it('orders students above paid above members', () => {
+    expect(strictestVisibility(['members', 'paid'])).toBe('paid');
+    expect(strictestVisibility(['paid', 'students'])).toBe('students');
+    expect(strictestVisibility(['public', 'members'])).toBe('members');
+  });
+
   it('picks the most restrictive level of a merged range', () => {
     expect(strictestVisibility(['public', 'staff', 'public'])).toBe('staff');
     expect(strictestVisibility(['public', 'private', 'staff'])).toBe('private');

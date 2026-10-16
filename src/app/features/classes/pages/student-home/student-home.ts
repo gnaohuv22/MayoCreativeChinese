@@ -13,6 +13,7 @@ import { CLASS_STATUS_LABELS, STAFF_ROLE_LABELS, STUDY_MODE_LABELS, type ClassAn
 import { formatDate, formatDateTime } from '../../utils/class-display.util';
 import { RecoveryEmailComponent } from '../../components/recovery-email/recovery-email';
 import { vocabSuggestionLabel, vocabSuggestionParam } from '../../utils/suggestion.util';
+import { ACCESS_MODULE_LABELS, UNLOCK_CONTACT_URL, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
 
 /** /hoc-vien — lớp của tôi: thông tin lớp, thông báo, gợi ý học, kết quả bài thi */
 @Component({
@@ -36,6 +37,17 @@ export class StudentHomeComponent {
   protected readonly formatDateTime = formatDateTime;
   protected readonly vocabLabel = vocabSuggestionLabel;
 
+  protected readonly unlockUrl = UNLOCK_CONTACT_URL;
+
+  /** Quyền Trả phí của khách: còn hạn đến ngày nào */
+  readonly paidModules = computed(() =>
+    (Object.keys(ACCESS_MODULE_LABELS) as AccessModule[]).map(module => {
+      const grant = this.auth.accessGrants().find(g => g.module === module);
+      return { module, label: ACCESS_MODULE_LABELS[module], open: this.auth.hasAccess(module), expiresAt: grant?.expires_at ?? null };
+    }),
+  );
+  readonly hasClosedModule = computed(() => this.paidModules().some(m => !m.open));
+
   readonly cls = computed(() => this.auth.student()?.class ?? null);
   readonly courseName = computed(() => COURSE_DETAILS.find(c => c.slug === this.cls()?.course_slug)?.name ?? '');
   readonly announcements = signal<ClassAnnouncement[]>([]);
@@ -53,6 +65,8 @@ export class StudentHomeComponent {
   });
 
   constructor() {
+    // Quyền Trả phí có thể vừa được cấp trong lúc đang đăng nhập
+    this.auth.loadContext();
     this.load();
   }
 

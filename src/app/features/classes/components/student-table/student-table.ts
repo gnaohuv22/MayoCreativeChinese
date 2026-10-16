@@ -4,15 +4,30 @@ import { AuthService, STUDENT_PASSWORD_RULES, generateStudentPassword } from '..
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ClassService } from '../../services/class.service';
+import { ACCESS_MODULE_LABELS, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
+import { formatDate } from '../../utils/class-display.util';
 import {
   STUDENT_STATUS_LABELS,
   type ClassOption,
   type Student,
+  type GrantTerm,
+  type StudentAccessGrant,
   type StudentProfileInput,
   type StudentStatus,
 } from '../../models/class.model';
 
 type BulkAction = 'move' | 'active' | 'locked' | 'archived' | 'delete';
+
+/** Thời hạn chọn sẵn khi cấp quyền (interval Postgres) */
+const GRANT_TERMS: { value: string; label: string }[] = [
+  { value: '7 days', label: '7 ngày' },
+  { value: '1 month', label: '1 tháng' },
+  { value: '3 months', label: '3 tháng' },
+  { value: '6 months', label: '6 tháng' },
+  { value: '12 months', label: '12 tháng' },
+  { value: 'until', label: 'Đến ngày…' },
+  { value: 'unlimited', label: 'Không thời hạn' },
+];
 
 const BULK_CONFIRM: Record<Exclude<BulkAction, 'move'>, { title: string; verb: string; done: string }> = {
   active: { title: 'Mở lại tài khoản', verb: 'Mở lại', done: 'Đã mở lại' },
@@ -53,6 +68,27 @@ export class StudentTableComponent {
   private readonly editDialog = viewChild.required<ElementRef<HTMLDialogElement>>('editDialog');
   private readonly passwordDialog = viewChild.required<ElementRef<HTMLDialogElement>>('passwordDialog');
   private readonly bulkDialog = viewChild.required<ElementRef<HTMLDialogElement>>('bulkDialog');
+  private readonly grantDialog = viewChild.required<ElementRef<HTMLDialogElement>>('grantDialog');
+
+  // Cấp / thu hồi quyền Trả phí
+  protected readonly moduleLabels = ACCESS_MODULE_LABELS;
+  protected readonly modules = Object.keys(ACCESS_MODULE_LABELS) as AccessModule[];
+  protected readonly grantTerms = GRANT_TERMS;
+  protected readonly formatDate = formatDate;
+  readonly grantMode = signal<'grant' | 'revoke'>('grant');
+  readonly grantTargets = signal<Student[]>([]);
+  readonly grantModules = signal<Set<AccessModule>>(new Set(['flashcards', 'exams']));
+  readonly grantTerm = signal('1 month');
+  readonly grantUntil = signal('');
+  readonly grantNote = signal('');
+  readonly grantError = signal<string | null>(null);
+  /** Ngày nhỏ nhất chọn được (ngày mai) */
+  readonly minUntil = computed(() => {
+    const d = new Date(Date.now() + 86_400_000);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  readonly grantReady = computed(() =>
+    this.grantModules().size > 0 && (this.grantMode() === 'revoke' || this.grantTerm() !== 'until' || this.grantUntil() >= this.minUntil()));
 
   // Sửa hồ sơ
   readonly editing = signal<Student | null>(null);
@@ -181,6 +217,64 @@ export class StudentTableComponent {
     this.passwordTarget.set(null);
     this.newPassword.set('');
     this.issuedPassword.set(null);
+  }
+
+  // ---------------------------------------------------------------------------
+  /** Quyền của 1 tài khoản để hiện trong bảng: còn hạn trước, hết hạn sau */
+  grantsOf(student: Student): (StudentAccessGrant & { active: boolean })[] {
+    const now = Date.now();
+    return (student.access_grants ?? [])
+      .map(g => ({ ...g, active: !g.expires_at || Date.parse(g.expires_at) > now }))
+      .sort((a, b) => Number(b.active) - Number(a.active) || a.module.localeCompare(b.module));
+  }
+
+  openGrant(students: Student[], mode: 'grant' | 'revoke' = 'grant') {
+    if (students.length === 0) return;
+    this.grantTargets.set(students);
+    this.grantMode.set(mode);
+    this.grantModules.set(new Set(this.modules));
+    this.grantTerm.set('1 month');
+    this.grantUntil.set('');
+    this.grantNote.set('');
+    this.grantError.set(null);
+    this.grantDialog().nativeElement.showModal();
+  }
+
+  toggleGrantModule(module: AccessModule) {
+    this.grantModules.update(set => {
+      const next = new Set(set);
+      if (next.has(module)) next.delete(module);
+      else next.add(module);
+      return next;
+    });
+  }
+
+  async submitGrant() {
+    const ids = this.grantTargets().map(s => s.user_id);
+    const modules = this.modules.filter(m => this.grantModules().has(m));
+    if (ids.length === 0 || !this.grantReady()) return;
+    const term = this.grantTerm();
+    const grantTerm: GrantTerm =
+      term === 'unlimited' ? { unlimited: true }
+      : term === 'until' ? { until: `${this.grantUntil()}T23:59:59+07:00` }
+      : { duration: term };
+
+    this.busy.set(true);
+    const res = this.grantMode() === 'grant'
+      ? await this.classService.grantAccess(ids, modules, grantTerm, this.grantNote().trim())
+      : await this.classService.revokeAccess(ids, modules);
+    this.busy.set(false);
+    if (res.error) {
+      this.grantError.set(res.error);
+      return;
+    }
+    this.grantDialog().nativeElement.close();
+    const what = modules.map(m => ACCESS_MODULE_LABELS[m]).join(' + ');
+    this.toast.success(this.grantMode() === 'grant'
+      ? `Đã cấp ${what} cho ${ids.length} tài khoản.`
+      : `Đã thu hồi ${what} của ${ids.length} tài khoản.`);
+    this.clearSelection();
+    this.changed.emit();
   }
 
   // ---------------------------------------------------------------------------

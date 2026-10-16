@@ -1,4 +1,4 @@
-import type { ContentVisibility } from '../../../components/shared/visibility/content-visibility';
+import type { AccessModule, ContentVisibility } from '../../../components/shared/visibility/content-visibility';
 import type { HskVersion, VocabCollection } from '../../flashcards/models/vocab-card.model';
 
 /** Bảng public.classes (migration 019) */
@@ -105,7 +105,18 @@ export interface Student {
   account_type: 'student' | 'guest';
   must_change_password: boolean;
   created_at: string;
+  /** Quyền Trả phí đã cấp, kể cả đã hết hạn (migration 024) */
+  access_grants?: StudentAccessGrant[];
 }
+
+export interface StudentAccessGrant {
+  module: AccessModule;
+  expires_at: string | null;
+  note: string;
+}
+
+/** Thời hạn khi cấp quyền: số ngày / tháng cộng thêm, đến ngày cụ thể, hoặc không thời hạn */
+export type GrantTerm = { duration: string } | { until: string } | { unlimited: true };
 
 /** Thông tin hồ sơ học viên sửa được (update_student) */
 export type StudentProfileInput = Pick<Student, 'full_name' | 'birth_year' | 'phone' | 'email' | 'parent_phone' | 'notes'>;
