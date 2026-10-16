@@ -339,7 +339,9 @@ begin
   select string_agg(username, ', ') into v_names
   from (select username from student_profiles where user_id = any (v_ids) order by username limit 5) x;
   v_until := case when p_until is not null then 'đến ' || to_char(p_until at time zone 'Asia/Ho_Chi_Minh', 'DD/MM/YYYY')
-                  when p_duration is not null then 'thêm ' || replace(replace(p_duration::text, 'mons', 'tháng'), 'days', 'ngày')
+                  when p_duration is not null then 'thêm ' || concat_ws(' ',
+                    nullif((extract(year from p_duration) * 12 + extract(month from p_duration))::int, 0) || ' tháng',
+                    nullif(extract(day from p_duration)::int, 0) || ' ngày')
                   else 'không thời hạn' end;
   perform write_activity('grant', 'student', cardinality(v_ids),
     format('Cấp quyền %s (%s) cho %s%s',

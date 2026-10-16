@@ -118,6 +118,9 @@ begin
   perform pg_temp.act_as(v_guest);
   assert pg_temp.visible_cards('hsk2', v_level) = v_total, 'được cấp flashcards → đọc thẻ Trả phí';
 
+  assert exists (select 1 from public.activity_log where action = 'grant' and created_at = now() and summary like '%(thêm 1 tháng)%'),
+    'nhật ký ghi thời lượng tiếng Việt';
+  perform pg_temp.act_as(v_guest);
   -- Học viên chỉ đọc quyền của mình
   execute 'set local role authenticated';
   assert (select count(*) from public.access_grants) = 2, 'khách chỉ thấy 2 dòng của mình';
