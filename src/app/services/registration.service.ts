@@ -28,7 +28,7 @@ export class RegistrationService {
    * - For Option 1 (Google Apps Script Web App): Paste the deployed Web App URL below.
    * - For Option 2 (GCP Service Account Serverless Proxy): Set to '/api/register'.
    */
-  private readonly endpoint = 'https://script.google.com/macros/s/AKfycbxWw7HI2sxMCUiWBch_xEGEoiVz7xD8Ks4QlEUreNWrJtH4H2g8QhI5AM86Lt0PdsXv/exec';
+  private readonly endpoint = 'https://script.google.com/macros/s/AKfycbxjrbalQ3_glYtJfl14KMcLFZVSdGCFiPVJ9g6LWXCFiYN2ZIhdemwf1N4w0J8fksox/exec';
 
   register(data: RegistrationData): Observable<any> {
     // We format data as form urlencoded. This avoids CORS preflight (OPTIONS) triggers in browsers.
