@@ -34,11 +34,31 @@ export const routes: Routes = [
       import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
   },
   {
-    // Khách tự đăng ký bằng số điện thoại (migration 021)
+    // Khách tự đăng ký: email + số điện thoại, hoặc Google (migration 021, 022)
     path: 'dang-ky',
     title: 'Đăng ký tài khoản',
     loadComponent: () =>
       import('./features/classes/pages/guest-register/guest-register').then(m => m.GuestRegisterComponent),
+  },
+  {
+    path: 'quen-mat-khau',
+    title: 'Quên mật khẩu',
+    loadComponent: () =>
+      import('./features/classes/pages/forgot-password/forgot-password').then(m => m.ForgotPasswordComponent),
+  },
+  {
+    // Link trong thư khôi phục mật khẩu dẫn về đây
+    path: 'dat-lai-mat-khau',
+    title: 'Đặt lại mật khẩu',
+    loadComponent: () =>
+      import('./features/classes/pages/reset-password/reset-password').then(m => m.ResetPasswordComponent),
+  },
+  {
+    // Lần đầu đăng nhập Google
+    path: 'hoan-tat-ho-so',
+    title: 'Hoàn tất tài khoản',
+    loadComponent: () =>
+      import('./features/classes/pages/oauth-profile/oauth-profile').then(m => m.OauthProfileComponent),
   },
   {
     // Khu học viên (tài khoản do nhân sự tạo theo lớp)

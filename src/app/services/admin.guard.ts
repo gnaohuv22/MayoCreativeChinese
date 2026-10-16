@@ -34,6 +34,9 @@ export const studentGuard: CanActivateFn = async (route, state) => {
   const router = inject(Router);
   const auth = await loadAuth(injector);
   const student = auth.student();
+  if (!student && auth.needsOauthProfile()) {
+    return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: { returnUrl: state.url } });
+  }
   if (!student) return router.createUrlTree(['/dang-nhap'], { queryParams: { returnUrl: state.url } });
   if (student.must_change_password && route.routeConfig?.path !== 'mat-khau') {
     return router.createUrlTree(['/hoc-vien/mat-khau']);

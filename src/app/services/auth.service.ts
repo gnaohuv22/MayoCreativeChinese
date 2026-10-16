@@ -18,7 +18,27 @@ export function normalizeVnPhone(input: string): string | null {
   return /^0[35789]\d{8}$/.test(digits) ? digits : null;
 }
 
-export type GuestRegisterError = 'invalid_phone' | 'missing_name' | 'weak_password' | 'no_consent' | 'phone_taken' | 'rate_limited' | 'captcha_required' | 'captcha_failed';
+export type GuestRegisterError =
+  | 'invalid_email' | 'invalid_phone' | 'missing_name' | 'weak_password' | 'no_consent'
+  | 'email_taken' | 'phone_taken' | 'rate_limited' | 'captcha_required' | 'captcha_failed';
+
+/** Lỗi đăng nhập người học có xử lý riêng trên giao diện */
+export const EMAIL_NOT_CONFIRMED = 'email_not_confirmed';
+export const LOGIN_RATE_LIMITED = 'login_rate_limited';
+
+export type OauthProfileError = 'not_oauth' | 'has_profile' | 'missing_name' | 'invalid_phone' | 'phone_taken' | 'no_consent';
+export type ResetPasswordError = 'not_recovery' | 'not_student' | 'weak_password';
+
+/** Email đăng nhập nội bộ (không nhận thư) của khách cũ / học viên lớp / nhân sự */
+export function isInternalEmail(email: string | null | undefined): boolean {
+  const e = (email ?? '').toLowerCase();
+  return e.endsWith(`@${GUEST_EMAIL_DOMAIN}`) || e.endsWith(`@${STUDENT_EMAIL_DOMAIN}`) || e.endsWith(`@${LOGIN_EMAIL_DOMAIN}`);
+}
+
+/** Đường dẫn tuyệt đối trên trang hiện tại (link trong thư / quay lại sau Google) */
+function siteUrl(path: string): string {
+  return new URL(path, location.origin).href;
+}
 
 /** Khớp bảng public.role_permissions (migration 013) */
 export type Permission =
@@ -134,6 +154,23 @@ export class AuthService {
   readonly isGuest = computed(() => this.studentContext()?.account_type === 'guest');
   readonly student = this.studentContext.asReadonly();
   readonly userId = computed(() => this.session()?.user.id ?? null);
+  /** Email đăng nhập; email nội bộ của khách cũ / học viên lớp không nhận được thư */
+  readonly email = computed(() => this.session()?.user.email ?? null);
+  /** Đăng nhập Google nhưng chưa điền hồ sơ khách (complete_oauth_profile) */
+  readonly needsOauthProfile = computed(() => {
+    const user = this.session()?.user;
+    const provider = user?.app_metadata?.['provider'];
+    return !!user && !!provider && provider !== 'email' && !this.context() && !this.studentContext();
+  });
+  /** Đăng nhập bằng mật khẩu (không phải Google) — mới đổi mật khẩu được */
+  readonly hasPassword = computed(() => (this.session()?.user.app_metadata?.['provider'] ?? 'email') === 'email');
+  /** Khách chưa có email nhận thư (đăng ký trước 022) — cần thêm email để khôi phục mật khẩu */
+  readonly needsRecoveryEmail = computed(() => this.isGuest() && this.hasPassword() && isInternalEmail(this.email()));
+  /** Tên Google trả về, để điền sẵn khi hoàn tất hồ sơ */
+  readonly oauthName = computed(() => {
+    const meta = this.session()?.user.user_metadata ?? {};
+    return String(meta['full_name'] ?? meta['name'] ?? '');
+  });
 
   /** Phiên bị mất mà không phải do bấm Đăng xuất (hết hạn, gia hạn lỗi, đăng xuất ở tab khác) */
   readonly sessionLost = signal(false);
@@ -207,15 +244,28 @@ export class AuthService {
     return {};
   }
 
-  /** Đăng nhập người học (trang /dang-nhap): tên đăng nhập học viên lớp, hoặc số điện thoại của khách */
-  async signInStudent(username: string, password: string): Promise<{ error?: string }> {
+  /**
+   * Đăng nhập người học (trang /dang-nhap): email hoặc số điện thoại của khách, tên đăng nhập học viên lớp.
+   * Số điện thoại → email đăng nhập tra bằng learner_login_email (chỉ trả khi mật khẩu đúng).
+   * Trả `email` khi lỗi EMAIL_NOT_CONFIRMED để trang gửi lại thư xác nhận.
+   */
+  async signInStudent(username: string, password: string): Promise<{ error?: string; email?: string }> {
     const login = username.trim().toLowerCase();
-    if (!login || login.includes('@')) return { error: 'Invalid login credentials' };
+    if (!login) return { error: 'Invalid login credentials' };
     const phone = /^[+\d][\d\s.-]*$/.test(login) ? normalizeVnPhone(login) : null;
-    const email = phone ? `${phone}@${GUEST_EMAIL_DOMAIN}` : `${login}@${STUDENT_EMAIL_DOMAIN}`;
+    let email = login.includes('@') ? login : `${login}@${STUDENT_EMAIL_DOMAIN}`;
+    if (phone) {
+      const { data, error } = await this.supabase.rpc('learner_login_email', { p_phone: phone, p_password: password });
+      if (error) return { error: error.message };
+      const result = data as { email?: string; error?: 'invalid' | 'rate_limited' };
+      if (result.error === 'rate_limited') return { error: LOGIN_RATE_LIMITED };
+      if (!result.email) return { error: 'Invalid login credentials' };
+      email = result.email;
+    }
     const { error } = await this.supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.code === 'user_banned') return { error: 'Tài khoản đã bị khoá. Vui lòng liên hệ giáo viên của lớp.' };
+      if (error.code === 'email_not_confirmed') return { error: EMAIL_NOT_CONFIRMED, email };
       return { error: error.message };
     }
     this.sessionLost.set(false);
@@ -227,11 +277,12 @@ export class AuthService {
     return {};
   }
 
-  /** Khách tự đăng ký rồi đăng nhập luôn */
-  async registerGuest(input: { phone: string; password: string; fullName: string; consent: boolean; turnstileToken: string | null }): Promise<{ error?: GuestRegisterError | string }> {
+  /** Khách tự đăng ký; đăng nhập được sau khi bấm link trong thư xác nhận. Trả email đã chuẩn hoá. */
+  async registerGuest(input: { email: string; phone: string; password: string; fullName: string; consent: boolean; turnstileToken: string | null }): Promise<{ error?: GuestRegisterError | string; email?: string }> {
     const phone = normalizeVnPhone(input.phone);
     if (!phone) return { error: 'invalid_phone' };
     const call = this.supabase.rpc('register_guest', {
+      p_email: input.email.trim(),
       p_phone: phone,
       p_password: input.password,
       p_full_name: input.fullName.trim(),
@@ -240,9 +291,80 @@ export class AuthService {
     // Proxy (api/rest.mjs) kiểm tra token Turnstile trước khi chuyển tới DB
     const { data, error } = await (input.turnstileToken ? call.setHeader('x-turnstile-token', input.turnstileToken) : call);
     if (error) return { error: error.message };
-    const result = data as { ok: boolean; error?: GuestRegisterError };
+    const result = data as { ok: boolean; email?: string; error?: GuestRegisterError };
+    if (!result.ok || !result.email) return { error: result.error ?? 'unknown' };
+    // Tài khoản tạo bằng SQL nên Supabase chưa gửi thư — yêu cầu gửi thư xác nhận
+    const sent = await this.resendConfirmation(result.email);
+    if (sent.error) console.error('Gửi thư xác nhận thất bại:', sent.error);
+    return { email: result.email };
+  }
+
+  /** Gửi (lại) thư xác nhận email; link trong thư đăng nhập luôn rồi quay về /dang-nhap */
+  async resendConfirmation(email: string): Promise<{ error?: string }> {
+    const { error } = await this.supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: siteUrl('/dang-nhap') },
+    });
+    return error ? { error: error.code === 'over_email_send_rate_limit' ? 'rate_limited' : error.message } : {};
+  }
+
+  /** Thư khôi phục mật khẩu (luôn báo đã gửi, để không dò được email nào có tài khoản) */
+  async requestPasswordReset(email: string): Promise<{ error?: string }> {
+    const { error } = await this.supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: siteUrl('/dat-lai-mat-khau'),
+    });
+    if (error?.code === 'over_email_send_rate_limit') return { error: 'rate_limited' };
+    if (error) console.error('Gửi thư khôi phục thất bại:', error);
+    return {};
+  }
+
+  /** Đặt mật khẩu mới trong phiên mở từ link khôi phục */
+  async resetLearnerPassword(newPassword: string): Promise<{ error?: ResetPasswordError | string }> {
+    if (!STUDENT_PASSWORD_RULES.every(rule => rule.test(newPassword))) return { error: 'weak_password' };
+    const { data, error } = await this.supabase.rpc('learner_reset_password', { p_new: newPassword });
+    if (error) return { error: error.message };
+    const result = data as { ok: boolean; error?: ResetPasswordError };
     if (!result.ok) return { error: result.error ?? 'unknown' };
-    return this.signInStudent(phone, input.password);
+    this.studentContext.update(ctx => (ctx ? { ...ctx, must_change_password: false } : ctx));
+    return {};
+  }
+
+  /** Chuyển sang Google; quay lại /dang-nhap (giữ returnUrl) với phiên đã đăng nhập */
+  async signInWithGoogle(returnUrl?: string): Promise<{ error?: string }> {
+    const back = returnUrl ? `/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}` : '/dang-nhap';
+    const { error } = await this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: siteUrl(back) },
+    });
+    return error ? { error: error.message } : {};
+  }
+
+  /** Lần đầu đăng nhập Google: tạo hồ sơ khách */
+  async completeOauthProfile(input: { fullName: string; phone: string; consent: boolean }): Promise<{ error?: OauthProfileError | string }> {
+    const { data, error } = await this.supabase.rpc('complete_oauth_profile', {
+      p_full_name: input.fullName.trim(),
+      p_phone: input.phone.trim(),
+      p_consent: input.consent,
+    });
+    if (error) return { error: error.message };
+    const result = data as { ok: boolean; error?: OauthProfileError };
+    if (!result.ok) return { error: result.error ?? 'unknown' };
+    await this.loadContext();
+    return {};
+  }
+
+  /** Khách cũ (email nội bộ) thêm email thật — Supabase gửi thư xác nhận tới email mới */
+  async addRecoveryEmail(email: string): Promise<{ error?: string }> {
+    const { error } = await this.supabase.auth.updateUser(
+      { email: email.trim().toLowerCase() },
+      { emailRedirectTo: siteUrl('/hoc-vien') },
+    );
+    if (!error) return {};
+    if (error.code === 'email_exists') return { error: 'email_taken' };
+    if (error.code === 'over_email_send_rate_limit') return { error: 'rate_limited' };
+    if (error.code === 'email_address_invalid' || error.code === 'validation_failed') return { error: 'invalid_email' };
+    return { error: error.message };
   }
 
   /** Học viên tự đổi mật khẩu (chính sách nhẹ hơn nhân sự, đổi qua RPC) */

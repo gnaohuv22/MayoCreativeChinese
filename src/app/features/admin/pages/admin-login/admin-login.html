@@ -13,6 +13,15 @@
       <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-1">{{ text.intro }}</p>
     </div>
 
+    @if (audience === 'student') {
+      <app-google-button [returnUrl]="returnUrlParam" />
+      <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-zinc-500" aria-hidden="true">
+        <span class="h-px flex-1 bg-brand-navy/10 dark:bg-white/10"></span>
+        hoặc
+        <span class="h-px flex-1 bg-brand-navy/10 dark:bg-white/10"></span>
+      </div>
+    }
+
     <label class="block space-y-1.5">
       <span class="text-xs font-bold text-brand-navy dark:text-white">{{ text.account }}</span>
       <input
@@ -28,7 +37,12 @@
     </label>
 
     <label class="block space-y-1.5">
-      <span class="text-xs font-bold text-brand-navy dark:text-white">Mật khẩu</span>
+      <span class="flex items-center justify-between gap-2">
+        <span class="text-xs font-bold text-brand-navy dark:text-white">Mật khẩu</span>
+        @if (audience === 'student') {
+          <a routerLink="/quen-mat-khau" class="text-xs font-bold text-brand-pink hover:underline">Quên mật khẩu?</a>
+        }
+      </span>
       <input
         type="password"
         name="password"
@@ -41,6 +55,23 @@
 
     @if (error()) {
       <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ error() }}</p>
+    }
+    @if (unconfirmedEmail()) {
+      <button
+        type="button"
+        (click)="resendConfirmation()"
+        [disabled]="resendState() === 'sending' || resendState() === 'sent'"
+        class="w-full py-2 rounded-full border border-brand-navy/15 dark:border-white/15 text-xs font-bold text-brand-navy dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 disabled:opacity-60 transition-colors cursor-pointer"
+      >
+        @switch (resendState()) {
+          @case ('sending') { Đang gửi lại… }
+          @case ('sent') { Đã gửi lại thư xác nhận }
+          @default { Gửi lại thư xác nhận }
+        }
+      </button>
+      @if (resendState() === 'error') {
+        <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">Chưa gửi lại được. Vui lòng đợi 1 phút rồi thử lại.</p>
+      }
     }
 
     <button

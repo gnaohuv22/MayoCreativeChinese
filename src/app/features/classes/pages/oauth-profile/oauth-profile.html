@@ -1,0 +1,57 @@
+<app-nav-header [showNavLinks]="false" pageTitle="Hoàn tất tài khoản" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-16 px-4 transition-colors">
+  <form
+    (ngSubmit)="submit()"
+    class="max-w-sm mx-auto p-8 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xl space-y-5"
+  >
+    <div>
+      <h1 class="text-2xl font-black text-brand-navy dark:text-white tracking-tight font-display">Hoàn tất tài khoản</h1>
+      @if (auth.email(); as email) {
+        <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-1 break-all">{{ email }}</p>
+      }
+    </div>
+
+    <div class="space-y-1.5">
+      <label for="oauth-name" class="mcc-label">Họ tên</label>
+      <input id="oauth-name" name="fullName" autocomplete="name" maxlength="100"
+             [ngModel]="fullName()" (ngModelChange)="fullName.set($event); error.set(null)" class="mcc-input" />
+    </div>
+
+    <div class="space-y-1.5">
+      <label for="oauth-phone" class="mcc-label">Số điện thoại (không bắt buộc)</label>
+      <input id="oauth-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
+             [ngModel]="phone()" (ngModelChange)="phone.set($event); error.set(null)" class="mcc-input" />
+    </div>
+
+    <label class="flex items-start gap-2.5 cursor-pointer">
+      <input
+        type="checkbox"
+        name="consent"
+        [checked]="consent()"
+        (change)="consent.set($any($event.target).checked); error.set(null)"
+        class="mt-0.5 w-4 h-4 shrink-0 rounded accent-brand-pink cursor-pointer"
+      />
+      <span class="text-xs leading-relaxed text-brand-navy/80 dark:text-brand-text-dark/80">
+        Tôi đồng ý để Mayo Creative Chinese lưu trữ và sử dụng họ tên, email, số điện thoại trên để quản lý tài khoản và liên hệ khi cần.
+        MCC không chia sẻ thông tin này cho bên thứ ba; bạn có thể yêu cầu xoá tài khoản bất cứ lúc nào qua Fanpage hoặc hotline của MCC.
+      </span>
+    </label>
+
+    @if (error()) {
+      <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ error() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="w-full py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-sm shadow-lg shadow-brand-pink/25 transition-all cursor-pointer"
+    >
+      {{ submitting() ? 'Đang lưu…' : 'Bắt đầu học' }}
+    </button>
+
+    <button type="button" (click)="cancel()" class="block w-full text-center text-xs font-bold text-zinc-500 hover:text-brand-pink cursor-pointer">
+      Huỷ và đăng xuất
+    </button>
+  </form>
+</div>

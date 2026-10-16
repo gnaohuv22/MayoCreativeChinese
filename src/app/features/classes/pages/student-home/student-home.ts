@@ -11,13 +11,14 @@ import { StudentService } from '../../services/student.service';
 import { RemoteProgressStore } from '../../../flashcards/services/remote-progress.store';
 import { CLASS_STATUS_LABELS, STAFF_ROLE_LABELS, STUDY_MODE_LABELS, type ClassAnnouncement, type ClassSuggestion, type ExamAttempt } from '../../models/class.model';
 import { formatDate, formatDateTime } from '../../utils/class-display.util';
+import { RecoveryEmailComponent } from '../../components/recovery-email/recovery-email';
 import { vocabSuggestionLabel, vocabSuggestionParam } from '../../utils/suggestion.util';
 
 /** /hoc-vien — lớp của tôi: thông tin lớp, thông báo, gợi ý học, kết quả bài thi */
 @Component({
   selector: 'app-student-home',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent, RecoveryEmailComponent],
   templateUrl: './student-home.html',
   styleUrl: './student-home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

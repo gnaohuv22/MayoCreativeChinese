@@ -2,11 +2,14 @@ import { Component, ChangeDetectionStrategy, computed, inject, signal, viewChild
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, STUDENT_PASSWORD_RULES, normalizeVnPhone, type GuestRegisterError } from '../../../../services/auth.service';
+import { GoogleButtonComponent } from '../../../../components/shared/google-button/google-button';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { TurnstileComponent, turnstileEnabled } from '../../../../components/shared/turnstile/turnstile';
 
 const ERRORS: Record<GuestRegisterError, string> = {
+  invalid_email: 'Email chưa đúng định dạng.',
+  email_taken: 'Email này đã có tài khoản. Hãy đăng nhập, hoặc dùng "Quên mật khẩu" nếu không nhớ mật khẩu.',
   invalid_phone: 'Số điện thoại chưa đúng (số di động Việt Nam, 10 chữ số).',
   missing_name: 'Vui lòng nhập họ tên.',
   weak_password: 'Mật khẩu chưa đáp ứng đủ yêu cầu.',
@@ -17,11 +20,11 @@ const ERRORS: Record<GuestRegisterError, string> = {
   captcha_failed: 'Xác minh không thành công. Vui lòng thử lại.',
 };
 
-/** /dang-ky — khách tự tạo tài khoản bằng số điện thoại (migration 021) */
+/** /dang-ky — khách tự tạo tài khoản: email (xác nhận qua thư) + số điện thoại, hoặc Google (migration 022) */
 @Component({
   selector: 'app-guest-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, TurnstileComponent],
+  imports: [FormsModule, RouterLink, NavHeaderComponent, AppIconComponent, TurnstileComponent, GoogleButtonComponent],
   templateUrl: './guest-register.html',
   styleUrl: './guest-register.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +35,7 @@ export class GuestRegisterComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly fullName = signal('');
+  readonly email = signal('');
   readonly phone = signal('');
   readonly password = signal('');
   readonly showPassword = signal(false);
@@ -39,10 +43,16 @@ export class GuestRegisterComponent {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly turnstileToken = signal<string | null>(null);
+  /** Email đã đăng ký, chờ xác nhận qua thư */
+  readonly sentTo = signal<string | null>(null);
+  readonly resendState = signal<'idle' | 'sending' | 'sent' | 'error'>('idle');
   private readonly turnstile = viewChild(TurnstileComponent);
 
   readonly rules = computed(() => STUDENT_PASSWORD_RULES.map(rule => ({ label: rule.label, ok: rule.test(this.password()) })));
   readonly phoneValid = computed(() => normalizeVnPhone(this.phone()) !== null);
+  readonly emailValid = computed(() => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(this.email().trim()));
+  /** Trang muốn quay về sau khi đăng nhập (truyền cho nút Google) */
+  readonly returnUrlParam = this.route.snapshot.queryParamMap.get('returnUrl') ?? undefined;
   /** Giữ returnUrl khi chuyển qua lại giữa đăng ký và đăng nhập */
   readonly returnQuery = computed(() => {
     const url = this.route.snapshot.queryParamMap.get('returnUrl');
@@ -64,6 +74,7 @@ export class GuestRegisterComponent {
     if (this.submitting()) return;
     const problem: GuestRegisterError | null =
       !this.fullName().trim() ? 'missing_name'
+      : !this.emailValid() ? 'invalid_email'
       : !this.phoneValid() ? 'invalid_phone'
       : !this.rules().every(r => r.ok) ? 'weak_password'
       : !this.consent() ? 'no_consent'
@@ -76,6 +87,7 @@ export class GuestRegisterComponent {
     this.submitting.set(true);
     this.error.set(null);
     const res = await this.auth.registerGuest({
+      email: this.email(),
       phone: this.phone(),
       password: this.password(),
       fullName: this.fullName(),
@@ -89,6 +101,14 @@ export class GuestRegisterComponent {
       this.error.set(ERRORS[res.error as GuestRegisterError] ?? res.error);
       return;
     }
-    await this.router.navigateByUrl(this.returnUrl());
+    this.sentTo.set(res.email ?? this.email().trim());
+  }
+
+  async resend() {
+    const email = this.sentTo();
+    if (!email || this.resendState() === 'sending') return;
+    this.resendState.set('sending');
+    const res = await this.auth.resendConfirmation(email);
+    this.resendState.set(res.error ? 'error' : 'sent');
   }
 }

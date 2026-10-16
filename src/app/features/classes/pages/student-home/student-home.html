@@ -13,10 +13,16 @@
         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-mono">{{ auth.username() }}</p>
       </div>
       <div class="flex gap-2">
-        <a routerLink="/hoc-vien/mat-khau" class="mcc-btn mcc-btn-secondary">Đổi mật khẩu</a>
+        @if (auth.hasPassword()) {
+          <a routerLink="/hoc-vien/mat-khau" class="mcc-btn mcc-btn-secondary">Đổi mật khẩu</a>
+        }
         <button type="button" (click)="signOut()" class="mcc-btn mcc-btn-secondary"><app-icon name="logout" size="xs" /> Đăng xuất</button>
       </div>
     </div>
+
+    @if (auth.needsRecoveryEmail()) {
+      <app-recovery-email />
+    }
 
     <!-- Lớp -->
     @if (cls(); as c) {
