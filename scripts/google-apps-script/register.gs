@@ -9,8 +9,11 @@
  * Chống bot (Cloudflare Turnstile): Project Settings › Script Properties › thêm TURNSTILE_SECRET
  * = secret key của widget. Chưa có thuộc tính này thì bỏ qua kiểm tra (form chạy như trước).
  *
- * Cột: A Thời gian · B Họ tên · C Năm sinh · D SĐT · E Email
- *      F Khóa quan tâm · G Hình thức · H Loại đăng ký   (F–H thêm 09/2026 cho trang /khoa-hoc)
+ * Bảng (tab đầu tiên): 2 dòng tiêu đề, dữ liệu từ dòng 3. Cột:
+ *   A STT · B Họ và tên · C Năm sinh · D Số điện thoại · E Email
+ *   F Hình thức học · G Tên khóa học · H Mục tiêu học tập (nhân sự điền)
+ *   I Trạng thái tư vấn (nhân sự điền) · J Ghi chú khác (loại đăng ký + thời gian gửi)
+ * Ghi vào dòng đầu tiên còn trống ở B–E (cột STT đã đánh số sẵn nên không dùng appendRow).
  */
 
 const SHEET_ID = '1lw0sjyzDUvu7GamJ2dEXLm_OD70iGMM1MXbHmvqDg0k';
@@ -20,7 +23,8 @@ const SECURITY_KEY = 'mcc_secret_token_2026_xyz';
 const TURNSTILE_HOSTNAMES = ['www.mayochinese.com', 'mayochinese.com', 'mayo-creative-chinese.vercel.app'];
 const TURNSTILE_ACTION = 'course_register';
 
-const HEADERS = ['Thời gian', 'Họ tên', 'Năm sinh', 'SĐT / Zalo', 'Email', 'Khóa quan tâm', 'Hình thức', 'Loại đăng ký'];
+/** Dòng dữ liệu đầu tiên (dòng 1–2 là tiêu đề gộp ô) */
+const FIRST_DATA_ROW = 3;
 
 const STUDY_MODE_LABELS = {
   online: 'Online',
@@ -52,17 +56,20 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
-    ensureHeaders_(sheet);
-    sheet.appendRow([
-      Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm:ss'),
+    const row = firstEmptyRow_(sheet);
+    const sentAt = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm');
+    // STT đã đánh số sẵn thì giữ nguyên; hết số thì đánh tiếp
+    const stt = sheet.getRange(row, 1);
+    if (stt.getValue() === '') stt.setValue(row - FIRST_DATA_ROW + 1);
+    sheet.getRange(row, 2, 1, 6).setValues([[
       p.fullName,
       p.birthYear || '',
       "'" + p.phoneNumber, // giữ số 0 đầu (Sheets tự đổi thành số nếu không có dấu ')
       p.email || '',
-      p.course || '',
       STUDY_MODE_LABELS[p.studyMode] || p.studyMode || '',
-      INTENT_LABELS[p.intent] || INTENT_LABELS.register,
-    ]);
+      p.course || '',
+    ]]);
+    sheet.getRange(row, 10).setValue((INTENT_LABELS[p.intent] || INTENT_LABELS.register) + ' · gửi lúc ' + sentAt);
   } finally {
     lock.releaseLock();
   }
@@ -97,16 +104,14 @@ function verifyTurnstile_(token) {
   }
 }
 
-/** Thêm tiêu đề cột còn thiếu (không ghi đè tiêu đề đã có) */
-function ensureHeaders_(sheet) {
-  const current = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
-  if (current.every(v => v === '')) {
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
-    return;
+/** Dòng đầu tiên (từ FIRST_DATA_ROW) mà Họ tên, Năm sinh, SĐT, Email (B–E) đều trống */
+function firstEmptyRow_(sheet) {
+  const last = Math.max(sheet.getLastRow(), FIRST_DATA_ROW);
+  const values = sheet.getRange(FIRST_DATA_ROW, 2, last - FIRST_DATA_ROW + 1, 4).getValues();
+  for (let i = 0; i < values.length; i++) {
+    if (values[i].every(v => v === '')) return FIRST_DATA_ROW + i;
   }
-  HEADERS.forEach((h, i) => {
-    if (current[i] === '') sheet.getRange(1, i + 1).setValue(h).setFontWeight('bold');
-  });
+  return last + 1;
 }
 
 function json_(obj) {
