@@ -42,8 +42,9 @@ function doPost(e) {
   if (!p.fullName || !p.phoneNumber) {
     return json_({ status: 'error', message: 'Missing required fields' });
   }
-  if (!verifyTurnstile_(p.turnstileToken)) {
-    return json_({ status: 'error', message: 'captcha_failed' });
+  const captchaProblem = verifyTurnstile_(p.turnstileToken);
+  if (captchaProblem) {
+    return json_({ status: 'error', message: 'captcha_failed', reason: captchaProblem });
   }
 
   // Tránh 2 người gửi cùng lúc ghi đè dòng của nhau
@@ -69,25 +70,30 @@ function doPost(e) {
   return json_({ status: 'success' });
 }
 
-/** Hỏi Cloudflare token có hợp lệ, đúng thao tác, đúng tên miền; lỗi mạng coi là không hợp lệ */
+/**
+ * Hỏi Cloudflare token có hợp lệ, đúng thao tác, đúng tên miền.
+ * Trả '' khi hợp lệ, hoặc lý do (không chứa bí mật) để biết sai ở đâu: mã lỗi của Cloudflare
+ * (vd invalid-input-secret = secret sai), action:<…>, hostname:<…>, no-token, network.
+ */
 function verifyTurnstile_(token) {
-  const secret = PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
-  if (!secret) return true;
-  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return false;
+  const secret = (PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET') || '').trim();
+  if (!secret) return '';
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return 'no-token';
   try {
     const res = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'post',
       payload: { secret: secret, response: token },
       muteHttpExceptions: true,
     });
-    if (res.getResponseCode() !== 200) return false;
+    if (res.getResponseCode() !== 200) return 'http-' + res.getResponseCode();
     const result = JSON.parse(res.getContentText());
-    return result.success === true
-      && result.action === TURNSTILE_ACTION
-      && TURNSTILE_HOSTNAMES.indexOf(result.hostname) !== -1;
+    if (result.success !== true) return (result['error-codes'] || ['unknown']).join(',');
+    if (result.action !== TURNSTILE_ACTION) return 'action:' + result.action;
+    if (TURNSTILE_HOSTNAMES.indexOf(result.hostname) === -1) return 'hostname:' + result.hostname;
+    return '';
   } catch (err) {
     console.error('Turnstile siteverify failed: ' + err);
-    return false;
+    return 'network';
   }
 }
 
