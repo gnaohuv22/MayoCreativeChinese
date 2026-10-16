@@ -7,6 +7,7 @@ import type {
   ClassSuggestion,
   CreatedStudent,
   ExamAttempt,
+  GrantTerm,
   NewStudentRow,
   SchoolClass,
   StaffDirectoryEntry,
@@ -17,11 +18,12 @@ import type {
   SuggestedExamInfo,
 } from '../models/class.model';
 import type { VocabCollection } from '../../flashcards/models/vocab-card.model';
+import type { AccessModule } from '../../../components/shared/visibility/content-visibility';
 
 const CLASS_COLUMNS =
   'id, code, name, course_slug, hsk_level, hsk_version, study_mode, start_date, end_date, schedule, max_students, notes, status, archived_at, created_at, updated_at, staff:class_staff(user_id, role), students:student_profiles(count)';
 const STUDENT_COLUMNS =
-  'user_id, username, full_name, birth_year, phone, email, parent_phone, notes, class_id, status, account_type, must_change_password, created_at';
+  'user_id, username, full_name, birth_year, phone, email, parent_phone, notes, class_id, status, account_type, must_change_password, created_at, access_grants(module, expires_at, note)';
 const SUGGESTION_COLUMNS =
   'id, class_id, kind, exam_id, collection, levels, note, created_at, exam:exams(id, title, hsk_level, hsk_version, visibility)';
 export const ATTEMPT_COLUMNS =
@@ -111,6 +113,27 @@ export class ClassService {
 
   async updateStudent(userId: string, input: StudentProfileInput): Promise<{ error?: string }> {
     const { error } = await this.supabase.rpc('update_student', { p_student: userId, p_data: input });
+    return error ? { error: rpcError(error) } : {};
+  }
+
+  /** Cấp / gia hạn quyền Trả phí (migration 024): còn hạn thì thời lượng cộng vào hạn hiện tại */
+  async grantAccess(userIds: string[], modules: AccessModule[], term: GrantTerm, note: string): Promise<{ error?: string }> {
+    const expired = await sessionError();
+    if (expired) return { error: expired };
+    const { error } = await this.supabase.rpc('grant_access', {
+      p_students: userIds,
+      p_modules: modules,
+      p_until: 'until' in term ? term.until : null,
+      p_duration: 'duration' in term ? term.duration : null,
+      p_note: note,
+    });
+    return error ? { error: rpcError(error) } : {};
+  }
+
+  async revokeAccess(userIds: string[], modules: AccessModule[]): Promise<{ error?: string }> {
+    const expired = await sessionError();
+    if (expired) return { error: expired };
+    const { error } = await this.supabase.rpc('revoke_access', { p_students: userIds, p_modules: modules });
     return error ? { error: rpcError(error) } : {};
   }
 

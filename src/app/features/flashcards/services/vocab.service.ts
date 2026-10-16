@@ -77,7 +77,7 @@ export class VocabService {
   /** Hàm tra quyền xem của người đang xem cho từng cấp (trang học viên) */
   async accessResolver(): Promise<(collection: VocabCollection, levelParam: string) => ContentAccess> {
     const [map] = await Promise.all([this.getVisibility(), this.auth.ready]);
-    const viewer = { staff: this.auth.can('content.read'), student: this.auth.isStudent() };
+    const viewer = this.auth.viewer('flashcards');
     // Cấp "Nội bộ" được gợi ý cho lớp → học viên lớp đó học được
     const suggested = new Set(
       (viewer.student ? await this.studentService.mySuggestions() : [])

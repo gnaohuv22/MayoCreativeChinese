@@ -7,14 +7,14 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
-import { MembersOnlyBadgeComponent } from '../../../../components/shared/visibility/members-only-badge';
+import { AccessBadgeComponent } from '../../../../components/shared/visibility/access-badge';
 import { VisibilityPickerComponent } from '../../../../components/shared/visibility/visibility-picker';
-import { isLockedAccess, type ContentAccess, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
+import { UNLOCK_CONTACT_URL, isLockedAccess, type ContentAccess, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
 
 @Component({
   selector: 'app-exam-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, HskBadgeComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent, MembersOnlyBadgeComponent, VisibilityPickerComponent],
+  imports: [CommonModule, RouterLink, AppIconComponent, HskBadgeComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent, AccessBadgeComponent, VisibilityPickerComponent],
   templateUrl: './exam-card.html',
   styleUrl: './exam-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,8 +34,16 @@ export class ExamCardComponent {
   access = input<ContentAccess>('open');
   /** Đang lưu trạng thái hiển thị (khoá bộ chọn) */
   savingVisibility = input<boolean>(false);
+  /** Người xem chưa đăng nhập: làm bài cần đăng nhập */
+  needsLogin = input<boolean>(false);
+  protected readonly unlockUrl = UNLOCK_CONTACT_URL;
   visibilityChange = output<{ exam: Exam; visibility: ContentVisibility }>();
 
+  /** Nhãn "Học viên" / "Thành viên" / "Trả phí" cho đề khoá theo tài khoản */
+  badgeKind = computed(() => {
+    const access = this.access();
+    return access === 'members' || access === 'login' || access === 'paid' ? access : null;
+  });
   locked = computed(() => this.mode() === 'learner' && isLockedAccess(this.access()));
 
   /** "Nghe hiểu 5 câu · Đọc hiểu 6 câu" — số câu thật của từng phần */

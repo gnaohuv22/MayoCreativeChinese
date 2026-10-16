@@ -24,6 +24,7 @@ import { parseOrderingTokens, type OrderingToken } from '../../models/exam-order
 import { OrderingAnswerComponent } from '../../components/ordering-answer/ordering-answer';
 import type { Exam, ExamSection, ExamQuestion, UserAnswers } from '../../models/exam.model';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
+import { UNLOCK_CONTACT_URL, contentAccess } from '../../../../components/shared/visibility/content-visibility';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
 import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle/theme-toggle';
 
@@ -56,10 +57,9 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   examId = signal<string>('');
   exam = signal<Exam | null>(null);
   isLoading = signal<boolean>(true);
-  /** Đề nội bộ mở bằng link khi chưa đăng nhập */
-  comingSoon = signal<boolean>(false);
-  /** Đề dành cho học viên MCC, người xem chưa đăng nhập tài khoản học viên */
-  membersOnly = signal<boolean>(false);
+  /** Đề người xem chưa làm được: members = cần học viên lớp, login = cần tài khoản, paid = cần cấp quyền, locked = sắp ra mắt */
+  lockedAs = signal<'members' | 'login' | 'paid' | 'locked' | null>(null);
+  protected readonly unlockUrl = UNLOCK_CONTACT_URL;
 
   // Trạng thái phiên thi
   isExamStarted = signal<boolean>(false);
@@ -167,8 +167,8 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     // Đề nội bộ / học viên mà người xem không được làm: đọc được tên đề nhưng RLS không trả câu hỏi
     if (data && data.visibility !== 'public' && !data.sections?.length) {
       await this.auth.ready;
-      this.membersOnly.set(data.visibility === 'students' && !this.auth.isStudent());
-      this.comingSoon.set(!this.membersOnly());
+      const access = contentAccess(data.visibility, this.auth.viewer('exams'));
+      this.lockedAs.set(access === 'members' || access === 'login' || access === 'paid' ? access : 'locked');
       data = null;
     }
     this.exam.set(data);

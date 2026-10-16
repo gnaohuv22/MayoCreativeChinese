@@ -353,12 +353,15 @@ export class ClassDetailComponent {
   }
 
   visibilityChipClass(v: ContentVisibility): string {
-    return {
+    const tones: Record<ContentVisibility, string> = {
       private: 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300',
       staff: 'bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
       students: 'bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+      paid: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+      members: 'bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
       public: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-    }[v];
+    };
+    return tones[v];
   }
 
   // ---------------------------------------------------------------------------

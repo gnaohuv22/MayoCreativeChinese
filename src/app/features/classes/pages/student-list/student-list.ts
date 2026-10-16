@@ -27,7 +27,7 @@ export class StudentListComponent {
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly search = signal('');
-  /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký */
+  /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký, 'paid' = đang có quyền Trả phí */
   readonly classFilter = signal('');
   readonly statusFilter = signal<StudentStatus | 'all'>('active');
 
@@ -43,6 +43,7 @@ export class StudentListComponent {
       (status === 'all' || s.status === status)
       && (!cls
         || (cls === 'guest' ? s.account_type === 'guest'
+          : cls === 'paid' ? (s.access_grants ?? []).some(g => !g.expires_at || Date.parse(g.expires_at) > Date.now())
           : cls === 'none' ? !s.class_id && s.account_type === 'student'
           : s.class_id === cls))
       && (!q

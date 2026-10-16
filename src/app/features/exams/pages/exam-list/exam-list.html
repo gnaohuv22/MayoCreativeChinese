@@ -213,6 +213,7 @@
             [exam]="item"
             mode="learner"
             [access]="accessOf(item)"
+            [needsLogin]="!signedIn()"
             (start)="startExam($event)"
           />
         }

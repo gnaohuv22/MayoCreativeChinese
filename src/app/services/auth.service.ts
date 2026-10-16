@@ -1,4 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import type { AccessModule, ContentViewer } from '../components/shared/visibility/content-visibility';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase.client';
 import { AdminPresence } from './admin-presence';
@@ -49,6 +50,7 @@ export type Permission =
   | 'staff.manage'
   | 'activity.read'
   | 'role.manage'
+  | 'access.manage'
   | 'class.manage'
   | 'class.all'
   | 'class.delete'
@@ -73,6 +75,13 @@ export interface StudentContext {
   account_type: 'student' | 'guest';
   must_change_password: boolean;
   class: StudentClassInfo | null;
+  /** Quyền Trả phí còn hạn (migration 024); expires_at null = không thời hạn */
+  access?: AccessGrant[];
+}
+
+export interface AccessGrant {
+  module: AccessModule;
+  expires_at: string | null;
 }
 
 export interface StudentClassInfo {
@@ -152,6 +161,8 @@ export class AuthService {
   /** Học viên lớp: mở nội dung "Học viên" */
   readonly isStudent = computed(() => this.studentContext()?.account_type === 'student');
   readonly isGuest = computed(() => this.studentContext()?.account_type === 'guest');
+  /** Quyền Trả phí được cấp còn hạn */
+  readonly accessGrants = computed<AccessGrant[]>(() => this.studentContext()?.access ?? []);
   readonly student = this.studentContext.asReadonly();
   readonly userId = computed(() => this.session()?.user.id ?? null);
   /** Email đăng nhập; email nội bộ của khách cũ / học viên lớp không nhận được thư */
@@ -210,6 +221,23 @@ export class AuthService {
       if (viewer !== lastViewer) RequestCache.clearAll();
       lastViewer = viewer;
     });
+  }
+
+  /** Mở được nội dung Trả phí của module: nhân sự xem nội dung, học viên lớp, hoặc được cấp quyền còn hạn */
+  hasAccess(module: AccessModule): boolean {
+    if (this.can('content.read') || this.isStudent()) return true;
+    const now = Date.now();
+    return this.accessGrants().some(g => g.module === module && (!g.expires_at || Date.parse(g.expires_at) > now));
+  }
+
+  /** Người đang xem trang học viên, cho module đang xem */
+  viewer(module: AccessModule): ContentViewer {
+    return {
+      staff: this.can('content.read'),
+      student: this.isStudent(),
+      learner: this.isLearner(),
+      paid: this.hasAccess(module),
+    };
   }
 
   can(permission: Permission): boolean {

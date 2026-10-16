@@ -6,8 +6,8 @@ import { ProgressService } from '../../services/progress.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
-import { MembersOnlyBadgeComponent } from '../../../../components/shared/visibility/members-only-badge';
-import { isLockedAccess } from '../../../../components/shared/visibility/content-visibility';
+import { AccessBadgeComponent } from '../../../../components/shared/visibility/access-badge';
+import { UNLOCK_CONTACT_URL, isLockedAccess } from '../../../../components/shared/visibility/content-visibility';
 import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection, VocabScope } from '../../models/vocab-card.model';
 import { scopeLevelLabel, scopeRoutes } from '../../utils/vocab-scope.util';
@@ -23,7 +23,8 @@ export interface CollectionLevelCard {
   /** Cấp nội bộ — chỉ nhân sự thấy */
   staffOnly: boolean;
   /** Khách xem cấp dành cho học viên MCC */
-  membersOnly: boolean;
+  /** Khoá theo tài khoản: members = học viên lớp, login = cần đăng nhập, paid = cần cấp quyền */
+  lockedAs: 'members' | 'login' | 'paid' | null;
   studyRoute: string[];
   listRoute: string[];
   quizRoute: string[];
@@ -32,7 +33,7 @@ export interface CollectionLevelCard {
 @Component({
   selector: 'app-vocab-level-picker',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent, MembersOnlyBadgeComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent, StaffOnlyBadgeComponent, AccessBadgeComponent],
   templateUrl: './vocab-level-picker.html',
   styleUrl: './vocab-level-picker.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,6 +60,8 @@ export class VocabLevelPickerComponent implements OnInit {
     combined: 'Từ sơ cấp 1 đến cao cấp 9 theo Tiêu chuẩn phân cấp trình độ giáo dục Trung văn quốc tế',
     supplement: 'Từ vựng cần học thêm khi chuyển từ HSK 2.0 lên HSK 3.0, chia theo chủ đề',
   };
+
+  protected readonly unlockUrl = UNLOCK_CONTACT_URL;
 
   async ngOnInit() {
     this.route.data.subscribe(async data => {
@@ -104,7 +107,7 @@ export class VocabLevelPickerComponent implements OnInit {
           mastered,
           hasData: count > 0,
           staffOnly: levelAccess === 'staff',
-          membersOnly: levelAccess === 'members',
+          lockedAs: levelAccess === 'members' || levelAccess === 'login' || levelAccess === 'paid' ? levelAccess : null,
           // Bộ chia nhỏ → vào trang chọn bài / chủ đề; bộ phẳng → vào flashcard
           studyRoute: config.grouping ? routes.back : routes.study,
           listRoute: routes.list,

@@ -23,6 +23,7 @@
         @if (hasGuests()) {
           <option value="guest">Khách tự đăng ký</option>
         }
+        <option value="paid">Đang có quyền trả phí</option>
       </select>
       <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc trạng thái">
         <option value="all">Mọi trạng thái</option>
