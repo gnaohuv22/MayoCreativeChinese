@@ -112,3 +112,22 @@ function ensureHeaders_(sheet) {
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * Chạy tay trong trình soạn thảo (chọn kiemTraTurnstile › Chạy) để kiểm tra script gọi được Cloudflare:
+ * Nhật ký thực thi in phản hồi của Cloudflare, hoặc lỗi quyền nếu script chưa được cấp quyền gọi ra ngoài.
+ */
+function kiemTraTurnstile() {
+  const secret = (PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET') || '').trim();
+  console.log('TURNSTILE_SECRET: ' + (secret ? 'có, ' + secret.length + ' ký tự' : 'CHƯA CÓ'));
+  try {
+    const res = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'post',
+      payload: { secret: secret, response: 'kiem-tra' },
+      muteHttpExceptions: true,
+    });
+    console.log('Cloudflare trả về ' + res.getResponseCode() + ': ' + res.getContentText());
+  } catch (err) {
+    console.error('Không gọi được Cloudflare: ' + err);
+  }
+}
