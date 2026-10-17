@@ -78,7 +78,7 @@
       </section>
 
       <section class="mcc-card p-6 space-y-4" aria-labelledby="paid-access-title">
-        <h2 id="paid-access-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Nội dung trả phí</h2>
+        <h2 id="paid-access-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Nội dung Mayo+</h2>
         <ul class="grid sm:grid-cols-2 gap-3">
           @for (m of paidModules(); track m.module) {
             <li class="flex items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
@@ -95,7 +95,7 @@
         </ul>
         @if (hasClosedModule()) {
           <p class="text-sm text-zinc-600 dark:text-zinc-300">
-            Muốn mở khoá đề thi và từ vựng trả phí?
+            Muốn mở khoá đề thi và từ vựng Mayo+?
             <a [href]="unlockUrl" target="_blank" rel="noopener" class="font-bold text-brand-pink hover:underline">Liên hệ MCC</a>
           </p>
         }

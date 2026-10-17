@@ -131,15 +131,24 @@ export class VocabService {
 
   /** Như fetchAll, kèm cờ ok = false khi có trang lỗi (kết quả thiếu, không nên cache) */
   private async fetchAllChecked<T>(build: () => any): Promise<{ rows: T[]; ok: boolean }> {
-    const rows: T[] = [];
-    for (let from = 0; ; from += PAGE) {
-      const { data, error } = await build().range(from, from + PAGE - 1);
-      if (error) {
-        console.error('Vocab query failed:', error);
+    // Trang đầu kèm tổng số dòng → các trang còn lại tải song song
+    const first = await build().range(0, PAGE - 1).setHeader('Prefer', 'count=exact');
+    if (first.error) {
+      console.error('Vocab query failed:', first.error);
+      return { rows: [], ok: false };
+    }
+    const rows: T[] = [...(first.data ?? [])];
+    const total = first.count ?? rows.length;
+    const rest = await Promise.all(
+      Array.from({ length: Math.max(0, Math.ceil(total / PAGE) - 1) }, (_, i) =>
+        build().range((i + 1) * PAGE, (i + 2) * PAGE - 1)),
+    );
+    for (const page of rest) {
+      if (page.error) {
+        console.error('Vocab query failed:', page.error);
         return { rows, ok: false };
       }
-      rows.push(...(data ?? []));
-      if (!data || data.length < PAGE) break;
+      rows.push(...(page.data ?? []));
     }
     return { rows, ok: true };
   }
@@ -201,9 +210,11 @@ export class VocabService {
   /** Toàn bộ số từ theo từng cấp cho cả 4 bộ, gom trong 1 query và cache chung */
   async getAllLevelCounts(): Promise<Record<VocabCollection, Map<number, number>>> {
     const { allCounts } = await this.cache.get('counts:all', async () => {
-      const { rows, ok } = await this.fetchAllChecked<{ collection: VocabCollection; hsk_level: number }>(() =>
-        this.supabase.from('vocab_cards').select('collection, hsk_level')
-      );
+      // Đếm sẵn trên server (migration 025), RLS vẫn áp dụng
+      const { data, error } = await this.supabase.rpc('vocab_level_counts');
+      if (error) console.error('Vocab count failed:', error);
+      const rows = (data ?? []) as { collection: VocabCollection; hsk_level: number; cards: number }[];
+      const ok = !error;
       const allCounts: Record<VocabCollection, Map<number, number>> = {
         hsk2: new Map(),
         hsk3: new Map(),
@@ -213,7 +224,7 @@ export class VocabService {
       for (const r of rows) {
         if (!r.collection || !allCounts[r.collection]) continue;
         const m = allCounts[r.collection];
-        m.set(r.hsk_level, (m.get(r.hsk_level) ?? 0) + 1);
+        m.set(r.hsk_level, (m.get(r.hsk_level) ?? 0) + Number(r.cards));
       }
       return { allCounts, ok };
     }, r => r.ok);

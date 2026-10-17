@@ -1,9 +1,12 @@
 <div class="inline-flex flex-wrap p-0.5 rounded-2xl bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10"
      role="radiogroup" [attr.aria-label]="label()">
-  @for (opt of options; track opt.value) {
-    <button type="button" role="radio"
+  @for (opt of options; track opt.value; let i = $index) {
+    <button #option type="button" role="radio"
             [attr.aria-checked]="value() === opt.value"
+            [attr.tabindex]="value() === opt.value ? 0 : -1"
+            [title]="opt.audience"
             [disabled]="disabled()"
+            (keydown)="onKeydown($event, i)"
             (click)="value() !== opt.value && changed.emit(opt.value)"
             class="px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
             [class]="value() === opt.value ? activeClass[opt.value] : 'text-zinc-600 dark:text-zinc-300 hover:text-brand-navy dark:hover:text-white'">

@@ -39,7 +39,7 @@ export class StudentHomeComponent {
 
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
 
-  /** Quyền Trả phí của khách: còn hạn đến ngày nào */
+  /** Quyền Mayo+ của khách: còn hạn đến ngày nào */
   readonly paidModules = computed(() =>
     (Object.keys(ACCESS_MODULE_LABELS) as AccessModule[]).map(module => {
       const grant = this.auth.accessGrants().find(g => g.module === module);
@@ -65,7 +65,7 @@ export class StudentHomeComponent {
   });
 
   constructor() {
-    // Quyền Trả phí có thể vừa được cấp trong lúc đang đăng nhập
+    // Quyền Mayo+ có thể vừa được cấp trong lúc đang đăng nhập
     this.auth.loadContext();
     this.load();
   }

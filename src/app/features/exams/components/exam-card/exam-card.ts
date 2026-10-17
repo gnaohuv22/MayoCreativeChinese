@@ -9,7 +9,7 @@ import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/co
 import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
 import { AccessBadgeComponent } from '../../../../components/shared/visibility/access-badge';
 import { VisibilityPickerComponent } from '../../../../components/shared/visibility/visibility-picker';
-import { UNLOCK_CONTACT_URL, isLockedAccess, type ContentAccess, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
+import { UNLOCK_CONTACT_URL, accountLock, isLockedAccess, type ContentAccess, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
 
 @Component({
   selector: 'app-exam-card',
@@ -39,11 +39,8 @@ export class ExamCardComponent {
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
   visibilityChange = output<{ exam: Exam; visibility: ContentVisibility }>();
 
-  /** Nhãn "Học viên" / "Thành viên" / "Trả phí" cho đề khoá theo tài khoản */
-  badgeKind = computed(() => {
-    const access = this.access();
-    return access === 'members' || access === 'login' || access === 'paid' ? access : null;
-  });
+  /** Nhãn "Học viên" / "Thành viên" / "Mayo+" cho đề khoá theo tài khoản */
+  badgeKind = computed(() => accountLock(this.access()));
   locked = computed(() => this.mode() === 'learner' && isLockedAccess(this.access()));
 
   /** "Nghe hiểu 5 câu · Đọc hiểu 6 câu" — số câu thật của từng phần */

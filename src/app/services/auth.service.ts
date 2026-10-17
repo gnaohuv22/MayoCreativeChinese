@@ -1,5 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import type { AccessModule, ContentViewer } from '../components/shared/visibility/content-visibility';
+import { isGrantActive, type AccessModule, type ContentViewer } from '../components/shared/visibility/content-visibility';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase.client';
 import { AdminPresence } from './admin-presence';
@@ -75,7 +75,7 @@ export interface StudentContext {
   account_type: 'student' | 'guest';
   must_change_password: boolean;
   class: StudentClassInfo | null;
-  /** Quyền Trả phí còn hạn (migration 024); expires_at null = không thời hạn */
+  /** Quyền Mayo+ còn hạn (migration 024); expires_at null = không thời hạn */
   access?: AccessGrant[];
 }
 
@@ -161,7 +161,7 @@ export class AuthService {
   /** Học viên lớp: mở nội dung "Học viên" */
   readonly isStudent = computed(() => this.studentContext()?.account_type === 'student');
   readonly isGuest = computed(() => this.studentContext()?.account_type === 'guest');
-  /** Quyền Trả phí được cấp còn hạn */
+  /** Quyền Mayo+ được cấp còn hạn */
   readonly accessGrants = computed<AccessGrant[]>(() => this.studentContext()?.access ?? []);
   readonly student = this.studentContext.asReadonly();
   readonly userId = computed(() => this.session()?.user.id ?? null);
@@ -223,11 +223,10 @@ export class AuthService {
     });
   }
 
-  /** Mở được nội dung Trả phí của module: nhân sự xem nội dung, học viên lớp, hoặc được cấp quyền còn hạn */
+  /** Mở được nội dung Mayo+ của module: nhân sự xem nội dung, học viên lớp, hoặc được cấp quyền còn hạn */
   hasAccess(module: AccessModule): boolean {
     if (this.can('content.read') || this.isStudent()) return true;
-    const now = Date.now();
-    return this.accessGrants().some(g => g.module === module && (!g.expires_at || Date.parse(g.expires_at) > now));
+    return this.accessGrants().some(g => g.module === module && isGrantActive(g));
   }
 
   /** Người đang xem trang học viên, cho module đang xem */

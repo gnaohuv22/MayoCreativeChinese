@@ -8,7 +8,7 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { StaffOnlyBadgeComponent } from '../../../../components/shared/visibility/staff-only-badge';
 import { AccessBadgeComponent } from '../../../../components/shared/visibility/access-badge';
-import { UNLOCK_CONTACT_URL, isLockedAccess } from '../../../../components/shared/visibility/content-visibility';
+import { UNLOCK_CONTACT_URL, accountLock, isLockedAccess, type AccountLock } from '../../../../components/shared/visibility/content-visibility';
 import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection, VocabScope } from '../../models/vocab-card.model';
 import { scopeLevelLabel, scopeRoutes } from '../../utils/vocab-scope.util';
@@ -23,9 +23,8 @@ export interface CollectionLevelCard {
   hasData: boolean;
   /** Cấp nội bộ — chỉ nhân sự thấy */
   staffOnly: boolean;
-  /** Khách xem cấp dành cho học viên MCC */
-  /** Khoá theo tài khoản: members = học viên lớp, login = cần đăng nhập, paid = cần cấp quyền */
-  lockedAs: 'members' | 'login' | 'paid' | null;
+  /** Khoá theo tài khoản: class = học viên lớp, login = cần đăng nhập, paid = cần cấp quyền */
+  lockedAs: AccountLock | null;
   studyRoute: string[];
   listRoute: string[];
   quizRoute: string[];
@@ -64,7 +63,7 @@ export class VocabLevelPickerComponent implements OnInit {
 
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
   private readonly auth = inject(AuthService);
-  /** Khách chưa đăng nhập: nội dung Trả phí mời đăng nhập trước */
+  /** Khách chưa đăng nhập: nội dung Mayo+ mời đăng nhập trước */
   readonly signedIn = computed(() => this.auth.isLearner() || this.auth.isStaff());
 
   async ngOnInit() {
@@ -82,9 +81,10 @@ export class VocabLevelPickerComponent implements OnInit {
     this.subtitle.set(this.SUBTITLES[col]);
 
     try {
-      const [counts, access] = await Promise.all([
+      const [counts, access, hasProgress] = await Promise.all([
         this.vocabService.getLevelCounts(col),
         this.vocabService.accessResolver(),
+        this.progressService.hasAnyProgress(),
       ]);
 
       const list = await Promise.all(config.levelParams.map(async param => {
@@ -95,7 +95,7 @@ export class VocabLevelPickerComponent implements OnInit {
 
         let reviewed = 0;
         let mastered = 0;
-        if (count > 0) {
+        if (count > 0 && hasProgress) {
           const refs = await this.vocabService.getCardRefsForScope(scope);
           const stats = await this.progressService.getStatsForCards(refs);
           reviewed = stats.reviewed;
@@ -111,7 +111,7 @@ export class VocabLevelPickerComponent implements OnInit {
           mastered,
           hasData: count > 0,
           staffOnly: levelAccess === 'staff',
-          lockedAs: levelAccess === 'members' || levelAccess === 'login' || levelAccess === 'paid' ? levelAccess : null,
+          lockedAs: accountLock(levelAccess),
           // Bộ chia nhỏ → vào trang chọn bài / chủ đề; bộ phẳng → vào flashcard
           studyRoute: config.grouping ? routes.back : routes.study,
           listRoute: routes.list,

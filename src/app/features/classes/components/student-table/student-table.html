@@ -33,12 +33,12 @@
           <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()" aria-label="Chọn tất cả" class="accent-brand-pink cursor-pointer" />
         </th>
         <th class="px-3 py-3 font-bold">Học viên</th>
+        <th class="px-3 py-3 font-bold">Mayo+</th>
         <th class="px-3 py-3 font-bold">Tên đăng nhập</th>
         @if (showClass()) {
           <th class="px-3 py-3 font-bold">Lớp</th>
         }
         <th class="px-3 py-3 font-bold">Liên hệ</th>
-        <th class="px-3 py-3 font-bold">Trả phí</th>
         <th class="px-3 py-3 font-bold">Trạng thái</th>
         <th class="px-3 py-3"></th>
       </tr>
@@ -53,6 +53,26 @@
             <p class="font-bold text-brand-navy dark:text-white">{{ s.full_name }}</p>
             @if (s.birth_year) {
               <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Sinh năm {{ s.birth_year }}</p>
+            }
+          </td>
+          <td class="px-3 py-3 text-[11px] whitespace-nowrap">
+            @if (s.account_type === 'student' && s.class_id) {
+              <span class="text-zinc-500 dark:text-zinc-400">Theo lớp</span>
+            }
+            @for (g of grantsOf(s); track g.module) {
+              <p [class]="g.active ? 'font-bold text-amber-700 dark:text-amber-300' : 'text-zinc-400 dark:text-zinc-500 line-through'">
+                {{ moduleLabels[g.module] }} · {{ g.expires_at ? (g.active ? 'đến ' : 'hết ') + formatDate(g.expires_at) : 'không hạn' }}
+              </p>
+              @if (g.note) {
+                <p class="text-zinc-500 dark:text-zinc-400 truncate max-w-48">{{ g.note }}</p>
+              }
+            }
+            @if (auth.can('access.manage')) {
+              <button type="button" (click)="openGrant([s])" class="mt-1 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10 cursor-pointer" [attr.aria-label]="'Cấp quyền cho ' + s.full_name">
+                <app-icon name="sparkles" size="xs" /> Cấp quyền
+              </button>
+            } @else if (!grantsOf(s).length && s.account_type === 'guest') {
+              <span class="text-zinc-400 dark:text-zinc-500">—</span>
             }
           </td>
           <td class="px-3 py-3 font-mono text-xs whitespace-nowrap">{{ s.username }}</td>
@@ -70,22 +90,7 @@
           <td class="px-3 py-3 text-xs text-zinc-600 dark:text-zinc-300">
             @if (s.phone) { <p>{{ s.phone }}</p> }
             @if (s.parent_phone) { <p>PH: {{ s.parent_phone }}</p> }
-            @if (s.email) { <p class="truncate max-w-48">{{ s.email }}</p> }
-          </td>
-          <td class="px-3 py-3 text-[11px] whitespace-nowrap">
-            @if (s.account_type === 'student' && s.class_id) {
-              <span class="text-zinc-500 dark:text-zinc-400">Theo lớp</span>
-            }
-            @for (g of grantsOf(s); track g.module) {
-              <p [class]="g.active ? 'font-bold text-amber-700 dark:text-amber-300' : 'text-zinc-400 dark:text-zinc-500 line-through'"
-                 [attr.title]="g.note || null">
-                {{ moduleLabels[g.module] }} · {{ g.expires_at ? (g.active ? 'đến ' : 'hết ') + formatDate(g.expires_at) : 'không hạn' }}
-              </p>
-            } @empty {
-              @if (s.account_type === 'guest') {
-                <span class="text-zinc-400 dark:text-zinc-500">—</span>
-              }
-            }
+            @if (s.email && s.email !== s.username) { <p class="truncate max-w-48">{{ s.email }}</p> }
           </td>
           <td class="px-3 py-3">
             <span class="mcc-chip" [class]="statusClass(s.status)">{{ statusLabels[s.status] }}</span>
@@ -95,11 +100,6 @@
           </td>
           <td class="px-3 py-3">
             <div class="flex justify-end gap-1.5">
-              @if (auth.can('access.manage')) {
-                <button type="button" (click)="openGrant([s])" class="p-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-500/10 text-amber-600 dark:text-amber-300 cursor-pointer" [attr.aria-label]="'Cấp quyền cho ' + s.full_name" title="Cấp quyền trả phí">
-                  <app-icon name="sparkles" size="xs" />
-                </button>
-              }
               <button type="button" (click)="openEdit(s)" class="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" [attr.aria-label]="'Sửa ' + s.full_name" title="Sửa hồ sơ">
                 <app-icon name="pencil" size="xs" />
               </button>
@@ -278,13 +278,13 @@
   }
 </dialog>
 
-<!-- Cấp / thu hồi quyền Trả phí -->
+<!-- Cấp / thu hồi quyền Mayo+ -->
 <dialog #grantDialog aria-labelledby="grant-title" class="mcc-dialog max-w-md">
   @if (grantTargets().length) {
     <form (ngSubmit)="submitGrant()" class="p-6 sm:p-7 space-y-4">
       <div class="flex items-start justify-between gap-4">
         <h2 id="grant-title" class="text-lg font-black font-display">
-          {{ grantMode() === 'grant' ? 'Cấp quyền trả phí' : 'Thu hồi quyền trả phí' }} · {{ grantTargets().length }} tài khoản
+          {{ grantMode() === 'grant' ? 'Cấp quyền Mayo+' : 'Thu hồi quyền Mayo+' }} · {{ grantTargets().length }} tài khoản
         </h2>
         <button type="button" (click)="grantDialog.close()" class="p-1.5 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
           <app-icon name="x-mark" size="sm" />
@@ -301,7 +301,9 @@
         <div class="flex flex-wrap gap-2">
           @for (m of modules; track m) {
             <label class="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer text-sm font-bold"
-                   [class]="grantModules().has(m) ? 'border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200' : 'border-brand-navy/10 dark:border-white/10 text-zinc-600 dark:text-zinc-300'">
+                   [class]="!grantModules().has(m) ? 'border-brand-navy/10 dark:border-white/10 text-zinc-600 dark:text-zinc-300'
+                     : grantMode() === 'revoke' ? 'border-red-500/50 bg-red-50 text-red-800 dark:bg-red-500/15 dark:text-red-200'
+                     : 'border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'">
               <input type="checkbox" [checked]="grantModules().has(m)" (change)="toggleGrantModule(m)" class="accent-brand-pink" />
               {{ moduleLabels[m] }}
             </label>
@@ -320,18 +322,31 @@
         </label>
         @if (grantTerm() === 'until') {
           <label class="block space-y-1.5">
-            <span class="mcc-label">Hết hạn sau ngày</span>
+            <span class="mcc-label">Dùng đến hết ngày</span>
             <input name="until" type="date" [min]="minUntil()" [ngModel]="grantUntil()" (ngModelChange)="grantUntil.set($event)" class="mcc-input" />
           </label>
-        } @else if (grantTerm() !== 'unlimited') {
-          <p class="text-xs text-zinc-600 dark:text-zinc-300">Tài khoản còn hạn được cộng thêm vào hạn hiện tại.</p>
         }
         <label class="block space-y-1.5">
           <span class="mcc-label">Ghi chú</span>
           <input name="note" maxlength="500" [ngModel]="grantNote()" (ngModelChange)="grantNote.set($event)" placeholder="VD: chuyển khoản 16/10, gói 3 tháng" class="mcc-input" />
         </label>
       } @else {
-        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tài khoản sẽ không mở được nội dung Trả phí của mục đã chọn nữa.</p>
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tài khoản sẽ không mở được nội dung Mayo+ của mục đã chọn nữa.</p>
+      }
+
+      @if (grantPreview().length) {
+        <ul class="rounded-2xl bg-zinc-50 dark:bg-white/5 px-4 py-3 space-y-1 text-xs" aria-label="Thay đổi sau khi lưu">
+          @for (p of grantPreview(); track p.label) {
+            <li class="flex items-center justify-between gap-3">
+              <span class="font-bold text-brand-navy dark:text-white">{{ p.label }}</span>
+              <span class="tabular-nums text-zinc-600 dark:text-zinc-300">
+                {{ p.before }} → <span class="font-bold" [class]="grantMode() === 'revoke' ? 'text-red-600 dark:text-red-400' : 'text-amber-700 dark:text-amber-300'">{{ p.after }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-xs text-zinc-600 dark:text-zinc-300">Chọn ít nhất một mục.</p>
       }
 
       @if (grantError()) {

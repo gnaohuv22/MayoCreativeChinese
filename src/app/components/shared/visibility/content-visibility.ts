@@ -2,25 +2,25 @@
 export type ContentVisibility = 'private' | 'staff' | 'students' | 'paid' | 'members' | 'public';
 
 /** Từ chặt tới mở */
-export const VISIBILITY_OPTIONS: { value: ContentVisibility; label: string }[] = [
-  { value: 'private', label: 'Bản nháp' },
-  { value: 'staff', label: 'Nội bộ' },
-  { value: 'students', label: 'Học viên' },
-  { value: 'paid', label: 'Trả phí' },
-  { value: 'members', label: 'Thành viên' },
-  { value: 'public', label: 'Công khai' },
+export const VISIBILITY_OPTIONS: { value: ContentVisibility; label: string; audience: string }[] = [
+  { value: 'private', label: 'Bản nháp', audience: 'Chỉ thấy trong khu quản trị' },
+  { value: 'staff', label: 'Nội bộ', audience: 'Nhân sự và lớp được gợi ý' },
+  { value: 'students', label: 'Học viên', audience: 'Học viên lớp MCC' },
+  { value: 'paid', label: 'Mayo+', audience: 'Học viên lớp và tài khoản được cấp quyền' },
+  { value: 'members', label: 'Thành viên', audience: 'Mọi tài khoản đã đăng nhập' },
+  { value: 'public', label: 'Công khai', audience: 'Tất cả, kể cả chưa đăng nhập' },
 ];
 
 export const VISIBILITY_LABELS: Record<ContentVisibility, string> = {
   private: 'Bản nháp',
   staff: 'Nội bộ',
   students: 'Học viên',
-  paid: 'Trả phí',
+  paid: 'Mayo+',
   members: 'Thành viên',
   public: 'Công khai',
 };
 
-/** Module cấp quyền Trả phí (access_grants.module) */
+/** Module cấp quyền Mayo+ (access_grants.module) */
 export type AccessModule = 'flashcards' | 'exams';
 
 export const ACCESS_MODULE_LABELS: Record<AccessModule, string> = {
@@ -28,7 +28,12 @@ export const ACCESS_MODULE_LABELS: Record<AccessModule, string> = {
   exams: 'Đề thi HSK',
 };
 
-/** Nơi liên hệ để mở khoá nội dung Trả phí */
+/** Quyền còn hạn (expires_at null = không thời hạn) */
+export function isGrantActive(grant: { expires_at: string | null }, now = Date.now()): boolean {
+  return !grant.expires_at || Date.parse(grant.expires_at) > now;
+}
+
+/** Nơi liên hệ để mở khoá nội dung Mayo+ */
 export const UNLOCK_CONTACT_URL = 'https://www.facebook.com/mayocreativechinese';
 
 /** Người đang xem trang học viên */
@@ -38,19 +43,26 @@ export interface ContentViewer {
   student: boolean;
   /** Đã đăng nhập tài khoản học viên (khách tự đăng ký hoặc học viên lớp) */
   learner?: boolean;
-  /** Mở được nội dung Trả phí của module đang xem (học viên lớp hoặc được cấp quyền còn hạn) */
+  /** Mở được nội dung Mayo+ của module đang xem (học viên lớp hoặc được cấp quyền còn hạn) */
   paid?: boolean;
 }
 
 /**
  * Người xem trang học viên thấy nội dung thế nào:
  * open = học/thi bình thường, staff = như open nhưng đánh dấu "Nội bộ",
- * members = cần tài khoản học viên lớp ("Học viên"), login = cần đăng nhập ("Thành viên"),
- * paid = cần được cấp quyền ("Trả phí"), locked = "Sắp ra mắt".
+ * class = chỉ học viên lớp MCC ("Học viên"), login = cần đăng nhập ("Thành viên"),
+ * paid = cần được cấp quyền ("Mayo+"), locked = "Sắp ra mắt".
  * Nội dung "Nội bộ" được gợi ý cho lớp thì học viên lớp đó mở được (`suggested`).
  * Bản nháp luôn khoá ở trang học viên, kể cả với nhân sự (xem trong khu quản trị).
  */
-export type ContentAccess = 'open' | 'staff' | 'members' | 'login' | 'paid' | 'locked';
+export type ContentAccess = 'open' | 'staff' | 'class' | 'login' | 'paid' | 'locked';
+
+/** Khoá theo tài khoản (hiện nhãn + lời mời đăng nhập / liên hệ) */
+export type AccountLock = 'class' | 'login' | 'paid';
+
+export function accountLock(access: ContentAccess): AccountLock | null {
+  return access === 'class' || access === 'login' || access === 'paid' ? access : null;
+}
 
 export function contentAccess(visibility: ContentVisibility, viewer: ContentViewer, suggested = false): ContentAccess {
   switch (visibility) {
@@ -61,7 +73,7 @@ export function contentAccess(visibility: ContentVisibility, viewer: ContentView
     case 'paid':
       return viewer.staff || viewer.student || viewer.paid ? 'open' : 'paid';
     case 'students':
-      return viewer.staff || viewer.student ? 'open' : 'members';
+      return viewer.staff || viewer.student ? 'open' : 'class';
     case 'staff':
       if (viewer.staff) return 'staff';
       if (viewer.student && suggested) return 'open';

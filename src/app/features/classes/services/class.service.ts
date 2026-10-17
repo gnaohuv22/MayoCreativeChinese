@@ -116,7 +116,7 @@ export class ClassService {
     return error ? { error: rpcError(error) } : {};
   }
 
-  /** Cấp / gia hạn quyền Trả phí (migration 024): còn hạn thì thời lượng cộng vào hạn hiện tại */
+  /** Cấp / gia hạn quyền Mayo+ (migration 024): còn hạn thì thời lượng cộng vào hạn hiện tại */
   async grantAccess(userIds: string[], modules: AccessModule[], term: GrantTerm, note: string): Promise<{ error?: string }> {
     const expired = await sessionError();
     if (expired) return { error: expired };

@@ -69,12 +69,6 @@ export function exportAsJson(cards: VocabCard[], filename: string): void {
   triggerDownload(blob, filename);
 }
 
-/** Export progress data as JSON download */
-export function exportProgressJson(jsonStr: string): void {
-  const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
-  triggerDownload(blob, `flashcard-progress-${new Date().toISOString().slice(0, 10)}.json`);
-}
-
 function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

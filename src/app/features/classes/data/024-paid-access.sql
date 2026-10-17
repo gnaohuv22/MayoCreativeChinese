@@ -3,11 +3,11 @@
 -- ==============================================================================
 -- Mức hiển thị mới cho đề thi và cấp từ vựng:
 --   members (Thành viên) — mọi tài khoản học viên đang hoạt động (khách tự đăng ký + học viên lớp)
---   paid    (Trả phí)    — học viên lớp đang hoạt động + tài khoản được cấp quyền module còn hạn
--- Quyền cấp theo cả module: 'flashcards' (mọi cấp từ vựng Trả phí) hoặc 'exams' (mọi đề Trả phí),
+--   paid    (Mayo+)    — học viên lớp đang hoạt động + tài khoản được cấp quyền module còn hạn
+-- Quyền cấp theo cả module: 'flashcards' (mọi cấp từ vựng Mayo+) hoặc 'exams' (mọi đề Mayo+),
 -- có hạn (expires_at) hoặc không thời hạn (null). Nhân sự có quyền access.manage cấp / thu hồi.
--- Đề "Công khai" vẫn mở cho khách chưa đăng nhập ở tầng CSDL tới khi áp 024b (bản www cũ còn cho
--- làm đề không cần đăng nhập). Chạy được nhiều lần.
+-- Đề thi cần đăng nhập (gộp 024b, đã phát hành 17/10/2026) — chạy lại file này không gỡ quy tắc đó.
+-- Chạy được nhiều lần.
 
 -- ------------------------------------------------------------------------------
 -- Mức hiển thị
@@ -27,7 +27,7 @@ immutable
 set search_path = ''
 as $$
   select case p_visibility
-    when 'public' then 'Công khai' when 'members' then 'Thành viên' when 'paid' then 'Trả phí'
+    when 'public' then 'Công khai' when 'members' then 'Thành viên' when 'paid' then 'Mayo+'
     when 'students' then 'Học viên' when 'staff' then 'Nội bộ' else 'Bản nháp' end
 $$;
 
@@ -47,7 +47,7 @@ $$;
 -- Quyền cấp / thu hồi
 -- ------------------------------------------------------------------------------
 insert into public.permissions (id, label, description, grp, sort_order) values
-  ('access.manage', 'Cấp quyền nội dung trả phí', 'Cấp, gia hạn, thu hồi quyền Flashcards / Đề thi HSK cho tài khoản học viên.', 'class', 15)
+  ('access.manage', 'Cấp quyền Mayo+', 'Cấp, gia hạn, thu hồi Mayo+ (Flashcards / Đề thi HSK) cho tài khoản học viên.', 'class', 15)
 on conflict (id) do update set label = excluded.label, description = excluded.description,
   grp = excluded.grp, sort_order = excluded.sort_order;
 insert into public.role_permissions (role_id, permission) values ('admin', 'access.manage')
@@ -78,7 +78,7 @@ revoke all on public.access_grants from anon;
 revoke insert, update, delete, truncate on public.access_grants from authenticated;
 grant select on public.access_grants to authenticated;
 
--- Người đang đăng nhập mở được nội dung Trả phí của module này không
+-- Người đang đăng nhập mở được nội dung Mayo+ của module này không
 create or replace function public.has_access(p_module text)
 returns boolean
 language sql
@@ -110,14 +110,15 @@ as $$
     select 1 from public.exams e
     where e.id = p_exam_id
       and (
-        e.visibility = 'public'
-        or public.has_permission('content.read')
-        or (e.visibility = 'members' and public.is_learner())
-        or (e.visibility = 'paid' and public.has_access('exams'))
-        or (e.visibility = 'students' and public.is_student())
-        or (e.visibility = 'staff' and exists (
-              select 1 from public.class_suggestions cs
-              where cs.kind = 'exam' and cs.exam_id = e.id and cs.class_id = public.my_class_id()))
+        public.has_permission('content.read')
+        or (auth.uid() is not null and (
+              e.visibility = 'public'
+              or (e.visibility = 'members' and public.is_learner())
+              or (e.visibility = 'paid' and public.has_access('exams'))
+              or (e.visibility = 'students' and public.is_student())
+              or (e.visibility = 'staff' and exists (
+                    select 1 from public.class_suggestions cs
+                    where cs.kind = 'exam' and cs.exam_id = e.id and cs.class_id = public.my_class_id()))))
       )
   )
 $$;
@@ -336,20 +337,21 @@ begin
     granted_at = now();
   get diagnostics v_count = row_count;
 
-  select string_agg(username, ', ') into v_names
-  from (select username from student_profiles where user_id = any (v_ids) order by username limit 5) x;
+  select string_agg(full_name, ', ') into v_names
+  from (select full_name from student_profiles where user_id = any (v_ids) order by full_name limit 5) x;
   v_until := case when p_until is not null then 'đến ' || to_char(p_until at time zone 'Asia/Ho_Chi_Minh', 'DD/MM/YYYY')
                   when p_duration is not null then 'thêm ' || concat_ws(' ',
                     nullif((extract(year from p_duration) * 12 + extract(month from p_duration))::int, 0) || ' tháng',
                     nullif(extract(day from p_duration)::int, 0) || ' ngày')
                   else 'không thời hạn' end;
   perform write_activity('grant', 'student', cardinality(v_ids),
-    format('Cấp quyền %s (%s) cho %s%s',
+    format('Cấp quyền %s (%s) cho %s%s%s',
       array_to_string(array(select case m when 'flashcards' then 'Flashcards' else 'Đề thi HSK' end from unnest(v_modules) m), ' + '),
       v_until, v_names,
-      case when cardinality(v_ids) > 5 then format(' và %s tài khoản khác', cardinality(v_ids) - 5) else '' end),
+      case when cardinality(v_ids) > 5 then format(' và %s tài khoản khác', cardinality(v_ids) - 5) else '' end,
+      case when v_note <> '' then ' · ' || v_note else '' end),
     jsonb_build_object('students', to_jsonb(v_ids), 'modules', to_jsonb(v_modules),
-                       'until', p_until, 'duration', p_duration::text));
+                       'until', p_until, 'duration', p_duration::text, 'note', v_note));
   return jsonb_build_object('ok', true, 'count', v_count);
 end;
 $$;
@@ -372,8 +374,8 @@ begin
   delete from access_grants where user_id = any (p_students) and module = any (p_modules);
   get diagnostics v_count = row_count;
   if v_count > 0 then
-    select string_agg(username, ', ') into v_names
-    from (select username from student_profiles where user_id = any (p_students) order by username limit 5) x;
+    select string_agg(full_name, ', ') into v_names
+    from (select full_name from student_profiles where user_id = any (p_students) order by full_name limit 5) x;
     perform write_activity('revoke', 'student', v_count,
       format('Thu hồi quyền %s của %s',
         array_to_string(array(select case m when 'flashcards' then 'Flashcards' else 'Đề thi HSK' end

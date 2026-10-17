@@ -10,6 +10,7 @@
       @if (mode() === 'admin') {
         <app-visibility-picker
           [value]="exam().visibility"
+          [label]="'Hiển thị: ' + exam().title"
           [disabled]="savingVisibility()"
           (changed)="visibilityChange.emit({ exam: exam(), visibility: $event })"
         />
@@ -80,10 +81,14 @@
   </div>
 
   <!-- Bottom Actions -->
-  @if (locked() && access() === 'members') {
+  @if (locked() && access() === 'class' && needsLogin()) {
     <a routerLink="/dang-nhap" class="w-full py-3 rounded-2xl border border-dashed border-violet-500/30 text-violet-700 dark:text-violet-300 hover:bg-violet-500/5 font-bold text-xs text-center transition-colors">
       Đăng nhập học viên để làm bài
     </a>
+  } @else if (locked() && access() === 'class') {
+    <div class="w-full py-3 rounded-2xl border border-dashed border-violet-500/30 text-violet-700 dark:text-violet-300 font-bold text-xs text-center">
+      Dành cho học viên lớp MCC
+    </div>
   } @else if (locked() && access() === 'login') {
     <a routerLink="/dang-nhap" [queryParams]="{ returnUrl: '/exams/' + exam().id + '/take' }" class="w-full py-3 rounded-2xl border border-dashed border-teal-500/35 text-teal-700 dark:text-teal-300 hover:bg-teal-500/5 font-bold text-xs text-center transition-colors">
       Đăng nhập để làm bài

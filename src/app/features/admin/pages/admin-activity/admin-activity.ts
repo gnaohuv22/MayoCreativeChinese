@@ -13,7 +13,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   publish: { label: 'Công khai', tone: 'emerald' },
   staff_only: { label: 'Nội bộ', tone: 'sky' },
   students_only: { label: 'Học viên', tone: 'violet' },
-  paid_only: { label: 'Trả phí', tone: 'amber' },
+  paid_only: { label: 'Mayo+', tone: 'amber' },
   members_only: { label: 'Thành viên', tone: 'sky' },
   grant: { label: 'Cấp quyền', tone: 'emerald' },
   revoke: { label: 'Thu hồi quyền', tone: 'red' },

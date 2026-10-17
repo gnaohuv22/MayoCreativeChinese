@@ -23,13 +23,16 @@
         @if (hasGuests()) {
           <option value="guest">Khách tự đăng ký</option>
         }
-        <option value="paid">Đang có quyền trả phí</option>
       </select>
       <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="mcc-input !w-auto !py-2" aria-label="Lọc trạng thái">
         <option value="all">Mọi trạng thái</option>
         <option value="active">{{ statusLabels.active }}</option>
         <option value="locked">{{ statusLabels.locked }}</option>
         <option value="archived">{{ statusLabels.archived }}</option>
+      </select>
+      <select [ngModel]="paidOnly()" (ngModelChange)="paidOnly.set($event === true || $event === 'true')" class="mcc-input !w-auto !py-2" aria-label="Lọc quyền Mayo+">
+        <option [ngValue]="false">Mọi quyền</option>
+        <option [ngValue]="true">Đang có Mayo+</option>
       </select>
     </div>
 

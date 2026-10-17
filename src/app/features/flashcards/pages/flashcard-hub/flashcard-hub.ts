@@ -3,13 +3,13 @@ import { RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
-import { exportProgressJson } from '../../utils/template-generator.util';
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
 import { ADVANCED_LEVEL_PARAM, VOCAB_COLLECTIONS, parseLevelParam } from '../../models/vocab-card.model';
 import type { VocabCollection } from '../../models/vocab-card.model';
-import { isLockedAccess } from '../../../../components/shared/visibility/content-visibility';
+import { accountLock, isLockedAccess, type AccountLock } from '../../../../components/shared/visibility/content-visibility';
+import { AccessBadgeComponent } from '../../../../components/shared/visibility/access-badge';
 
 export interface CollectionCardItem {
   key: VocabCollection;
@@ -18,16 +18,20 @@ export interface CollectionCardItem {
   badgeColor: string;
   description: string;
   /** num = tham số route `:level` ('1'…'9' hoặc '7-9'); count = số từ học được (0 = "Sắp ra mắt") */
-  levels: { num: number | string; label: string; count: number; staffOnly: boolean }[];
+  levels: { num: number | string; label: string; count: number; staffOnly: boolean; lock: AccountLock | null }[];
   route: string;
   totalCards: number;
+  /** Có từ học được, hoặc bị khoá theo tài khoản (vẫn vào được trang chọn cấp để xem cách mở) */
+  open: boolean;
+  /** Không cấp nào học được vì cần đăng nhập / cấp quyền */
+  lockedAs: AccountLock | null;
   highlightText?: string;
 }
 
 @Component({
   selector: 'app-flashcard-hub',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, ComingSoonBadgeComponent, AccessBadgeComponent],
   templateUrl: './flashcard-hub.html',
   styleUrl: './flashcard-hub.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,7 +68,7 @@ export class FlashcardHubComponent implements OnInit {
         params.map(num => {
           const levelAccess = access(collection, String(num));
           const count = parseLevelParam(String(num)).reduce((sum, l) => sum + (counts.get(l) ?? 0), 0);
-          return { num, label: label(num), count: isLockedAccess(levelAccess) ? 0 : count, staffOnly: levelAccess === 'staff' };
+          return { num, label: label(num), count: isLockedAccess(levelAccess) ? 0 : count, staffOnly: levelAccess === 'staff', lock: accountLock(levelAccess) };
         });
       const sumOf = (levels: { count: number }[]) => levels.reduce((a, l) => a + l.count, 0);
       const levelsV2 = levelsOf('hsk2', countsV2, [1, 2, 3, 4, 5, 6], i => `HSK ${i}`);
@@ -78,6 +82,11 @@ export class FlashcardHubComponent implements OnInit {
       const totalSupplement = sumOf(levelsSupplement);
       this.totalWordsInSystem.set(totalV2 + totalV3 + totalCombined + totalSupplement);
 
+      const lockState = (total: number, levels: CollectionCardItem['levels']) => {
+        const lockedAs = total > 0 ? null : levels.find(l => l.lock)?.lock ?? null;
+        return { open: total > 0 || lockedAs !== null, lockedAs };
+      };
+
       const items: CollectionCardItem[] = [
         {
           key: 'hsk2',
@@ -88,6 +97,7 @@ export class FlashcardHubComponent implements OnInit {
           levels: levelsV2,
           route: '/flashcards/hsk2',
           totalCards: totalV2,
+          ...lockState(totalV2, levelsV2),
         },
         {
           key: 'hsk3',
@@ -98,6 +108,7 @@ export class FlashcardHubComponent implements OnInit {
           levels: levelsV3,
           route: '/flashcards/hsk3',
           totalCards: totalV3,
+          ...lockState(totalV3, levelsV3),
           highlightText: 'Chia theo bài học & giáo trình',
         },
         {
@@ -109,6 +120,7 @@ export class FlashcardHubComponent implements OnInit {
           levels: levelsCombined,
           route: '/flashcards/combined',
           totalCards: totalCombined,
+          ...lockState(totalCombined, levelsCombined),
         },
         {
           key: 'supplement',
@@ -119,6 +131,7 @@ export class FlashcardHubComponent implements OnInit {
           levels: levelsSupplement,
           route: '/flashcards/supplement',
           totalCards: totalSupplement,
+          ...lockState(totalSupplement, levelsSupplement),
           highlightText: 'Chia theo chủ đề • HSK 3, 4, 5, 6',
         },
       ];
@@ -128,16 +141,6 @@ export class FlashcardHubComponent implements OnInit {
       console.error('Error loading collections in hub', err);
     } finally {
       this.loading.set(false);
-    }
-  }
-
-  async exportProgress() {
-    try {
-      const data = await this.progressService.exportProgress();
-      exportProgressJson(data);
-    } catch (err) {
-      console.error('Error exporting progress', err);
-      this.toast.error('Không sao lưu được tiến độ học tập.');
     }
   }
 
@@ -151,22 +154,6 @@ export class FlashcardHubComponent implements OnInit {
       this.toast.error(err instanceof Error ? err.message : 'Không đưa được tiến độ lên tài khoản.');
     } finally {
       this.uploading.set(false);
-    }
-  }
-
-  /** Khôi phục từ file sao lưu (học viên: thay tiến độ trên tài khoản) */
-  async importProgress(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = ''; // cho phép chọn lại cùng file
-    if (!file) return;
-    const where = this.accountBacked() ? 'trong tài khoản của bạn' : 'trên trình duyệt này';
-    if (!confirm(`Khôi phục sẽ thay thế toàn bộ tiến độ học hiện tại ${where}. Tiếp tục?`)) return;
-    try {
-      const count = await this.progressService.importProgress(await file.text());
-      this.toast.success(`Đã khôi phục tiến độ của ${count} từ.`);
-    } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'Không khôi phục được tiến độ.');
     }
   }
 }

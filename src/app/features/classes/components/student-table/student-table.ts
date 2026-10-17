@@ -4,7 +4,7 @@ import { AuthService, STUDENT_PASSWORD_RULES, generateStudentPassword } from '..
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ClassService } from '../../services/class.service';
-import { ACCESS_MODULE_LABELS, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
+import { ACCESS_MODULE_LABELS, isGrantActive, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
 import { formatDate } from '../../utils/class-display.util';
 import {
   STUDENT_STATUS_LABELS,
@@ -28,6 +28,15 @@ const GRANT_TERMS: { value: string; label: string }[] = [
   { value: 'until', label: 'Đến ngày…' },
   { value: 'unlimited', label: 'Không thời hạn' },
 ];
+
+/** Cộng thời lượng dạng '7 days' / '3 months' vào một mốc */
+function addTerm(from: Date, term: string): Date {
+  const [n, unit] = term.split(' ');
+  const d = new Date(from);
+  if (unit.startsWith('day')) d.setDate(d.getDate() + Number(n));
+  else d.setMonth(d.getMonth() + Number(n));
+  return d;
+}
 
 const BULK_CONFIRM: Record<Exclude<BulkAction, 'move'>, { title: string; verb: string; done: string }> = {
   active: { title: 'Mở lại tài khoản', verb: 'Mở lại', done: 'Đã mở lại' },
@@ -70,7 +79,7 @@ export class StudentTableComponent {
   private readonly bulkDialog = viewChild.required<ElementRef<HTMLDialogElement>>('bulkDialog');
   private readonly grantDialog = viewChild.required<ElementRef<HTMLDialogElement>>('grantDialog');
 
-  // Cấp / thu hồi quyền Trả phí
+  // Cấp / thu hồi quyền Mayo+
   protected readonly moduleLabels = ACCESS_MODULE_LABELS;
   protected readonly modules = Object.keys(ACCESS_MODULE_LABELS) as AccessModule[];
   protected readonly grantTerms = GRANT_TERMS;
@@ -86,6 +95,26 @@ export class StudentTableComponent {
   readonly minUntil = computed(() => {
     const d = new Date(Date.now() + 86_400_000);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  /** Hạn trước → sau khi lưu của từng mục đã chọn (khớp cách grant_access tính, migration 024) */
+  readonly grantPreview = computed(() => {
+    const targets = this.grantTargets();
+    const mode = this.grantMode();
+    const term = this.grantTerm();
+    return this.modules.filter(m => this.grantModules().has(m)).map(module => {
+      const current = targets.length === 1 ? targets[0].access_grants?.find(g => g.module === module) : undefined;
+      const active = current && isGrantActive(current) ? current : undefined;
+      const before = targets.length > 1 ? `${targets.length} tài khoản`
+        : !active ? 'Chưa có' : active.expires_at ? formatDate(active.expires_at) : 'Không thời hạn';
+      let after: string;
+      if (mode === 'revoke') after = 'Thu hồi';
+      else if (term === 'unlimited') after = 'Không thời hạn';
+      else if (term === 'until') after = this.grantUntil() ? formatDate(this.grantUntil()) : '…';
+      else if (targets.length > 1) after = `+ ${GRANT_TERMS.find(t => t.value === term)?.label ?? term}`;
+      else if (active && !active.expires_at) after = 'Không thời hạn';
+      else after = formatDate(addTerm(active?.expires_at ? new Date(active.expires_at) : new Date(), term).toISOString());
+      return { label: ACCESS_MODULE_LABELS[module], before, after };
+    });
   });
   readonly grantReady = computed(() =>
     this.grantModules().size > 0 && (this.grantMode() === 'revoke' || this.grantTerm() !== 'until' || this.grantUntil() >= this.minUntil()));
@@ -222,9 +251,8 @@ export class StudentTableComponent {
   // ---------------------------------------------------------------------------
   /** Quyền của 1 tài khoản để hiện trong bảng: còn hạn trước, hết hạn sau */
   grantsOf(student: Student): (StudentAccessGrant & { active: boolean })[] {
-    const now = Date.now();
     return (student.access_grants ?? [])
-      .map(g => ({ ...g, active: !g.expires_at || Date.parse(g.expires_at) > now }))
+      .map(g => ({ ...g, active: isGrantActive(g) }))
       .sort((a, b) => Number(b.active) - Number(a.active) || a.module.localeCompare(b.module));
   }
 
@@ -232,7 +260,8 @@ export class StudentTableComponent {
     if (students.length === 0) return;
     this.grantTargets.set(students);
     this.grantMode.set(mode);
-    this.grantModules.set(new Set(this.modules));
+    // Thu hồi: để trống, tránh lỡ tay thu hồi cả hai
+    this.grantModules.set(new Set(mode === 'grant' ? this.modules : []));
     this.grantTerm.set('1 month');
     this.grantUntil.set('');
     this.grantNote.set('');

@@ -17,7 +17,7 @@ describe('contentAccess', () => {
   it('opens student content to students and staff, members-only for visitors', () => {
     expect(contentAccess('students', STUDENT)).toBe('open');
     expect(contentAccess('students', STAFF)).toBe('open');
-    expect(contentAccess('students', VISITOR)).toBe('members');
+    expect(contentAccess('students', VISITOR)).toBe('class');
   });
 
   it('shows staff content to staff, and to students only when suggested to their class', () => {
