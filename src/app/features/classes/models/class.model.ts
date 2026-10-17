@@ -105,7 +105,7 @@ export interface Student {
   account_type: 'student' | 'guest';
   must_change_password: boolean;
   created_at: string;
-  /** Quyền Trả phí đã cấp, kể cả đã hết hạn (migration 024) */
+  /** Quyền Mayo+ đã cấp, kể cả đã hết hạn (migration 024) */
   access_grants?: StudentAccessGrant[];
 }
 

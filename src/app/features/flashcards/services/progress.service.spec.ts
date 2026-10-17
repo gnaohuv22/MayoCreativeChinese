@@ -1,31 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseProgressBackup, progressKey, shareProgressAcrossLevels } from './progress.service';
+import { progressKey, shareProgressAcrossLevels } from './progress.service';
 import type { CardProgress } from '../models/vocab-card.model';
-
-const record = { id: 7, cardId: 12, hanzi: '你好', hskLevel: 1, hskVersion: '2.0', confidence: 2, reviewCount: 3, bookmarked: false };
-
-describe('parseProgressBackup', () => {
-  it('reads an exported backup and drops the local id', () => {
-    const [parsed] = parseProgressBackup(JSON.stringify([record]));
-    expect(parsed).not.toHaveProperty('id');
-    expect(parsed).toMatchObject({ cardId: 12, hanzi: '你好', confidence: 2 });
-  });
-
-  it('accepts an empty backup', () => {
-    expect(parseProgressBackup('[]')).toEqual([]);
-  });
-
-  it('rejects a file that is not JSON', () => {
-    expect(() => parseProgressBackup('not json')).toThrow('File không đúng định dạng JSON.');
-  });
-
-  it('rejects JSON that is not a progress backup', () => {
-    const notBackup = 'File không phải bản sao lưu tiến độ Flashcard.';
-    expect(() => parseProgressBackup('{"hanzi":"你好"}')).toThrow(notBackup);
-    expect(() => parseProgressBackup(JSON.stringify([{ ...record, confidence: 5 }]))).toThrow(notBackup);
-    expect(() => parseProgressBackup(JSON.stringify([record, null]))).toThrow(notBackup);
-  });
-});
 
 describe('shareProgressAcrossLevels', () => {
   // HSK 2.0 tích luỹ: 爱 ài có id 1 ở HSK 1 và id 151 ở HSK 2; 得 de (318) và 得 dé (2276) là 2 từ khác nhau

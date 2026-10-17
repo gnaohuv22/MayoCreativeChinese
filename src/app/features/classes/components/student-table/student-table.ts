@@ -79,7 +79,7 @@ export class StudentTableComponent {
   private readonly bulkDialog = viewChild.required<ElementRef<HTMLDialogElement>>('bulkDialog');
   private readonly grantDialog = viewChild.required<ElementRef<HTMLDialogElement>>('grantDialog');
 
-  // Cấp / thu hồi quyền Trả phí
+  // Cấp / thu hồi quyền Mayo+
   protected readonly moduleLabels = ACCESS_MODULE_LABELS;
   protected readonly modules = Object.keys(ACCESS_MODULE_LABELS) as AccessModule[];
   protected readonly grantTerms = GRANT_TERMS;

@@ -33,7 +33,7 @@
           <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()" aria-label="Chọn tất cả" class="accent-brand-pink cursor-pointer" />
         </th>
         <th class="px-3 py-3 font-bold">Học viên</th>
-        <th class="px-3 py-3 font-bold">Trả phí</th>
+        <th class="px-3 py-3 font-bold">Mayo+</th>
         <th class="px-3 py-3 font-bold">Tên đăng nhập</th>
         @if (showClass()) {
           <th class="px-3 py-3 font-bold">Lớp</th>
@@ -278,13 +278,13 @@
   }
 </dialog>
 
-<!-- Cấp / thu hồi quyền Trả phí -->
+<!-- Cấp / thu hồi quyền Mayo+ -->
 <dialog #grantDialog aria-labelledby="grant-title" class="mcc-dialog max-w-md">
   @if (grantTargets().length) {
     <form (ngSubmit)="submitGrant()" class="p-6 sm:p-7 space-y-4">
       <div class="flex items-start justify-between gap-4">
         <h2 id="grant-title" class="text-lg font-black font-display">
-          {{ grantMode() === 'grant' ? 'Cấp quyền trả phí' : 'Thu hồi quyền trả phí' }} · {{ grantTargets().length }} tài khoản
+          {{ grantMode() === 'grant' ? 'Cấp quyền Mayo+' : 'Thu hồi quyền Mayo+' }} · {{ grantTargets().length }} tài khoản
         </h2>
         <button type="button" (click)="grantDialog.close()" class="p-1.5 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer" aria-label="Đóng">
           <app-icon name="x-mark" size="sm" />
@@ -331,7 +331,7 @@
           <input name="note" maxlength="500" [ngModel]="grantNote()" (ngModelChange)="grantNote.set($event)" placeholder="VD: chuyển khoản 16/10, gói 3 tháng" class="mcc-input" />
         </label>
       } @else {
-        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tài khoản sẽ không mở được nội dung Trả phí của mục đã chọn nữa.</p>
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tài khoản sẽ không mở được nội dung Mayo+ của mục đã chọn nữa.</p>
       }
 
       @if (grantPreview().length) {

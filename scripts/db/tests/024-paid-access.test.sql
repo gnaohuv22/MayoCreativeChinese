@@ -66,7 +66,7 @@ begin
   select count(*) into v_total from public.vocab_cards where collection = 'hsk2' and hsk_level = v_level;
   assert v_exam is not null and v_total > 0, 'cần có sẵn đề thi và từ vựng hsk2';
 
-  assert public.visibility_label('paid') = 'Trả phí' and public.visibility_label('members') = 'Thành viên', 'nhãn';
+  assert public.visibility_label('paid') = 'Mayo+' and public.visibility_label('members') = 'Thành viên', 'nhãn';
 
   -- ---- Mức Thành viên ----
   update public.exams set visibility = 'members' where id = v_exam;

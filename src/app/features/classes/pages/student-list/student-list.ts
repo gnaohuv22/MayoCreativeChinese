@@ -31,7 +31,7 @@ export class StudentListComponent {
   /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký */
   readonly classFilter = signal('');
   readonly statusFilter = signal<StudentStatus | 'all'>('active');
-  /** true = chỉ tài khoản đang có quyền Trả phí */
+  /** true = chỉ tài khoản đang có quyền Mayo+ */
   readonly paidOnly = signal(false);
 
   readonly classCodes = computed(() => new Map(this.classes().map(c => [c.id, c.code])));

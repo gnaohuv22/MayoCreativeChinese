@@ -30,9 +30,9 @@
         <option value="locked">{{ statusLabels.locked }}</option>
         <option value="archived">{{ statusLabels.archived }}</option>
       </select>
-      <select [ngModel]="paidOnly()" (ngModelChange)="paidOnly.set($event === true || $event === 'true')" class="mcc-input !w-auto !py-2" aria-label="Lọc quyền trả phí">
+      <select [ngModel]="paidOnly()" (ngModelChange)="paidOnly.set($event === true || $event === 'true')" class="mcc-input !w-auto !py-2" aria-label="Lọc quyền Mayo+">
         <option [ngValue]="false">Mọi quyền</option>
-        <option [ngValue]="true">Đang có quyền trả phí</option>
+        <option [ngValue]="true">Đang có Mayo+</option>
       </select>
     </div>
 

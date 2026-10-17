@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { VocabService } from '../../services/vocab.service';
 import { ProgressService } from '../../services/progress.service';
-import { exportProgressJson } from '../../utils/template-generator.util';
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ComingSoonBadgeComponent } from '../../../../components/shared/badge/coming-soon-badge';
@@ -145,16 +144,6 @@ export class FlashcardHubComponent implements OnInit {
     }
   }
 
-  async exportProgress() {
-    try {
-      const data = await this.progressService.exportProgress();
-      exportProgressJson(data);
-    } catch (err) {
-      console.error('Error exporting progress', err);
-      this.toast.error('Không sao lưu được tiến độ học tập.');
-    }
-  }
-
   async uploadLocal() {
     this.uploading.set(true);
     try {
@@ -165,22 +154,6 @@ export class FlashcardHubComponent implements OnInit {
       this.toast.error(err instanceof Error ? err.message : 'Không đưa được tiến độ lên tài khoản.');
     } finally {
       this.uploading.set(false);
-    }
-  }
-
-  /** Khôi phục từ file sao lưu (học viên: thay tiến độ trên tài khoản) */
-  async importProgress(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = ''; // cho phép chọn lại cùng file
-    if (!file) return;
-    const where = this.accountBacked() ? 'trong tài khoản của bạn' : 'trên trình duyệt này';
-    if (!confirm(`Khôi phục sẽ thay thế toàn bộ tiến độ học hiện tại ${where}. Tiếp tục?`)) return;
-    try {
-      const count = await this.progressService.importProgress(await file.text());
-      this.toast.success(`Đã khôi phục tiến độ của ${count} từ.`);
-    } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'Không khôi phục được tiến độ.');
     }
   }
 }

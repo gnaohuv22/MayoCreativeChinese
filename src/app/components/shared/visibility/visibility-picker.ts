@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, ElementRef, input, output, viewChildren } from '@angular/core';
 import { VISIBILITY_OPTIONS, type ContentVisibility } from './content-visibility';
 
-/** Chọn 1 trong 6 mức hiển thị: Bản nháp · Nội bộ · Học viên · Trả phí · Thành viên · Công khai */
+/** Chọn 1 trong 6 mức hiển thị: Bản nháp · Nội bộ · Học viên · Mayo+ · Thành viên · Công khai */
 @Component({
   selector: 'app-visibility-picker',
   standalone: true,

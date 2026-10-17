@@ -2,10 +2,11 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastComponent } from './components/shared/toast/toast';
 import { AdminDockComponent } from './components/shared/admin-dock/admin-dock';
+import { EasterEggComponent } from './components/shared/easter-egg/easter-egg';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastComponent, AdminDockComponent],
+  imports: [RouterOutlet, ToastComponent, AdminDockComponent, EasterEggComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

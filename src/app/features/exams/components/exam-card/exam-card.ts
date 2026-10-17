@@ -39,7 +39,7 @@ export class ExamCardComponent {
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
   visibilityChange = output<{ exam: Exam; visibility: ContentVisibility }>();
 
-  /** Nhãn "Học viên" / "Thành viên" / "Trả phí" cho đề khoá theo tài khoản */
+  /** Nhãn "Học viên" / "Thành viên" / "Mayo+" cho đề khoá theo tài khoản */
   badgeKind = computed(() => accountLock(this.access()));
   locked = computed(() => this.mode() === 'learner' && isLockedAccess(this.access()));
 

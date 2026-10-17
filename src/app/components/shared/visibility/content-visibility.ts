@@ -6,7 +6,7 @@ export const VISIBILITY_OPTIONS: { value: ContentVisibility; label: string; audi
   { value: 'private', label: 'Bản nháp', audience: 'Chỉ thấy trong khu quản trị' },
   { value: 'staff', label: 'Nội bộ', audience: 'Nhân sự và lớp được gợi ý' },
   { value: 'students', label: 'Học viên', audience: 'Học viên lớp MCC' },
-  { value: 'paid', label: 'Trả phí', audience: 'Học viên lớp và tài khoản được cấp quyền' },
+  { value: 'paid', label: 'Mayo+', audience: 'Học viên lớp và tài khoản được cấp quyền' },
   { value: 'members', label: 'Thành viên', audience: 'Mọi tài khoản đã đăng nhập' },
   { value: 'public', label: 'Công khai', audience: 'Tất cả, kể cả chưa đăng nhập' },
 ];
@@ -15,12 +15,12 @@ export const VISIBILITY_LABELS: Record<ContentVisibility, string> = {
   private: 'Bản nháp',
   staff: 'Nội bộ',
   students: 'Học viên',
-  paid: 'Trả phí',
+  paid: 'Mayo+',
   members: 'Thành viên',
   public: 'Công khai',
 };
 
-/** Module cấp quyền Trả phí (access_grants.module) */
+/** Module cấp quyền Mayo+ (access_grants.module) */
 export type AccessModule = 'flashcards' | 'exams';
 
 export const ACCESS_MODULE_LABELS: Record<AccessModule, string> = {
@@ -33,7 +33,7 @@ export function isGrantActive(grant: { expires_at: string | null }, now = Date.n
   return !grant.expires_at || Date.parse(grant.expires_at) > now;
 }
 
-/** Nơi liên hệ để mở khoá nội dung Trả phí */
+/** Nơi liên hệ để mở khoá nội dung Mayo+ */
 export const UNLOCK_CONTACT_URL = 'https://www.facebook.com/mayocreativechinese';
 
 /** Người đang xem trang học viên */
@@ -43,7 +43,7 @@ export interface ContentViewer {
   student: boolean;
   /** Đã đăng nhập tài khoản học viên (khách tự đăng ký hoặc học viên lớp) */
   learner?: boolean;
-  /** Mở được nội dung Trả phí của module đang xem (học viên lớp hoặc được cấp quyền còn hạn) */
+  /** Mở được nội dung Mayo+ của module đang xem (học viên lớp hoặc được cấp quyền còn hạn) */
   paid?: boolean;
 }
 
@@ -51,7 +51,7 @@ export interface ContentViewer {
  * Người xem trang học viên thấy nội dung thế nào:
  * open = học/thi bình thường, staff = như open nhưng đánh dấu "Nội bộ",
  * class = chỉ học viên lớp MCC ("Học viên"), login = cần đăng nhập ("Thành viên"),
- * paid = cần được cấp quyền ("Trả phí"), locked = "Sắp ra mắt".
+ * paid = cần được cấp quyền ("Mayo+"), locked = "Sắp ra mắt".
  * Nội dung "Nội bộ" được gợi ý cho lớp thì học viên lớp đó mở được (`suggested`).
  * Bản nháp luôn khoá ở trang học viên, kể cả với nhân sự (xem trong khu quản trị).
  */
