@@ -19,6 +19,7 @@ import type {
 } from '../models/class.model';
 import type { VocabCollection } from '../../flashcards/models/vocab-card.model';
 import type { AccessModule } from '../../../components/shared/visibility/content-visibility';
+import type { DeviceList } from '../../../services/auth.service';
 
 const CLASS_COLUMNS =
   'id, code, name, course_slug, hsk_level, hsk_version, study_mode, start_date, end_date, schedule, max_students, notes, status, archived_at, created_at, updated_at, staff:class_staff(user_id, role), students:student_profiles(count)';
@@ -128,6 +129,21 @@ export class ClassService {
       p_note: note,
     });
     return error ? { error: rpcError(error) } : {};
+  }
+
+  /** Thiết bị đăng nhập của 1 học viên (migration 026) */
+  async studentDevices(userId: string): Promise<{ data?: DeviceList; error?: string }> {
+    const { data, error } = await this.supabase.rpc('student_devices', { p_student: userId });
+    return error ? { error: rpcError(error) } : { data: data as DeviceList };
+  }
+
+  /** Nhân sự gỡ thiết bị (không giới hạn số lần), thiết bị đó bị đăng xuất */
+  async removeStudentDevice(userId: string, device: string): Promise<{ data?: DeviceList; error?: string }> {
+    const expired = await sessionError();
+    if (expired) return { error: expired };
+    const { data, error } = await this.supabase.rpc('admin_remove_device', { p_student: userId, p_device: device });
+    if (error) return { error: rpcError(error) };
+    return (data as { ok: boolean }).ok ? { data: data as DeviceList } : { error: 'Thiết bị đã được gỡ.' };
   }
 
   async revokeAccess(userIds: string[], modules: AccessModule[]): Promise<{ error?: string }> {

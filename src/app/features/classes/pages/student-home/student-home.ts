@@ -12,6 +12,8 @@ import { RemoteProgressStore } from '../../../flashcards/services/remote-progres
 import { CLASS_STATUS_LABELS, STAFF_ROLE_LABELS, STUDY_MODE_LABELS, type ClassAnnouncement, type ClassSuggestion, type ExamAttempt } from '../../models/class.model';
 import { formatDate, formatDateTime } from '../../utils/class-display.util';
 import { RecoveryEmailComponent } from '../../components/recovery-email/recovery-email';
+import { DeviceListComponent } from '../../components/device-list/device-list';
+import type { DeviceList, LearnerDevice } from '../../../../services/auth.service';
 import { vocabSuggestionLabel, vocabSuggestionParam } from '../../utils/suggestion.util';
 import { ACCESS_MODULE_LABELS, UNLOCK_CONTACT_URL, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
 
@@ -19,7 +21,7 @@ import { ACCESS_MODULE_LABELS, UNLOCK_CONTACT_URL, type AccessModule } from '../
 @Component({
   selector: 'app-student-home',
   standalone: true,
-  imports: [RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent, RecoveryEmailComponent],
+  imports: [RouterLink, NavHeaderComponent, AppIconComponent, HskBadgeComponent, RecoveryEmailComponent, DeviceListComponent],
   templateUrl: './student-home.html',
   styleUrl: './student-home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +56,9 @@ export class StudentHomeComponent {
   readonly suggestions = signal<ClassSuggestion[]>([]);
   readonly attempts = signal<ExamAttempt[]>([]);
   readonly loading = signal(true);
+  readonly devices = signal<DeviceList | null>(null);
+  readonly removingDevice = signal<string | null>(null);
+  readonly deviceError = signal<string | null>(null);
 
   readonly examSuggestions = computed(() => this.suggestions().filter(s => s.kind === 'exam' && s.exam));
   readonly vocabSuggestions = computed(() => this.suggestions().filter(s => s.kind === 'vocab' && s.collection));
@@ -72,15 +77,27 @@ export class StudentHomeComponent {
 
   async load() {
     this.loading.set(true);
-    const [announcements, suggestions, attempts] = await Promise.all([
+    const [announcements, suggestions, attempts, devices] = await Promise.all([
       this.studentService.myAnnouncements(),
       this.studentService.mySuggestions(),
       this.studentService.myAttempts(),
+      this.auth.myDevices(),
     ]);
+    this.devices.set(devices);
     this.announcements.set(announcements);
     this.suggestions.set(suggestions);
     this.attempts.set(attempts);
     this.loading.set(false);
+  }
+
+  async removeDevice(device: LearnerDevice) {
+    if (!confirm(`Gỡ "${device.label || 'thiết bị'}"? Thiết bị đó sẽ bị đăng xuất, và 30 ngày tới bạn không tự gỡ thêm được.`)) return;
+    this.removingDevice.set(device.device_id);
+    this.deviceError.set(null);
+    const res = await this.auth.removeMyDevice(device.device_id);
+    this.removingDevice.set(null);
+    if (res.error) this.deviceError.set(res.error);
+    else this.devices.set(res.list ?? null);
   }
 
   vocabRoute(s: ClassSuggestion): string[] {
