@@ -81,9 +81,10 @@ export class VocabLevelPickerComponent implements OnInit {
     this.subtitle.set(this.SUBTITLES[col]);
 
     try {
-      const [counts, access] = await Promise.all([
+      const [counts, access, hasProgress] = await Promise.all([
         this.vocabService.getLevelCounts(col),
         this.vocabService.accessResolver(),
+        this.progressService.hasAnyProgress(),
       ]);
 
       const list = await Promise.all(config.levelParams.map(async param => {
@@ -94,7 +95,7 @@ export class VocabLevelPickerComponent implements OnInit {
 
         let reviewed = 0;
         let mastered = 0;
-        if (count > 0) {
+        if (count > 0 && hasProgress) {
           const refs = await this.vocabService.getCardRefsForScope(scope);
           const stats = await this.progressService.getStatsForCards(refs);
           reviewed = stats.reviewed;

@@ -81,6 +81,13 @@ export class ProgressService {
   }
 
   /** Học viên: có tiến độ cũ trên máy này (từ trước khi đăng nhập) để đưa lên tài khoản */
+  /** Đã có tiến độ nào chưa (chưa có thì trang chọn cấp khỏi tải danh sách từ để tính %) */
+  async hasAnyProgress(): Promise<boolean> {
+    const sid = await this.studentId();
+    if (sid) return (await this.remote.all(sid)).size > 0;
+    return (await db.progress.count()) > 0;
+  }
+
   async localRecordCount(): Promise<number> {
     return db.progress.count();
   }
