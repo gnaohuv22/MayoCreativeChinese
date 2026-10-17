@@ -196,5 +196,21 @@
         }
       </div>
     }
+
+    @if (devices(); as d) {
+      <section class="mcc-card p-6 space-y-4 max-w-3xl" aria-labelledby="devices-title">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="devices-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Thiết bị đăng nhập</h2>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ d.devices.length }} / {{ d.limit }} thiết bị</span>
+        </div>
+        <app-device-list [devices]="d.devices" [canRemove]="!d.next_removal_at" [removing]="removingDevice()" (remove)="removeDevice($event)" />
+        @if (d.next_removal_at) {
+          <p class="text-xs text-zinc-600 dark:text-zinc-300">Lần tự gỡ tiếp theo: {{ formatDate(d.next_removal_at) }}.</p>
+        }
+        @if (deviceError()) {
+          <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ deviceError() }}</p>
+        }
+      </section>
+    }
   </div>
 </div>

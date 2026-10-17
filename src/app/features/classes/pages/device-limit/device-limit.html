@@ -1,0 +1,26 @@
+<app-nav-header [showNavLinks]="false" pageTitle="Thiết bị đăng nhập" />
+
+<div class="min-h-screen bg-brand-light dark:bg-brand-dark py-16 px-4 transition-colors">
+  <section class="max-w-md mx-auto p-8 rounded-3xl bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-xl space-y-5">
+    <div>
+      <h1 class="text-2xl font-black text-brand-navy dark:text-white tracking-tight font-display">Đã dùng đủ {{ list()?.limit ?? 3 }} thiết bị</h1>
+      <p class="text-sm text-zinc-600 dark:text-zinc-300 mt-1">Gỡ một thiết bị cũ để tiếp tục học trên thiết bị này.</p>
+    </div>
+
+    @if (list(); as l) {
+      @if (l.next_removal_at) {
+        <p class="text-sm p-4 rounded-2xl bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+          Bạn đã tự gỡ một thiết bị trong 30 ngày qua. Lần gỡ tiếp theo: <b>{{ formatDate(l.next_removal_at) }}</b>.
+          <a [href]="contactUrl" target="_blank" rel="noopener" class="font-bold underline">Liên hệ MCC</a> nếu cần gỡ sớm hơn.
+        </p>
+      }
+      <app-device-list [devices]="l.devices" [canRemove]="!l.next_removal_at" [removing]="removing()" (remove)="remove($event)" />
+    }
+
+    @if (error()) {
+      <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ error() }}</p>
+    }
+
+    <button type="button" (click)="signOut()" class="w-full mcc-btn mcc-btn-secondary justify-center">Đăng xuất</button>
+  </section>
+</div>

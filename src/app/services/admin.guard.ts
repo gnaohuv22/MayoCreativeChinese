@@ -39,6 +39,7 @@ export const accountGuard: CanActivateFn = async (_route, state) => {
     return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: { returnUrl: state.url } });
   }
   if (!student) return router.createUrlTree(['/dang-nhap'], { queryParams: { returnUrl: state.url } });
+  if (auth.deviceBlocked()) return router.createUrlTree(['/thiet-bi'], { queryParams: { returnUrl: state.url } });
   if (student.must_change_password) return router.createUrlTree(['/hoc-vien/mat-khau']);
   return true;
 };
@@ -53,6 +54,7 @@ export const studentGuard: CanActivateFn = async (route, state) => {
     return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: { returnUrl: state.url } });
   }
   if (!student) return router.createUrlTree(['/dang-nhap'], { queryParams: { returnUrl: state.url } });
+  if (auth.deviceBlocked()) return router.createUrlTree(['/thiet-bi'], { queryParams: { returnUrl: state.url } });
   if (student.must_change_password && route.routeConfig?.path !== 'mat-khau') {
     return router.createUrlTree(['/hoc-vien/mat-khau']);
   }

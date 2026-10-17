@@ -1,0 +1,29 @@
+<ul class="divide-y divide-brand-navy/5 dark:divide-white/5 rounded-2xl border border-brand-navy/10 dark:border-white/10">
+  @for (d of devices(); track d.device_id) {
+    <li class="flex items-center justify-between gap-3 px-4 py-3">
+      <div class="min-w-0">
+        <p class="text-sm font-bold text-brand-navy dark:text-white truncate">
+          {{ d.label || 'Thiết bị không tên' }}
+          @if (d.current) {
+            <span class="mcc-chip ml-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Thiết bị này</span>
+          }
+        </p>
+        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Dùng gần nhất {{ formatDateTime(d.last_seen) }}</p>
+      </div>
+      @if (!d.current) {
+        <button type="button" (click)="remove.emit(d)" [disabled]="!canRemove() || removing() !== null"
+                class="mcc-btn mcc-btn-secondary !px-3 !py-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                [attr.aria-label]="'Gỡ ' + (d.label || 'thiết bị')">
+          @if (removing() === d.device_id) {
+            <app-icon name="arrow-path" size="xs" customClass="animate-spin" />
+          } @else {
+            <app-icon name="x-mark" size="xs" />
+          }
+          Gỡ
+        </button>
+      }
+    </li>
+  } @empty {
+    <li class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">Chưa có thiết bị nào.</li>
+  }
+</ul>

@@ -1,4 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { deviceId, deviceLabel } from './device-id';
 import { isGrantActive, type AccessModule, type ContentViewer } from '../components/shared/visibility/content-visibility';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase.client';
@@ -77,6 +79,23 @@ export interface StudentContext {
   class: StudentClassInfo | null;
   /** Quyền Mayo+ còn hạn (migration 024); expires_at null = không thời hạn */
   access?: AccessGrant[];
+}
+
+/** Thiết bị đăng nhập của học viên (migration 026) */
+export interface LearnerDevice {
+  device_id: string;
+  label: string;
+  first_seen: string;
+  last_seen: string;
+  /** Thiết bị đang dùng */
+  current: boolean;
+}
+
+export interface DeviceList {
+  devices: LearnerDevice[];
+  limit: number;
+  /** Lần tự gỡ tiếp theo được phép (null = gỡ được ngay) */
+  next_removal_at: string | null;
 }
 
 export interface AccessGrant {
@@ -183,6 +202,10 @@ export class AuthService {
     return String(meta['full_name'] ?? meta['name'] ?? '');
   });
 
+  /** Tài khoản đã đủ thiết bị: danh sách để chọn gỡ (trang /thiet-bi) */
+  readonly deviceBlocked = signal<DeviceList | null>(null);
+  private readonly router = inject(Router);
+
   /** Phiên bị mất mà không phải do bấm Đăng xuất (hết hạn, gia hạn lỗi, đăng xuất ở tab khác) */
   readonly sessionLost = signal(false);
   private signingOut = false;
@@ -251,7 +274,53 @@ export class AuthService {
     const ctx = staff.error ? null : (staff.data as StaffContext | null);
     this.context.set(ctx);
     this.studentContext.set(student.error ? null : (student.data as StudentContext | null));
+    if (!ctx && this.studentContext()) await this.registerDevice();
+    else this.deviceBlocked.set(null);
     return ctx;
+  }
+
+  /** Ghi nhận thiết bị này cho học viên; đủ 3 thiết bị thì chuyển tới trang chọn thiết bị gỡ */
+  async registerDevice(): Promise<boolean> {
+    const { data, error } = await this.supabase.rpc('register_device', { p_device: deviceId(), p_label: deviceLabel() });
+    if (error) {
+      console.error('Register device failed:', error);
+      return false;
+    }
+    const res = data as { ok: boolean; error?: string } & Partial<DeviceList>;
+    if (res.ok) {
+      this.deviceBlocked.set(null);
+      return true;
+    }
+    if (res.error === 'device_limit') {
+      this.deviceBlocked.set({ devices: res.devices ?? [], limit: res.limit ?? 3, next_removal_at: res.next_removal_at ?? null });
+      if (!this.router.url.startsWith('/thiet-bi')) {
+        this.router.navigate(['/thiet-bi'], { queryParams: { returnUrl: this.router.url } });
+      }
+    }
+    return false;
+  }
+
+  async myDevices(): Promise<DeviceList | null> {
+    const { data, error } = await this.supabase.rpc('my_devices');
+    if (error) console.error('My devices failed:', error);
+    return (data as DeviceList | null) ?? null;
+  }
+
+  /** Tự gỡ 1 thiết bị khác (1 lần / 30 ngày) */
+  async removeMyDevice(device: string): Promise<{ list?: DeviceList; error?: string }> {
+    const { data, error } = await this.supabase.rpc('remove_my_device', { p_device: device });
+    if (error) return { error: error.message };
+    const res = data as { ok: boolean; error?: string; next_removal_at?: string } & Partial<DeviceList>;
+    if (!res.ok) {
+      return {
+        error: {
+          too_soon: `Mỗi 30 ngày chỉ tự gỡ được 1 thiết bị. Lần tiếp theo: ${new Date(res.next_removal_at ?? '').toLocaleDateString('vi-VN')}.`,
+          current_device: 'Không gỡ được thiết bị đang dùng.',
+          not_found: 'Thiết bị đã được gỡ.',
+        }[res.error ?? ''] ?? 'Không gỡ được thiết bị.',
+      };
+    }
+    return { list: { devices: res.devices ?? [], limit: res.limit ?? 3, next_removal_at: res.next_removal_at ?? null } };
   }
 
   async signIn(username: string, password: string): Promise<{ error?: string }> {

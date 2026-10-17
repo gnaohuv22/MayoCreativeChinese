@@ -66,6 +66,13 @@ export const routes: Routes = [
       import('./features/classes/pages/reset-password/reset-password').then(m => m.ResetPasswordComponent),
   },
   {
+    // Đã dùng đủ 3 thiết bị (migration 026)
+    path: 'thiet-bi',
+    title: 'Thiết bị đăng nhập',
+    loadComponent: () =>
+      import('./features/classes/pages/device-limit/device-limit').then(m => m.DeviceLimitComponent),
+  },
+  {
     // Lần đầu đăng nhập Google
     path: 'hoan-tat-ho-so',
     title: 'Hoàn tất tài khoản',

@@ -6,6 +6,8 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ClassService } from '../../services/class.service';
 import { ACCESS_MODULE_LABELS, isGrantActive, type AccessModule } from '../../../../components/shared/visibility/content-visibility';
 import { formatDate } from '../../utils/class-display.util';
+import { DeviceListComponent } from '../device-list/device-list';
+import type { DeviceList, LearnerDevice } from '../../../../services/auth.service';
 import {
   STUDENT_STATUS_LABELS,
   type ClassOption,
@@ -49,7 +51,7 @@ const BULK_CONFIRM: Record<Exclude<BulkAction, 'move'>, { title: string; verb: s
 @Component({
   selector: 'app-student-table',
   standalone: true,
-  imports: [FormsModule, AppIconComponent],
+  imports: [FormsModule, AppIconComponent, DeviceListComponent],
   templateUrl: './student-table.html',
   styleUrl: './student-table.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -78,6 +80,13 @@ export class StudentTableComponent {
   private readonly passwordDialog = viewChild.required<ElementRef<HTMLDialogElement>>('passwordDialog');
   private readonly bulkDialog = viewChild.required<ElementRef<HTMLDialogElement>>('bulkDialog');
   private readonly grantDialog = viewChild.required<ElementRef<HTMLDialogElement>>('grantDialog');
+  private readonly deviceDialog = viewChild.required<ElementRef<HTMLDialogElement>>('deviceDialog');
+
+  // Thiết bị đăng nhập
+  readonly deviceTarget = signal<Student | null>(null);
+  readonly deviceList = signal<DeviceList | null>(null);
+  readonly removingDevice = signal<string | null>(null);
+  readonly deviceError = signal<string | null>(null);
 
   // Cấp / thu hồi quyền Mayo+
   protected readonly moduleLabels = ACCESS_MODULE_LABELS;
@@ -254,6 +263,31 @@ export class StudentTableComponent {
     return (student.access_grants ?? [])
       .map(g => ({ ...g, active: isGrantActive(g) }))
       .sort((a, b) => Number(b.active) - Number(a.active) || a.module.localeCompare(b.module));
+  }
+
+  async openDevices(student: Student) {
+    this.deviceTarget.set(student);
+    this.deviceList.set(null);
+    this.deviceError.set(null);
+    this.deviceDialog().nativeElement.showModal();
+    const res = await this.classService.studentDevices(student.user_id);
+    if (res.error) this.deviceError.set(res.error);
+    else this.deviceList.set(res.data ?? null);
+  }
+
+  async removeDevice(device: LearnerDevice) {
+    const student = this.deviceTarget();
+    if (!student) return;
+    this.removingDevice.set(device.device_id);
+    this.deviceError.set(null);
+    const res = await this.classService.removeStudentDevice(student.user_id, device.device_id);
+    this.removingDevice.set(null);
+    if (res.error) {
+      this.deviceError.set(res.error);
+      return;
+    }
+    this.deviceList.set(res.data ?? null);
+    this.toast.success(`Đã gỡ ${device.label || 'thiết bị'} của ${student.full_name}.`);
   }
 
   openGrant(students: Student[], mode: 'grant' | 'revoke' = 'grant') {

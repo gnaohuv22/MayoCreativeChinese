@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { deviceId } from './device-id';
 
 const SUPABASE_URL = 'https://animyjihwiyqsxvikxxg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ipJ6WbMASU_-LFDIWNyMkg_1404EDZJ';
@@ -19,6 +20,7 @@ export async function proxiedFetch(input: RequestInfo | URL, init?: RequestInit)
     const request = new Request(input, init);
     const headers = new Headers(request.headers);
     headers.set('x-rest-path', restPath);
+    headers.set('x-mcc-device', deviceId());
     const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
     return fetch(REST_PROXY, {
       method: request.method,
@@ -29,6 +31,7 @@ export async function proxiedFetch(input: RequestInfo | URL, init?: RequestInit)
   }
   const headers = new Headers(init?.headers);
   headers.set('x-rest-path', restPath);
+  headers.set('x-mcc-device', deviceId());
   return fetch(REST_PROXY, { ...init, headers });
 }
 
