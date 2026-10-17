@@ -115,7 +115,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/admin/layout/admin-shell/admin-shell').then(m => m.AdminShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'exams' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        title: 'Tổng quan',
+        loadComponent: () =>
+          import('./features/admin/pages/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
+      },
       {
         path: 'exams',
         loadComponent: () =>

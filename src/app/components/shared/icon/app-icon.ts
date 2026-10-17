@@ -45,7 +45,8 @@ export type IconName =
   | 'document-duplicate'
   | 'chevron-down'
   | 'users'
-  | 'calendar';
+  | 'calendar'
+  | 'fire';
 
 @Component({
   selector: 'app-icon',

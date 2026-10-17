@@ -26,6 +26,7 @@ export class AdminShellComponent {
   private readonly router = inject(Router);
 
   readonly navItems: AdminNavItem[] = [
+    { label: 'Tổng quan', hint: 'Lớp học, bài thi, Mayo+', route: '/admin/dashboard', icon: 'home' },
     { label: 'Đề thi HSK', hint: 'Soạn, xuất bản, nhân bản đề', route: '/admin/exams', icon: 'academic' },
     { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open' },
   ];
