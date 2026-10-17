@@ -57,8 +57,8 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   examId = signal<string>('');
   exam = signal<Exam | null>(null);
   isLoading = signal<boolean>(true);
-  /** Đề người xem chưa làm được: members = cần học viên lớp, login = cần tài khoản, paid = cần cấp quyền, locked = sắp ra mắt */
-  lockedAs = signal<'members' | 'login' | 'paid' | 'locked' | null>(null);
+  /** Đề người xem chưa làm được: class = chỉ học viên lớp, paid = cần cấp quyền, locked = sắp ra mắt */
+  lockedAs = signal<'class' | 'paid' | 'locked' | null>(null);
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
 
   // Trạng thái phiên thi
@@ -168,7 +168,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     if (data && data.visibility !== 'public' && !data.sections?.length) {
       await this.auth.ready;
       const access = contentAccess(data.visibility, this.auth.viewer('exams'));
-      this.lockedAs.set(access === 'members' || access === 'login' || access === 'paid' ? access : 'locked');
+      this.lockedAs.set(access === 'class' || access === 'paid' ? access : 'locked');
       data = null;
     }
     this.exam.set(data);

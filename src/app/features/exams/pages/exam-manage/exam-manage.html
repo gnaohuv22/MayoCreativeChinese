@@ -47,9 +47,9 @@
         color="indigo"
       />
       <app-stat-card
-        label="Công khai"
-        [value]="countByVisibility('public')"
-        [subtext]="'Nội bộ: ' + countByVisibility('staff')"
+        label="Đang mở"
+        [value]="countByVisibility('public') + countByVisibility('members') + countByVisibility('paid') + countByVisibility('students')"
+        [subtext]="'Trả phí: ' + countByVisibility('paid') + ' · Nội bộ: ' + countByVisibility('staff')"
         icon="check"
         color="emerald"
       />

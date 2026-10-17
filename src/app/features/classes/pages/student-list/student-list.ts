@@ -4,6 +4,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { stripVietnamese } from '../../utils/student-import.util';
 import { ClassService } from '../../services/class.service';
+import { isGrantActive } from '../../../../components/shared/visibility/content-visibility';
 import { StudentTableComponent } from '../../components/student-table/student-table';
 import { STUDENT_STATUS_LABELS, type SchoolClass, type Student, type StudentStatus } from '../../models/class.model';
 
@@ -27,9 +28,11 @@ export class StudentListComponent {
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly search = signal('');
-  /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký, 'paid' = đang có quyền Trả phí */
+  /** '' = mọi lớp, 'none' = học viên chưa có lớp, 'guest' = khách tự đăng ký */
   readonly classFilter = signal('');
   readonly statusFilter = signal<StudentStatus | 'all'>('active');
+  /** true = chỉ tài khoản đang có quyền Trả phí */
+  readonly paidOnly = signal(false);
 
   readonly classCodes = computed(() => new Map(this.classes().map(c => [c.id, c.code])));
   readonly hasUnassigned = computed(() => this.students().some(s => !s.class_id && s.account_type === 'student'));
@@ -39,11 +42,12 @@ export class StudentListComponent {
     const q = stripVietnamese(this.search().trim().toLowerCase());
     const cls = this.classFilter();
     const status = this.statusFilter();
+    const paid = this.paidOnly();
     return this.students().filter(s =>
       (status === 'all' || s.status === status)
+      && (!paid || (s.access_grants ?? []).some(g => isGrantActive(g)))
       && (!cls
         || (cls === 'guest' ? s.account_type === 'guest'
-          : cls === 'paid' ? (s.access_grants ?? []).some(g => !g.expires_at || Date.parse(g.expires_at) > Date.now())
           : cls === 'none' ? !s.class_id && s.account_type === 'student'
           : s.class_id === cls))
       && (!q

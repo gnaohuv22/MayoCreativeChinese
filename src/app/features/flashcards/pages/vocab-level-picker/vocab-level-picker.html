@@ -133,7 +133,9 @@
                   <app-coming-soon-badge />
                 }
               </div>
-              @if (item.lockedAs === 'members') {
+              @if (item.lockedAs === 'class' && signedIn()) {
+                <p class="text-sm text-brand-navy/50 dark:text-white/40">Dành cho học viên lớp MCC.</p>
+              } @else if (item.lockedAs === 'class') {
                 <p class="text-sm text-brand-navy/50 dark:text-white/40">
                   Dành cho học viên MCC. <a routerLink="/dang-nhap" class="font-bold text-brand-pink hover:underline">Đăng nhập</a>
                 </p>

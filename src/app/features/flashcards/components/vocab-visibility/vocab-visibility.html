@@ -21,7 +21,7 @@
               <app-visibility-picker
                 [value]="row.visibility"
                 [disabled]="saving() === col.key + '|' + row.param"
-                [label]="'Trạng thái ' + row.label"
+                [label]="'Hiển thị ' + col.title + ' ' + row.label"
                 (changed)="setVisibility(col.key, row, $event)"
               />
             </li>

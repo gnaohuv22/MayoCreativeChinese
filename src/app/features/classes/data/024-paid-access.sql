@@ -336,20 +336,21 @@ begin
     granted_at = now();
   get diagnostics v_count = row_count;
 
-  select string_agg(username, ', ') into v_names
-  from (select username from student_profiles where user_id = any (v_ids) order by username limit 5) x;
+  select string_agg(full_name, ', ') into v_names
+  from (select full_name from student_profiles where user_id = any (v_ids) order by full_name limit 5) x;
   v_until := case when p_until is not null then 'đến ' || to_char(p_until at time zone 'Asia/Ho_Chi_Minh', 'DD/MM/YYYY')
                   when p_duration is not null then 'thêm ' || concat_ws(' ',
                     nullif((extract(year from p_duration) * 12 + extract(month from p_duration))::int, 0) || ' tháng',
                     nullif(extract(day from p_duration)::int, 0) || ' ngày')
                   else 'không thời hạn' end;
   perform write_activity('grant', 'student', cardinality(v_ids),
-    format('Cấp quyền %s (%s) cho %s%s',
+    format('Cấp quyền %s (%s) cho %s%s%s',
       array_to_string(array(select case m when 'flashcards' then 'Flashcards' else 'Đề thi HSK' end from unnest(v_modules) m), ' + '),
       v_until, v_names,
-      case when cardinality(v_ids) > 5 then format(' và %s tài khoản khác', cardinality(v_ids) - 5) else '' end),
+      case when cardinality(v_ids) > 5 then format(' và %s tài khoản khác', cardinality(v_ids) - 5) else '' end,
+      case when v_note <> '' then ' · ' || v_note else '' end),
     jsonb_build_object('students', to_jsonb(v_ids), 'modules', to_jsonb(v_modules),
-                       'until', p_until, 'duration', p_duration::text));
+                       'until', p_until, 'duration', p_duration::text, 'note', v_note));
   return jsonb_build_object('ok', true, 'count', v_count);
 end;
 $$;
@@ -372,8 +373,8 @@ begin
   delete from access_grants where user_id = any (p_students) and module = any (p_modules);
   get diagnostics v_count = row_count;
   if v_count > 0 then
-    select string_agg(username, ', ') into v_names
-    from (select username from student_profiles where user_id = any (p_students) order by username limit 5) x;
+    select string_agg(full_name, ', ') into v_names
+    from (select full_name from student_profiles where user_id = any (p_students) order by full_name limit 5) x;
     perform write_activity('revoke', 'student', v_count,
       format('Thu hồi quyền %s của %s',
         array_to_string(array(select case m when 'flashcards' then 'Flashcards' else 'Đề thi HSK' end
