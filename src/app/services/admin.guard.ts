@@ -15,7 +15,23 @@ export const staffGuard: CanActivateFn = async (_route, state) => {
   const injector = inject(Injector);
   const router = inject(Router);
   const auth = await loadAuth(injector);
-  return auth.isStaff() || router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
+  if (auth.isStaff()) return true;
+  // Học viên đang đăng nhập → báo không có quyền (không đưa về trang đăng nhập quản trị)
+  if (auth.isLearner()) return router.createUrlTree(['/khong-co-quyen']);
+  return router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
+};
+
+/** Trang đăng nhập / đăng ký: đã đăng nhập thì về trang của mình (hoặc returnUrl hợp lệ) */
+export const guestOnlyGuard: CanActivateFn = async route => {
+  const injector = inject(Injector);
+  const router = inject(Router);
+  const auth = await loadAuth(injector);
+  const returnUrl = route.queryParamMap.get('returnUrl') ?? '';
+  const safe = returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !/^\/(dang-nhap|dang-ky|admin\/login)/.test(returnUrl);
+  if (auth.isStaff()) return router.parseUrl(safe && returnUrl.startsWith('/admin') ? returnUrl : '/admin/exams');
+  if (auth.isLearner()) return router.parseUrl(safe && !returnUrl.startsWith('/admin') ? returnUrl : '/hoc-vien');
+  if (auth.needsOauthProfile()) return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: safe ? { returnUrl } : {} });
+  return true;
 };
 
 /** Trang cần một quyền cụ thể; thiếu quyền → về trang đề thi */
