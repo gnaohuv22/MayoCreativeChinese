@@ -189,6 +189,22 @@ export interface ExamAttempt {
   exam?: { title: string; hsk_level: number; hsk_version: HskVersion } | null;
 }
 
+/** my_learning_summary() (migration 027) */
+export interface LearningSummary {
+  current_streak: number;
+  longest_streak: number;
+  total_days: number;
+  last_day: string | null;
+  studied_today: boolean;
+  /** 7 ngày gần nhất, cũ → mới */
+  week: { day: string; reviews: number; exams: number }[];
+  words_studied: number;
+  words_mastered: number;
+  exams_taken: number;
+  exams_passed: number;
+  best_percent: number | null;
+}
+
 /** class_vocab_progress() */
 export interface StudentVocabProgress {
   student_id: string;

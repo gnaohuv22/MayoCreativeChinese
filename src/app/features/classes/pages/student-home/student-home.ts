@@ -9,7 +9,7 @@ import { scopeRoutes } from '../../../flashcards/utils/vocab-scope.util';
 import { VOCAB_COLLECTIONS } from '../../../flashcards/models/vocab-card.model';
 import { StudentService } from '../../services/student.service';
 import { RemoteProgressStore } from '../../../flashcards/services/remote-progress.store';
-import { CLASS_STATUS_LABELS, STAFF_ROLE_LABELS, STUDY_MODE_LABELS, type ClassAnnouncement, type ClassSuggestion, type ExamAttempt } from '../../models/class.model';
+import { CLASS_STATUS_LABELS, STAFF_ROLE_LABELS, STUDY_MODE_LABELS, type ClassAnnouncement, type ClassSuggestion, type ExamAttempt, type LearningSummary } from '../../models/class.model';
 import { formatDate, formatDateTime } from '../../utils/class-display.util';
 import { RecoveryEmailComponent } from '../../components/recovery-email/recovery-email';
 import { DeviceListComponent } from '../../components/device-list/device-list';
@@ -56,6 +56,7 @@ export class StudentHomeComponent {
   readonly suggestions = signal<ClassSuggestion[]>([]);
   readonly attempts = signal<ExamAttempt[]>([]);
   readonly loading = signal(true);
+  readonly summary = signal<LearningSummary | null>(null);
   readonly devices = signal<DeviceList | null>(null);
   readonly removingDevice = signal<string | null>(null);
   readonly deviceError = signal<string | null>(null);
@@ -77,12 +78,14 @@ export class StudentHomeComponent {
 
   async load() {
     this.loading.set(true);
-    const [announcements, suggestions, attempts, devices] = await Promise.all([
+    const [announcements, suggestions, attempts, devices, summary] = await Promise.all([
       this.studentService.myAnnouncements(),
       this.studentService.mySuggestions(),
       this.studentService.myAttempts(),
       this.auth.myDevices(),
+      this.studentService.myLearningSummary(),
     ]);
+    this.summary.set(summary);
     this.devices.set(devices);
     this.announcements.set(announcements);
     this.suggestions.set(suggestions);
@@ -98,6 +101,18 @@ export class StudentHomeComponent {
     this.removingDevice.set(null);
     if (res.error) this.deviceError.set(res.error);
     else this.devices.set(res.list ?? null);
+  }
+
+  /** "T2" … "CN" cho ngày yyyy-mm-dd */
+  weekdayLabel(day: string): string {
+    const d = new Date(`${day}T00:00:00`).getDay();
+    return d === 0 ? 'CN' : `T${d + 1}`;
+  }
+
+  streakMessage(s: LearningSummary): string {
+    if (s.studied_today) return s.current_streak > 1 ? 'Hôm nay bạn đã học. Giữ vững chuỗi nhé!' : 'Khởi đầu tốt! Mai học tiếp để nối chuỗi.';
+    if (s.current_streak > 0) return `Học hôm nay để giữ chuỗi ${s.current_streak} ngày.`;
+    return 'Ôn vài từ hôm nay để bắt đầu chuỗi ngày học.';
   }
 
   vocabRoute(s: ClassSuggestion): string[] {

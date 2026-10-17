@@ -3,7 +3,7 @@ import { getSupabase } from '../../../services/supabase.client';
 import { AuthService } from '../../../services/auth.service';
 import { RequestCache } from '../../../services/request-cache';
 import type { ExamSubmission, UserAnswers } from '../../exams/models/exam.model';
-import type { ClassAnnouncement, ClassSuggestion, ExamAttempt } from '../models/class.model';
+import type { ClassAnnouncement, ClassSuggestion, ExamAttempt, LearningSummary } from '../models/class.model';
 import { ATTEMPT_COLUMNS } from './class.service';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -39,6 +39,13 @@ export class StudentService {
       .order('created_at', { ascending: false });
     if (error) console.error('Announcements query failed:', error);
     return (data ?? []) as ClassAnnouncement[];
+  }
+
+  /** Chuỗi ngày học + tóm tắt tiến độ (migration 027) */
+  async myLearningSummary(): Promise<LearningSummary | null> {
+    const { data, error } = await this.supabase.rpc('my_learning_summary');
+    if (error) console.error('Learning summary failed:', error);
+    return (data as LearningSummary | null) ?? null;
   }
 
   async myAttempts(limit = 20): Promise<ExamAttempt[]> {

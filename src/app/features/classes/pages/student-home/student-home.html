@@ -24,6 +24,61 @@
       <app-recovery-email />
     }
 
+    <!-- Chuỗi ngày học + tiến độ -->
+    @if (summary(); as s) {
+      <section class="mcc-card p-6 sm:p-7 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6" aria-labelledby="streak-title">
+        <div class="space-y-4">
+          <div class="flex items-center gap-4">
+            <span class="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center"
+                  [class]="s.studied_today ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-100 text-zinc-400 dark:bg-white/10 dark:text-zinc-500'">
+              <app-icon name="fire" size="lg" />
+            </span>
+            <div>
+              <h2 id="streak-title" class="font-display font-black text-3xl text-brand-navy dark:text-white leading-none">
+                {{ s.current_streak }} <span class="text-base font-bold">ngày liên tiếp</span>
+              </h2>
+              <p class="text-sm text-zinc-600 dark:text-zinc-300 mt-1">{{ streakMessage(s) }}</p>
+            </div>
+          </div>
+          <ol class="grid grid-cols-7 gap-1.5" aria-label="7 ngày gần nhất">
+            @for (d of s.week; track d.day; let last = $last) {
+              <li class="flex flex-col items-center gap-1">
+                <span class="w-full h-9 rounded-xl flex items-center justify-center"
+                      [class]="d.reviews + d.exams > 0 ? 'bg-orange-500/90 text-white' : 'bg-zinc-100 dark:bg-white/10 text-zinc-400 dark:text-zinc-500'"
+                      [attr.title]="d.reviews + ' lượt ôn · ' + d.exams + ' bài thi'">
+                  @if (d.reviews + d.exams > 0) { <app-icon name="check" size="xs" /> }
+                </span>
+                <span class="text-[10px] font-bold" [class]="last ? 'text-brand-pink' : 'text-zinc-500 dark:text-zinc-400'">{{ last ? 'Nay' : weekdayLabel(d.day) }}</span>
+              </li>
+            }
+          </ol>
+          <div class="flex flex-wrap gap-2">
+            <a routerLink="/flashcards" class="mcc-btn mcc-btn-primary"><app-icon name="book-open" size="xs" /> Học từ vựng</a>
+            <a routerLink="/exams" class="mcc-btn mcc-btn-secondary"><app-icon name="academic" size="xs" /> Làm đề thi</a>
+          </div>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-3 content-start">
+          <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
+            <dt class="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">Chuỗi dài nhất</dt>
+            <dd class="mt-1 text-2xl font-black text-brand-navy dark:text-white tabular-nums">{{ s.longest_streak }} <span class="text-xs font-bold text-zinc-500">ngày</span></dd>
+          </div>
+          <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
+            <dt class="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">Từ đã thuộc</dt>
+            <dd class="mt-1 text-2xl font-black text-brand-navy dark:text-white tabular-nums">{{ s.words_mastered }} <span class="text-xs font-bold text-zinc-500">/ {{ s.words_studied }} đã học</span></dd>
+          </div>
+          <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
+            <dt class="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">Bài thi</dt>
+            <dd class="mt-1 text-2xl font-black text-brand-navy dark:text-white tabular-nums">{{ s.exams_taken }} <span class="text-xs font-bold text-zinc-500">· đạt {{ s.exams_passed }}</span></dd>
+          </div>
+          <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5">
+            <dt class="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">Điểm cao nhất</dt>
+            <dd class="mt-1 text-2xl font-black text-brand-navy dark:text-white tabular-nums">{{ s.best_percent !== null ? s.best_percent + '%' : '—' }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+
     <!-- Lớp -->
     @if (cls(); as c) {
       <section class="mcc-card p-6 sm:p-7 grid md:grid-cols-[1fr_auto] gap-6">
@@ -69,14 +124,6 @@
         }
       </section>
     } @else if (auth.isGuest()) {
-      <section class="mcc-card p-6 flex flex-wrap items-center justify-between gap-4">
-        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tiến độ flashcard và bài thi của bạn được lưu vào tài khoản này.</p>
-        <div class="flex gap-2">
-          <a routerLink="/flashcards" class="mcc-btn mcc-btn-primary"><app-icon name="book-open" size="xs" /> Flashcard</a>
-          <a routerLink="/exams" class="mcc-btn mcc-btn-secondary"><app-icon name="academic" size="xs" /> Đề thi HSK</a>
-        </div>
-      </section>
-
       <section class="mcc-card p-6 space-y-4" aria-labelledby="paid-access-title">
         <h2 id="paid-access-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Nội dung Mayo+</h2>
         <ul class="grid sm:grid-cols-2 gap-3">

@@ -53,7 +53,9 @@ begin
   s1 := pg_temp.new_session(v_guest); s2 := pg_temp.new_session(v_guest);
   s3 := pg_temp.new_session(v_guest); s4 := pg_temp.new_session(v_guest);
 
-  -- Bản web cũ (không gửi header) vẫn chạy khi chưa bật chế độ nghiêm
+  -- Bản web cũ (không gửi header) vẫn chạy khi chưa bật chế độ nghiêm (tắt tạm trong giao dịch thử)
+  insert into private.settings (key, value) values ('device_limit_strict', 'off')
+  on conflict (key) do update set value = excluded.value;
   perform pg_temp.act_as(v_guest, s1, null);
   assert pg_temp.gate_ok(), 'không header + chưa nghiêm → cho qua';
 

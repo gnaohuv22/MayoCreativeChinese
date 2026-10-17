@@ -1,0 +1,163 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-brand-navy/10 dark:border-white/10">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Tổng quan</h1>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+          {{ data()?.can_see_all ? 'Mọi lớp học và học viên.' : 'Các lớp bạn phụ trách.' }}
+        </p>
+      </div>
+      <button type="button" (click)="load()" class="self-start sm:self-auto p-2 rounded-full text-brand-navy dark:text-white hover:bg-brand-navy/5 dark:hover:bg-white/10 cursor-pointer" title="Tải lại" aria-label="Tải lại">
+        <app-icon name="arrow-path" size="sm" [customClass]="loading() ? 'animate-spin' : ''" />
+      </button>
+    </div>
+
+    @if (error()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được tổng quan: {{ error() }}</p>
+    } @else if (!data() && loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải…</p>
+    }
+
+    @if (data(); as d) {
+      <!-- Thành viên Mayo+ (admin) -->
+      @if (d.membership; as m) {
+        <section class="space-y-4" aria-labelledby="mayo-title">
+          <h2 id="mayo-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Thành viên Mayo+</h2>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <app-stat-card label="Đang có Mayo+" [value]="m.active" icon="sparkles" color="amber"
+              [subtext]="'Flashcards ' + (m.active_by_module?.flashcards ?? 0) + ' · Đề thi ' + (m.active_by_module?.exams ?? 0)" />
+            <app-stat-card label="Có học 7 ngày qua" [value]="m.active_learning_7d + ' / ' + m.active" icon="fire" color="pink" subtext="Thành viên Mayo+" />
+            <app-stat-card label="Đăng ký mới" [value]="m.new_signups_7d" icon="users" color="indigo" subtext="7 ngày qua" />
+            <app-stat-card label="Tài khoản khách" [value]="m.guests" icon="users" color="navy" subtext="Đang hoạt động" />
+          </div>
+
+          <div class="grid lg:grid-cols-2 gap-4">
+            @for (block of [{ title: 'Sắp hết hạn (14 ngày)', list: m.expiring, expired: false }, { title: 'Hết hạn gần đây (30 ngày)', list: m.expired, expired: true }]; track block.title) {
+              <div class="mcc-card p-5 space-y-3">
+                <h3 class="text-sm font-bold text-brand-navy dark:text-white">{{ block.title }} <span class="text-zinc-500 font-semibold">· {{ block.list.length }}</span></h3>
+                <ul class="divide-y divide-brand-navy/5 dark:divide-white/5">
+                  @for (g of block.list; track g.user_id + g.module) {
+                    <li class="py-2.5 flex items-start justify-between gap-3">
+                      <div class="min-w-0 text-xs">
+                        <p class="text-sm font-bold text-brand-navy dark:text-white truncate">{{ g.full_name }}</p>
+                        <p class="text-zinc-600 dark:text-zinc-300">
+                          {{ moduleLabels[g.module] }} ·
+                          <span [class]="block.expired ? 'text-red-600 dark:text-red-400 font-bold' : 'text-amber-700 dark:text-amber-300 font-bold'">
+                            {{ block.expired ? 'hết ' + formatDate(g.expires_at) : 'còn ' + daysLeft(g.expires_at) + ' ngày (' + formatDate(g.expires_at) + ')' }}
+                          </span>
+                        </p>
+                        <p class="text-zinc-500 dark:text-zinc-400">
+                          Học gần nhất: {{ lastStudied(g.last_day) }}
+                          @if (g.phone) { · <a [href]="'tel:' + g.phone" class="hover:underline">{{ g.phone }}</a> }
+                        </p>
+                      </div>
+                      <button type="button" (click)="copyReminder(g, block.expired)" class="mcc-btn mcc-btn-secondary !px-3 !py-1.5 shrink-0 whitespace-nowrap">Chép lời nhắc</button>
+                    </li>
+                  } @empty {
+                    <li class="py-4 text-sm text-zinc-500 dark:text-zinc-400">Không có.</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Lớp học -->
+      <section class="space-y-4" aria-labelledby="classes-title">
+        <h2 id="classes-title" class="text-sm font-black uppercase tracking-wide text-brand-navy dark:text-white">Lớp học</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (c of d.classes; track c.id) {
+            <a [routerLink]="['/admin/classes', c.id]" class="mcc-card p-5 space-y-4 hover:border-brand-pink/40 transition-colors">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="font-display font-black text-lg text-brand-navy dark:text-white">{{ c.code }}</p>
+                  <p class="text-xs text-zinc-600 dark:text-zinc-300 truncate">{{ c.name }}</p>
+                </div>
+                <span class="mcc-chip" [class]="classStatus[c.status].tone">{{ classStatus[c.status].label }}</span>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-zinc-600 dark:text-zinc-300">Học trong 7 ngày</span>
+                  <span class="font-bold text-brand-navy dark:text-white tabular-nums">{{ c.active_7d }} / {{ c.students }}</span>
+                </div>
+                <div class="h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                  <div class="h-full rounded-full bg-orange-500" [style.width.%]="c.students ? (c.active_7d / c.students) * 100 : 0"></div>
+                </div>
+              </div>
+              <dl class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5">
+                  <dt class="text-[10px] text-zinc-500 dark:text-zinc-400">Từ thuộc / người</dt>
+                  <dd class="text-sm font-black text-brand-navy dark:text-white tabular-nums">{{ c.mastered_avg ?? 0 }}</dd>
+                </div>
+                <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5">
+                  <dt class="text-[10px] text-zinc-500 dark:text-zinc-400">Bài thi 30 ngày</dt>
+                  <dd class="text-sm font-black text-brand-navy dark:text-white tabular-nums">{{ c.attempts_30d }}</dd>
+                </div>
+                <div class="p-2 rounded-xl bg-zinc-50 dark:bg-white/5">
+                  <dt class="text-[10px] text-zinc-500 dark:text-zinc-400">Điểm TB · đạt</dt>
+                  <dd class="text-sm font-black text-brand-navy dark:text-white tabular-nums">
+                    {{ c.avg_percent_30d !== null ? c.avg_percent_30d + '%' : '—' }}@if (c.pass_rate_30d !== null) { · {{ c.pass_rate_30d }}% }
+                  </dd>
+                </div>
+              </dl>
+            </a>
+          } @empty {
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Bạn chưa phụ trách lớp nào.</p>
+          }
+        </div>
+      </section>
+
+      <div class="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-6 items-start">
+        <!-- Học viên vắng -->
+        <section class="mcc-card p-5 space-y-3" aria-labelledby="inactive-title">
+          <h2 id="inactive-title" class="text-sm font-bold text-brand-navy dark:text-white">
+            Chưa học trong 7 ngày <span class="text-zinc-500 font-semibold">· {{ d.inactive_students.length }}</span>
+          </h2>
+          <ul class="divide-y divide-brand-navy/5 dark:divide-white/5 max-h-96 overflow-y-auto">
+            @for (s of d.inactive_students; track s.user_id) {
+              <li class="py-2 flex items-center justify-between gap-3 text-xs">
+                <span class="min-w-0">
+                  <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ s.full_name }}</span>
+                  <a [routerLink]="['/admin/classes', s.class_id]" class="text-zinc-500 dark:text-zinc-400 hover:underline">{{ s.class_code }}</a>
+                </span>
+                <span class="text-zinc-600 dark:text-zinc-300 whitespace-nowrap">{{ lastStudied(s.last_day) }}</span>
+              </li>
+            } @empty {
+              <li class="py-4 text-sm text-zinc-500 dark:text-zinc-400">Học viên lớp đang học đều có học tuần này.</li>
+            }
+          </ul>
+        </section>
+
+        <!-- Bài thi gần đây -->
+        <section class="mcc-card p-5 space-y-3" aria-labelledby="attempts-title">
+          <h2 id="attempts-title" class="text-sm font-bold text-brand-navy dark:text-white">Bài thi gần đây</h2>
+          <ul class="divide-y divide-brand-navy/5 dark:divide-white/5">
+            @for (a of d.recent_attempts; track a.id) {
+              <li class="py-2.5 flex items-center justify-between gap-3 text-xs">
+                <span class="min-w-0">
+                  <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ a.full_name }}
+                    <span class="font-semibold text-zinc-500">· {{ a.class_code ?? 'Khách' }}</span>
+                  </span>
+                  <span class="block text-zinc-600 dark:text-zinc-300 truncate">{{ a.exam_title ?? 'Đề đã xoá' }}</span>
+                  <span class="block text-zinc-500 dark:text-zinc-400">{{ formatDateTime(a.submitted_at) }}@if (a.time_spent_secs) { · {{ minutes(a.time_spent_secs) }} }</span>
+                </span>
+                <span class="text-right shrink-0">
+                  <span class="block text-sm font-black text-brand-navy dark:text-white tabular-nums">{{ a.score }}/{{ a.total_score }}</span>
+                  @if (passed(a) !== null) {
+                    <span class="mcc-chip" [class]="passed(a) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300'">
+                      {{ passed(a) ? 'Đạt' : 'Chưa đạt' }} · {{ percent(a) }}%
+                    </span>
+                  }
+                </span>
+              </li>
+            } @empty {
+              <li class="py-4 text-sm text-zinc-500 dark:text-zinc-400">Chưa có bài thi nào.</li>
+            }
+          </ul>
+        </section>
+      </div>
+    }
+  </div>
+</div>

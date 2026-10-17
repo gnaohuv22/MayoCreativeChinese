@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
+import { guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
 
 export const routes: Routes = [
   {
@@ -22,6 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin/login',
+    canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
   },
@@ -30,6 +31,7 @@ export const routes: Routes = [
     path: 'dang-nhap',
     title: 'Đăng nhập học viên',
     data: { audience: 'student' },
+    canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/admin/pages/admin-login/admin-login').then(m => m.AdminLoginComponent),
   },
@@ -37,6 +39,7 @@ export const routes: Routes = [
     // Khách tự đăng ký: email + số điện thoại, hoặc Google (migration 021, 022)
     path: 'dang-ky',
     title: 'Đăng ký tài khoản',
+    canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/classes/pages/guest-register/guest-register').then(m => m.GuestRegisterComponent),
   },
@@ -64,6 +67,12 @@ export const routes: Routes = [
     title: 'Đặt lại mật khẩu',
     loadComponent: () =>
       import('./features/classes/pages/reset-password/reset-password').then(m => m.ResetPasswordComponent),
+  },
+  {
+    // Học viên mở khu quản trị
+    path: 'khong-co-quyen',
+    title: 'Không có quyền truy cập',
+    loadComponent: () => import('./features/admin/pages/forbidden/forbidden').then(m => m.ForbiddenComponent),
   },
   {
     // Đã dùng đủ 3 thiết bị (migration 026)
@@ -106,7 +115,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/admin/layout/admin-shell/admin-shell').then(m => m.AdminShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'exams' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        title: 'Tổng quan',
+        loadComponent: () =>
+          import('./features/admin/pages/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
+      },
       {
         path: 'exams',
         loadComponent: () =>
