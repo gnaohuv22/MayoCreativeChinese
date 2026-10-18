@@ -32,7 +32,7 @@ export class StoryService {
     return this.loading;
   }
 
-  /** Bài đầy đủ theo slug; null = không có / chưa xuất bản */
+  /** Bài đầy đủ theo slug; null = không có / chưa xuất bản; lỗi mạng / DB thì ném lỗi */
   async get(slug: string): Promise<StudentStory | null> {
     const { data, error } = await this.supabase
       .from('site_posts')
@@ -40,7 +40,8 @@ export class StoryService {
       .eq('slug', slug)
       .eq('is_published', true)
       .maybeSingle();
-    if (error || !data) return null;
+    if (error) throw error;
+    if (!data) return null;
     const images = data.images as StoryImage[];
     return { ...data, images, cover: images[0] ?? EMPTY_IMAGE } as StudentStory;
   }

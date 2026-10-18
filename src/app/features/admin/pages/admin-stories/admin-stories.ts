@@ -5,6 +5,7 @@ import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { ToastService } from '../../../../services/toast.service';
 import { SiteAdminService, type StoryFields } from '../../services/site-admin.service';
 import { SiteImageFieldComponent } from '../../components/site-image-field/site-image-field';
+import { AdminGuideComponent } from '../../components/admin-guide/admin-guide';
 import type { StoryBlock, StoryBlockKind, StoryResult, StoryRow } from '../../../posts/models/student-story.model';
 
 /** Khối đang sửa: danh sách giữ dạng chữ nhiều dòng cho dễ gõ, tách dòng khi lưu */
@@ -102,7 +103,7 @@ function toFields(draft: Draft): StoryFields {
 @Component({
   selector: 'app-admin-stories',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink, AppIconComponent, SiteImageFieldComponent],
+  imports: [NgTemplateOutlet, RouterLink, AppIconComponent, SiteImageFieldComponent, AdminGuideComponent],
   templateUrl: './admin-stories.html',
   styleUrl: './admin-stories.css',
   host: { '(window:beforeunload)': 'onBeforeUnload($event)' },
@@ -159,7 +160,10 @@ export class AdminStoriesComponent {
   }
 
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isDirty()) event.preventDefault();
+    if (!this.isDirty()) return;
+    event.preventDefault();
+    // Chromium cũ cần returnValue mới hiện hộp xác nhận
+    event.returnValue = '';
   }
 
   private openDraft(draft: Draft | null): void {
@@ -183,9 +187,7 @@ export class AdminStoriesComponent {
       category: this.categories()[0] ?? '', customCategory: this.categories().length === 0,
       title: '', excerpt: '', images: [], body: [{ kind: 'lead', text: '' }],
     };
-    this.draft.set(draft);
-    // Bài mới luôn tính là chưa lưu
-    this.savedSnapshot = '';
+    this.openDraft(draft);
   }
 
   close(): void {
@@ -262,7 +264,11 @@ export class AdminStoriesComponent {
     if (!fields.category) return this.toast.error('Chưa chọn chuyên mục');
     if (!this.slugValid(fields.slug)) return this.toast.error('Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang');
     if (fields.is_published && fields.images.length === 0) return this.toast.error('Bài xuất bản cần ít nhất 1 ảnh (ảnh bìa)');
+    const nameless = draft.body.some(b => b.kind === 'results' && b.items.some(r => !r.name.trim() && (r.level.trim() || r.score.trim() || r.note?.trim())));
+    if (nameless) return this.toast.error('Bảng kết quả có dòng chưa có họ tên');
 
+    // Bản đã gửi đi: chữ gõ thêm trong lúc đang lưu vẫn tính là chưa lưu
+    const sent = JSON.stringify(fields);
     this.saving.set(true);
     const existing = draft.id ? this.rows().find(r => r.id === draft.id) : null;
     const res = existing
@@ -280,7 +286,10 @@ export class AdminStoriesComponent {
     }
     const row = res.row;
     this.rows.update(rows => (existing ? rows.map(r => (r.id === row.id ? row : r)) : [...rows, row]));
-    this.openDraft(toDraft(row));
+    // Giữ bản nháp đang mở (không ghi đè chữ vừa gõ thêm), chỉ cập nhật trạng thái đã lưu
+    draft.id = row.id;
+    draft.slugTouched = true;
+    this.savedSnapshot = sent;
     this.toast.success(`Đã lưu: ${row.title}`);
   }
 
@@ -302,13 +311,14 @@ export class AdminStoriesComponent {
     if (target < 0 || target >= rows.length || this.reordering()) return;
     [rows[index], rows[target]] = [rows[target], rows[index]];
     this.reordering.set(true);
-    const { stamps, error } = await this.siteAdmin.reorderPosts(rows.map(r => r.id));
+    const { error } = await this.siteAdmin.reorderPosts(rows.map(r => r.id));
     this.reordering.set(false);
-    if (error || !stamps) {
-      this.toast.error(error ?? 'Không đổi được thứ tự');
+    if (error) {
+      this.toast.error(error);
       return;
     }
-    this.rows.set(rows.map((r, i) => ({ ...r, sort_order: i + 1, updated_at: stamps[r.id] ?? r.updated_at })));
+    // Đổi thứ tự không đổi updated_at (032) nên bài đang mở vẫn lưu bình thường
+    this.rows.set(rows.map((r, i) => ({ ...r, sort_order: i + 1 })));
   }
 
   // ---------------------------------------------------------------------------
@@ -332,17 +342,20 @@ export class AdminStoriesComponent {
     }
     if (this.categories().includes(to) && !confirm(`Gộp “${from}” vào chuyên mục “${to}” có sẵn?`)) return;
     this.renameSaving.set(true);
-    const { stamps, error } = await this.siteAdmin.renameCategory(from, to);
-    this.renameSaving.set(false);
-    if (error || !stamps) {
-      this.toast.error(error ?? 'Không đổi được tên chuyên mục');
+    const { error } = await this.siteAdmin.renameCategory(from, to);
+    if (error) {
+      this.renameSaving.set(false);
+      this.toast.error(error);
       return;
     }
-    this.rows.update(rows => rows.map(r => (r.id in stamps ? { ...r, category: to, updated_at: stamps[r.id] } : r)));
-    const draft = this.draft();
-    if (draft?.id && draft.category === from) {
-      draft.category = to;
-      this.savedSnapshot = JSON.stringify(toFields(draft));
+    // Tải lại danh sách (cả nội dung mới nhất) để không giữ bản cũ với updated_at mới
+    const { rows } = await this.siteAdmin.listPosts();
+    this.renameSaving.set(false);
+    if (rows) {
+      this.rows.set(rows);
+      const openId = this.draft()?.id;
+      const fresh = openId ? rows.find(r => r.id === openId) : null;
+      if (fresh) this.openDraft(toDraft(fresh));
     }
     this.renaming.set(null);
     this.toast.success(`Đã đổi tên chuyên mục thành “${to}”`);

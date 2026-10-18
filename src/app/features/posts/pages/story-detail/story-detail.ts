@@ -37,6 +37,9 @@ export class StoryDetailComponent {
   /** undefined = đang tải, null = không có bài */
   private readonly loaded = signal<StudentStory | null | undefined>(undefined);
   readonly story = computed(() => this.loaded() ?? null);
+  readonly loadFailed = signal(false);
+  /** Tăng để tải lại bài sau lỗi */
+  private readonly attempt = signal(0);
   readonly others = computed(() => (this.stories.summaries() ?? []).filter(s => s.slug !== this.slug()).slice(0, 3));
 
   /** Ảnh đang xem phóng to (null = đóng) */
@@ -56,11 +59,18 @@ export class StoryDetailComponent {
     // Đổi slug (bấm sang bài khác) → tải bài mới; bỏ kết quả của slug cũ nếu về muộn
     effect(() => {
       const slug = this.slug();
+      this.attempt();
       this.loaded.set(undefined);
+      this.loadFailed.set(false);
       if (!slug) return;
-      void this.stories.get(slug).then(story => {
-        if (this.slug() === slug) this.loaded.set(story);
-      });
+      this.stories.get(slug).then(
+        story => {
+          if (this.slug() === slug) this.loaded.set(story);
+        },
+        () => {
+          if (this.slug() === slug) this.loadFailed.set(true);
+        },
+      );
     });
 
     effect(() => {
@@ -88,6 +98,10 @@ export class StoryDetailComponent {
       }
       this.lightboxIndex.set(null);
     });
+  }
+
+  retry(): void {
+    this.attempt.update(n => n + 1);
   }
 
   openLightbox(index: number): void {

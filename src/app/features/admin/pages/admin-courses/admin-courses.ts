@@ -5,8 +5,10 @@ import { ToastService } from '../../../../services/toast.service';
 import { SiteAdminService } from '../../services/site-admin.service';
 import { CourseBlocksEditorComponent } from '../../components/course-blocks-editor/course-blocks-editor';
 import { CourseInfoEditorComponent } from '../../components/course-info-editor/course-info-editor';
+import { AdminGuideComponent } from '../../components/admin-guide/admin-guide';
 import { slugify } from '../../../courses/course-links';
-import { type CourseDraft, type CourseRow, type DraftTrack, draftToContent, emptyDraft, rowToDraft } from './course-draft';
+import { type CourseDraft, type CourseRow, type DraftTrack, draftToContent, droppedItem, emptyDraft, rowToDraft } from './course-draft';
+import { CourseService } from '../../../courses/services/course.service';
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -14,7 +16,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 @Component({
   selector: 'app-admin-courses',
   standalone: true,
-  imports: [RouterLink, AppIconComponent, CourseBlocksEditorComponent, CourseInfoEditorComponent],
+  imports: [RouterLink, AppIconComponent, CourseBlocksEditorComponent, CourseInfoEditorComponent, AdminGuideComponent],
   templateUrl: './admin-courses.html',
   styleUrl: './admin-courses.css',
   host: { '(window:beforeunload)': 'onBeforeUnload($event)' },
@@ -23,6 +25,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export class AdminCoursesComponent {
   private readonly siteAdmin = inject(SiteAdminService);
   private readonly toast = inject(ToastService);
+  private readonly courseService = inject(CourseService);
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
@@ -66,13 +69,16 @@ export class AdminCoursesComponent {
   }
 
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isDirty()) event.preventDefault();
+    if (!this.isDirty()) return;
+    event.preventDefault();
+    // Chromium cũ cần returnValue mới hiện hộp xác nhận
+    event.returnValue = '';
   }
 
-  private openDraft(draft: CourseDraft | null, isNew = false): void {
+  private openDraft(draft: CourseDraft | null): void {
     this.draft.set(draft);
     this.openTrack.set(null);
-    this.savedSnapshot = draft && !isNew ? this.snapshot(draft) : '';
+    this.savedSnapshot = draft ? this.snapshot(draft) : '';
     window.scrollTo({ top: 0 });
   }
 
@@ -81,7 +87,7 @@ export class AdminCoursesComponent {
   }
 
   addCourse(): void {
-    if (this.confirmLeave()) this.openDraft(emptyDraft(), true);
+    if (this.confirmLeave()) this.openDraft(emptyDraft());
   }
 
   close(): void {
@@ -144,7 +150,11 @@ export class AdminCoursesComponent {
     const name = draft.name.trim();
     if (!name) return this.toast.error('Chưa nhập tên khóa học');
     if (!draft.id && !this.slugValid(draft.slug)) return this.toast.error('Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang');
+    const dropped = droppedItem(draft);
+    if (dropped) return this.toast.error(dropped);
     const fields = { name, is_published: draft.is_published, content: draftToContent(draft) };
+    // Bản đã gửi đi: chữ gõ thêm trong lúc đang lưu vẫn tính là chưa lưu
+    const sent = this.snapshot(draft);
 
     this.saving.set(true);
     const existing = draft.id ? this.rows().find(r => r.id === draft.id) : null;
@@ -165,18 +175,20 @@ export class AdminCoursesComponent {
     this.rows.update(rows => (existing ? rows.map(r => (r.id === row.id ? row : r)) : [...rows, row]));
     // Giữ nguyên bản nháp đang mở (vị trí cuộn, khối đang mở), chỉ cập nhật trạng thái đã lưu
     draft.id = row.id;
-    this.savedSnapshot = this.snapshot(draft);
+    this.savedSnapshot = sent;
+    this.courseService.refreshNames();
     this.toast.success(`Đã lưu: ${row.name}`);
   }
 
   async deleteCourse(row: CourseRow): Promise<void> {
-    if (!confirm(`Xoá hẳn trang khóa học “${row.name}”? Lớp học đang gắn khóa này sẽ không còn hiện tên khóa. Muốn tạm ẩn thì bỏ chọn “Hiện trên trang web”.`)) return;
+    if (!confirm(`Xoá hẳn trang khóa học “${row.name}”? Không khôi phục được. Muốn tạm gỡ thì bỏ chọn “Hiện trên trang web”.`)) return;
     const { error } = await this.siteAdmin.deleteCourse(row.id);
     if (error) {
       this.toast.error(error);
       return;
     }
     this.rows.update(rows => rows.filter(r => r.id !== row.id));
+    this.courseService.refreshNames();
     this.toast.success('Đã xoá trang khóa học');
   }
 
@@ -186,12 +198,14 @@ export class AdminCoursesComponent {
     if (target < 0 || target >= rows.length || this.reordering()) return;
     [rows[index], rows[target]] = [rows[target], rows[index]];
     this.reordering.set(true);
-    const { stamps, error } = await this.siteAdmin.reorderCourses(rows.map(r => r.id));
+    const { error } = await this.siteAdmin.reorderCourses(rows.map(r => r.id));
     this.reordering.set(false);
-    if (error || !stamps) {
-      this.toast.error(error ?? 'Không đổi được thứ tự');
+    if (error) {
+      this.toast.error(error);
       return;
     }
-    this.rows.set(rows.map((r, i) => ({ ...r, sort_order: i + 1, updated_at: stamps[r.id] ?? r.updated_at })));
+    // Đổi thứ tự không đổi updated_at (032)
+    this.rows.set(rows.map((r, i) => ({ ...r, sort_order: i + 1 })));
+    this.courseService.refreshNames();
   }
 }

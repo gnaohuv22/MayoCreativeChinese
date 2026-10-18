@@ -10,6 +10,7 @@
       [value]="value()[lang()] ?? ''"
       [placeholder]="lang() === 'vi' ? '' : (value().vi ?? '')"
       [attr.lang]="lang()"
+      [attr.aria-label]="label() ? null : ariaLabel() || null"
       (input)="update($event)"
       class="mcc-input resize-y leading-relaxed"
     ></textarea>
@@ -20,6 +21,7 @@
       [value]="value()[lang()] ?? ''"
       [placeholder]="lang() === 'vi' ? '' : (value().vi ?? '')"
       [attr.lang]="lang()"
+      [attr.aria-label]="label() ? null : ariaLabel() || null"
       (input)="update($event)"
       class="mcc-input"
     />

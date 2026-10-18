@@ -18,6 +18,8 @@ export class LtextInputComponent {
   readonly value = input.required<LocalizedText>();
   readonly lang = input.required<Lang>();
   readonly label = input('');
+  /** Tên cho trình đọc màn hình khi ô không có nhãn hiển thị */
+  readonly ariaLabel = input('');
   readonly multiline = input(false);
   readonly rows = input(3);
   readonly maxlength = input(2000);

@@ -110,6 +110,14 @@
       }
     </div>
   }
+} @else if (loadFailed()) {
+  <main class="min-h-[70vh] flex flex-col items-center justify-center gap-4 px-4 pt-28 pb-16 text-center">
+    <p class="text-base font-semibold text-brand-navy dark:text-white">Không tải được trang. Kiểm tra kết nối mạng rồi thử lại.</p>
+    <button type="button" (click)="retry()" class="mcc-btn mcc-btn-primary">
+      <app-icon name="arrow-path" size="xs" />
+      <span>Thử lại</span>
+    </button>
+  </main>
 }
 
 <app-footer />

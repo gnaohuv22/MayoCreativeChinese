@@ -49,6 +49,9 @@ export class CourseDetailComponent {
   /** undefined = đang tải, null = không có khóa */
   private readonly loaded = signal<CourseDetail | null | undefined>(undefined);
   readonly course = computed(() => this.loaded() ?? null);
+  readonly loadFailed = signal(false);
+  /** Tăng để tải lại khóa sau lỗi */
+  private readonly attempt = signal(0);
 
   /** Chặng đang chọn (khóa có nhiều lựa chọn) */
   readonly trackIndex = signal(0);
@@ -98,13 +101,20 @@ export class CourseDetailComponent {
     // Đổi slug → tải khóa mới; bỏ kết quả của slug cũ nếu về muộn
     effect(() => {
       const slug = this.slug();
+      this.attempt();
       this.loaded.set(undefined);
+      this.loadFailed.set(false);
       this.trackIndex.set(0);
       this.audienceIndex.set(0);
       if (!slug) return;
-      void this.courses.get(slug).then(course => {
-        if (this.slug() === slug) this.loaded.set(course);
-      });
+      this.courses.get(slug).then(
+        course => {
+          if (this.slug() === slug) this.loaded.set(course);
+        },
+        () => {
+          if (this.slug() === slug) this.loadFailed.set(true);
+        },
+      );
     });
 
     effect(() => {
@@ -140,6 +150,10 @@ export class CourseDetailComponent {
       const idx = c.audiences.findIndex(a => slugify(a).startsWith(param));
       if (idx >= 0) this.audienceIndex.set(idx);
     });
+  }
+
+  retry(): void {
+    this.attempt.update(n => n + 1);
   }
 
   selectTrack(index: number): void {

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { AppIconComponent } from '../shared/icon/app-icon';
 import { I18nService } from '../../services/i18n.service';
@@ -17,7 +17,7 @@ export class HeroComponent {
   protected readonly registerModal = inject(RegisterModalService);
   protected readonly site = inject(SiteContentService);
 
-  readonly hero = computed(() => this.site.content()?.hero);
+  readonly hero = this.site.hero;
 
   openRegisterModal(): void {
     this.registerModal.open();

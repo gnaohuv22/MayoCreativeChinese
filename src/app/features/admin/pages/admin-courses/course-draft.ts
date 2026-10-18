@@ -68,37 +68,60 @@ export interface CourseRow {
 // Dòng định dạng ↔ chữ
 // -----------------------------------------------------------------------------
 
+/** **chữ** (không chứa ** bên trong) */
+const BOLD = /^\*\*((?:(?!\*\*).)+)\*\*$/;
+/** _chữ_ (không chứa _ bên trong) */
+const ITALIC = /^_([^_]+)_$/;
+
+/** Dòng thường nhưng trông giống cú pháp định dạng → thêm \ ở đầu để giữ nguyên */
+function needsEscape(text: string): boolean {
+  return text.startsWith('- ') || text.startsWith('\\') || BOLD.test(text) || ITALIC.test(text);
+}
+
+export function lineToText(l: RichLine): string {
+  let t = l.text;
+  if (l.italic) t = `_${t}_`;
+  if (l.bold) t = `**${t}**`;
+  if (!l.bold && !l.italic && needsEscape(t)) t = `\\${t}`;
+  return (l.bullet ? '- ' : '') + t;
+}
+
 export function linesToText(lines: RichLine[]): string {
-  return lines
-    .map(l => (l.bullet ? '- ' : '') + (l.bold ? `**${l.text}**` : l.italic ? `_${l.text}_` : l.text))
-    .join('\n');
+  return lines.map(lineToText).join('\n');
+}
+
+/** Một dòng chữ → RichLine; "\" ở đầu (sau "- " nếu có) = giữ nguyên, không định dạng */
+export function textToLine(raw: string): RichLine {
+  let t = raw.trim();
+  let bullet = false;
+  if (t.startsWith('- ')) {
+    bullet = true;
+    t = t.slice(2).trim();
+  }
+  let bold = false;
+  let italic = false;
+  if (t.startsWith('\\')) {
+    t = t.slice(1);
+  } else {
+    const b = BOLD.exec(t);
+    if (b) {
+      bold = true;
+      t = b[1];
+    }
+    const i = ITALIC.exec(t);
+    if (i) {
+      italic = true;
+      t = i[1];
+    }
+  }
+  return { text: t, ...(bold ? { bold } : {}), ...(italic ? { italic } : {}), ...(bullet ? { bullet } : {}) };
 }
 
 export function textToLines(text: string): RichLine[] {
   return text
     .split('\n')
-    .map(raw => raw.trim())
-    .filter(Boolean)
-    .map(raw => {
-      const line: RichLine = { text: raw };
-      let t = raw;
-      if (t.startsWith('- ')) {
-        line.bullet = true;
-        t = t.slice(2).trim();
-      }
-      const bold = /^\*\*(.+)\*\*$/.exec(t);
-      const italic = /^_(.+)_$/.exec(t);
-      if (bold) {
-        line.bold = true;
-        t = bold[1];
-      } else if (italic) {
-        line.italic = true;
-        t = italic[1];
-      }
-      line.text = t;
-      return line;
-    })
-    .map(({ text, bold, italic, bullet }) => ({ text, ...(bold ? { bold } : {}), ...(italic ? { italic } : {}), ...(bullet ? { bullet } : {}) }));
+    .filter(raw => raw.trim())
+    .map(textToLine);
 }
 
 const splitLines = (text: string) => text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -179,6 +202,18 @@ export function rowToDraft(row: CourseRow): CourseDraft {
     bannerSlug: c.banner?.slug ?? '',
     cardId: c.cardId ?? null,
   };
+}
+
+/** Mục sẽ bị bỏ khi lưu (thiếu nhãn / nội dung) — báo cho người sửa thay vì âm thầm bỏ */
+export function droppedItem(d: CourseDraft): string | null {
+  if (d.lead.some(l => l.label.trim() && !l.text.trim())) return 'Dòng giới thiệu có nhãn nhưng chưa có nội dung';
+  const infoLists = [{ rows: d.info, where: 'Thông tin khóa học' }, ...d.tracks.map(t => ({ rows: t.info, where: `Thông tin chặng “${t.title || 'chưa có tên'}”` }))];
+  for (const { rows, where } of infoLists) {
+    if (rows.some(r => !r.label.trim() && r.text.trim())) return `${where}: có dòng chưa có nhãn`;
+  }
+  if (d.stats.some(s => !s.value.trim() && s.label.trim())) return 'Số liệu: có dòng chưa có con số';
+  if (d.tracks.some(t => !t.title.trim())) return 'Có chặng chưa có tên';
+  return null;
 }
 
 export function emptyDraft(): CourseDraft {

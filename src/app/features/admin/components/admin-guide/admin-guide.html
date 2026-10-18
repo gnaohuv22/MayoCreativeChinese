@@ -1,0 +1,10 @@
+<details class="mcc-card group" [open]="open()" (toggle)="onToggle($event)">
+  <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none list-none text-sm font-bold text-brand-navy dark:text-white">
+    <app-icon name="question-mark" size="sm" customClass="text-brand-pink" />
+    <span class="flex-1">Hướng dẫn sử dụng</span>
+    <app-icon name="chevron-down" size="xs" customClass="text-zinc-500 dark:text-zinc-400 transition-transform group-open:rotate-180" />
+  </summary>
+  <div class="mcc-guide px-4 pb-4 pt-1 border-t border-brand-navy/5 dark:border-white/5">
+    <ng-content />
+  </div>
+</details>

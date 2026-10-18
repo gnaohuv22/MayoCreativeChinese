@@ -18,6 +18,18 @@
         }
       </div>
 
+      <app-admin-guide storageKey="courses">
+        <ul>
+          <li>Bấm vào một khóa để sửa. Mỗi lần <b>Lưu khóa học</b> là lưu cả trang của khóa đó.</li>
+          <li>Đường dẫn không đổi được sau khi tạo vì lớp học gắn với khóa theo đường dẫn. Muốn tạm gỡ khóa khỏi trang web, bỏ chọn <b>Hiện trên trang web</b> thay vì xoá.</li>
+          <li>Trong <b>Đoạn văn</b> và ô <b>Bảng</b>, mỗi dòng là một dòng trên trang: <code>- chữ</code> là gạch đầu dòng, <code>**chữ**</code> là in đậm, <code>_chữ_</code> là in nghiêng (chữ hồng). Muốn giữ nguyên các ký tự đó, thêm <code>\</code> ở đầu dòng.</li>
+          <li><b>Bảng</b> và <b>Giai đoạn</b> thu gọn sẵn, bấm vào tên để mở. Giai đoạn chứa các khối bên trong và hiện trên trang dạng mục đóng/mở.</li>
+          <li><b>Chặng</b> dùng cho khóa có nhiều lựa chọn (VD: Nhập Môn / Thông Thạo / Tinh Anh). Khi có chặng, trang hiện nội dung và thông tin của chặng đang chọn.</li>
+          <li><b>Tab đối tượng</b>: mỗi dòng một tab (VD: Trẻ em / Người lớn); thẻ khóa học ở trang chủ có thể mở sẵn một tab.</li>
+          <li><b>Thông tin khóa học</b>: nhãn có chữ Thời lượng, Tần suất, Sĩ số, Cam kết, Giáo trình hoặc Học phí sẽ có biểu tượng riêng.</li>
+        </ul>
+      </app-admin-guide>
+
       <section class="mcc-card p-5 sm:p-6 space-y-4">
         <div class="grid sm:grid-cols-2 gap-4">
           <div class="space-y-1.5">
@@ -182,6 +194,18 @@
           <span>Thêm khóa học</span>
         </button>
       </div>
+
+      <app-admin-guide storageKey="courses">
+        <ul>
+          <li>Bấm vào một khóa để sửa. Mỗi lần <b>Lưu khóa học</b> là lưu cả trang của khóa đó.</li>
+          <li>Đường dẫn không đổi được sau khi tạo vì lớp học gắn với khóa theo đường dẫn. Muốn tạm gỡ khóa khỏi trang web, bỏ chọn <b>Hiện trên trang web</b> thay vì xoá.</li>
+          <li>Trong <b>Đoạn văn</b> và ô <b>Bảng</b>, mỗi dòng là một dòng trên trang: <code>- chữ</code> là gạch đầu dòng, <code>**chữ**</code> là in đậm, <code>_chữ_</code> là in nghiêng (chữ hồng).</li>
+          <li><b>Bảng</b> và <b>Giai đoạn</b> thu gọn sẵn, bấm vào tên để mở. Giai đoạn chứa các khối bên trong và hiện trên trang dạng mục đóng/mở.</li>
+          <li><b>Chặng</b> dùng cho khóa có nhiều lựa chọn (VD: Nhập Môn / Thông Thạo / Tinh Anh). Khi có chặng, trang hiện nội dung và thông tin của chặng đang chọn.</li>
+          <li><b>Tab đối tượng</b>: mỗi dòng một tab (VD: Trẻ em / Người lớn); thẻ khóa học ở trang chủ có thể mở sẵn một tab.</li>
+          <li><b>Thông tin khóa học</b>: nhãn có chữ Thời lượng, Tần suất, Sĩ số, Cam kết, Giáo trình hoặc Học phí sẽ có biểu tượng riêng.</li>
+        </ul>
+      </app-admin-guide>
 
       @if (loading()) {
         <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải khóa học…</p>

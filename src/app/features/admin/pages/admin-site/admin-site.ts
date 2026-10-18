@@ -19,6 +19,7 @@ import {
 import { SiteAdminService } from '../../services/site-admin.service';
 import { LtextInputComponent } from '../../components/ltext-input/ltext-input';
 import { SiteImageFieldComponent } from '../../components/site-image-field/site-image-field';
+import { AdminGuideComponent } from '../../components/admin-guide/admin-guide';
 
 const SECTION_LABELS: Record<SiteSectionId, string> = {
   hero: 'Mở đầu',
@@ -39,13 +40,19 @@ const ICON_LABELS: Record<CourseIcon, string> = {
 };
 
 const newId = () => crypto.randomUUID().slice(0, 8);
+
+/** JSON với khoá object xếp theo thứ tự chữ cái — DB (jsonb) trả khoá đã sắp xếp, so sánh không bị lệch thứ tự */
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v) =>
+    v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) : v);
+}
 const clone = <T>(value: T): T => structuredClone(value);
 
 /** /admin/site — sửa nội dung trang chủ (quyền site.manage) */
 @Component({
   selector: 'app-admin-site',
   standalone: true,
-  imports: [RouterLink, AppIconComponent, LtextInputComponent, SiteImageFieldComponent],
+  imports: [RouterLink, AppIconComponent, LtextInputComponent, SiteImageFieldComponent, AdminGuideComponent],
   templateUrl: './admin-site.html',
   styleUrl: './admin-site.css',
   host: { '(window:beforeunload)': 'onBeforeUnload($event)' },
@@ -62,7 +69,7 @@ export class AdminSiteComponent {
   private readonly detailChoices = computed(() => [
     { value: '', label: 'Không có' },
     ...(this.courseService.names() ?? []).flatMap(c => [
-      { value: c.slug, label: c.name },
+      { value: c.slug, label: c.is_published ? c.name : `${c.name} (đang ẩn)` },
       ...(c.audiences ?? []).slice(1).map(a => {
         const short = a.replace(/\s*\(.*\)$/, '');
         return { value: `${c.slug}?${AUDIENCE_PARAM}=${slugify(short)}`, label: `${c.name} – ${short}` };
@@ -102,7 +109,7 @@ export class AdminSiteComponent {
     const content: Partial<SiteContent> = {};
     for (const row of rows) {
       Object.assign(content, { [row.id]: row.content });
-      this.saved[row.id] = JSON.stringify(row.content);
+      this.saved[row.id] = stableJson(row.content);
       this.stamps[row.id] = row.updated_at;
     }
     if (SITE_SECTION_IDS.some(id => !content[id])) {
@@ -114,7 +121,7 @@ export class AdminSiteComponent {
 
   isDirty(id: SiteSectionId): boolean {
     const draft = this.draft();
-    return !!draft && JSON.stringify(draft[id]) !== this.saved[id];
+    return !!draft && stableJson(draft[id]) !== this.saved[id];
   }
 
   anyDirty(): boolean {
@@ -127,7 +134,10 @@ export class AdminSiteComponent {
   }
 
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.anyDirty()) event.preventDefault();
+    if (!this.anyDirty()) return;
+    event.preventDefault();
+    // Chromium cũ cần returnValue mới hiện hộp xác nhận
+    event.returnValue = '';
   }
 
   selectTab(id: SiteSectionId): void {
@@ -140,6 +150,7 @@ export class AdminSiteComponent {
   }
 
   discard(): void {
+    if (!confirm(`Bỏ mọi thay đổi chưa lưu ở “${SECTION_LABELS[this.tab()]}”?`)) return;
     const id = this.tab();
     const saved = this.saved[id];
     const draft = this.draft();
@@ -169,7 +180,7 @@ export class AdminSiteComponent {
       this.toast.error(res.error ?? 'Lưu thất bại');
       return;
     }
-    this.saved[id] = JSON.stringify(content);
+    this.saved[id] = stableJson(content);
     this.stamps[id] = res.updatedAt;
     this.siteContent.applySaved(id, content, res.updatedAt);
     this.toast.success(`Đã lưu: ${SECTION_LABELS[id]}`);
@@ -252,6 +263,10 @@ export class AdminSiteComponent {
   addPhoto(url: string): void {
     const gallery = this.draft()?.gallery;
     if (!gallery || !url) return;
+    if (gallery.categories.length === 0) {
+      this.toast.error('Thêm danh mục ảnh trước');
+      return;
+    }
     const item: GalleryItem = { id: newId(), src: url, category: gallery.categories[0]?.id ?? '', caption: {} };
     gallery.items.push(item);
   }

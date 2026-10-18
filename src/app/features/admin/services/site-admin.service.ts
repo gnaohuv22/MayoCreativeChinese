@@ -21,21 +21,32 @@ export interface SiteSectionRow<K extends SiteSectionId = SiteSectionId> {
 /** Cạnh dài tối đa của ảnh tải lên (px) — ảnh trang chủ không cần lớn hơn */
 const MAX_IMAGE_EDGE = 1600;
 
-/** Thu nhỏ + chuyển WebP để trang chủ tải nhanh; trình duyệt không hỗ trợ thì giữ file gốc */
-async function toWebp(file: File): Promise<Blob> {
+/** File gốc lớn hơn mức này thì từ chối luôn (ảnh điện thoại thường < 15 MB) */
+const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
+/** Giới hạn của bucket site-media (028) */
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Thu nhỏ + chuyển WebP để trang chủ tải nhanh. Safari không mã hoá được WebP → JPEG từ cùng
+ * ảnh đã thu nhỏ; chỉ khi trình duyệt không đọc được ảnh (VD: HEIC) mới giữ file gốc.
+ */
+async function shrinkImage(file: File): Promise<Blob> {
+  let bitmap: ImageBitmap;
   try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/webp', 0.85));
-    return blob?.type === 'image/webp' ? blob : file;
+    bitmap = await createImageBitmap(file);
   } catch {
     return file;
   }
+  const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const encode = (type: string) => new Promise<Blob | null>(resolve => canvas.toBlob(resolve, type, 0.85));
+  const webp = await encode('image/webp');
+  if (webp?.type === 'image/webp') return webp;
+  return (await encode('image/jpeg')) ?? file;
 }
 
 /** Sửa nội dung trang chủ (public.site_sections, quyền site.manage — migration 028) */
@@ -75,8 +86,10 @@ export class SiteAdminService {
     if (!file.type.startsWith('image/')) return { error: 'File này không phải ảnh' };
     const lost = await sessionError();
     if (lost) return { error: lost };
-    const blob = await toWebp(file);
-    const ext = blob.type === 'image/webp' ? 'webp' : (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+    if (file.size > MAX_SOURCE_BYTES) return { error: 'Ảnh quá lớn (tối đa 25 MB)' };
+    const blob = await shrinkImage(file);
+    if (blob.size > MAX_UPLOAD_BYTES) return { error: 'Ảnh sau khi nén vẫn lớn hơn 5 MB, hãy chọn ảnh nhỏ hơn' };
+    const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/jpeg' ? 'jpg' : (file.name.split('.').pop() ?? 'jpg').toLowerCase();
     const path = `${folder}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
     const { error } = await this.supabase.storage
       .from('site-media')
@@ -125,25 +138,24 @@ export class SiteAdminService {
     return error ? { error: writeErrorMessage(error) } : {};
   }
 
-  /** Đổi tên chuyên mục cho mọi bài đang dùng; trả về updated_at mới theo id bài */
-  async renameCategory(from: string, to: string): Promise<{ stamps?: Record<string, string>; error?: string }> {
+  /** Đổi tên chuyên mục cho mọi bài đang dùng (RPC 032: 1 transaction, 1 dòng nhật ký) */
+  async renameCategory(from: string, to: string): Promise<{ error?: string }> {
     const lost = await sessionError();
     if (lost) return { error: lost };
-    const { data, error } = await this.supabase.from('site_posts').update({ category: to }).eq('category', from).select('id, updated_at');
-    if (error) return { error: writeErrorMessage(error) };
-    return { stamps: Object.fromEntries((data ?? []).map(r => [r.id, r.updated_at])) };
+    const { error } = await this.supabase.rpc('rename_story_category', { p_from: from, p_to: to });
+    return error ? { error: writeErrorMessage(error) } : {};
   }
 
-  /** Đánh lại thứ tự theo mảng id; trả về updated_at mới của từng bài (trigger đổi updated_at) */
-  async reorderPosts(ids: string[]): Promise<{ stamps?: Record<string, string>; error?: string }> {
+  /** Đánh lại thứ tự theo mảng id (RPC 032: 1 transaction, updated_at không đổi) */
+  reorderPosts(ids: string[]): Promise<{ error?: string }> {
+    return this.reorder('reorder_site_posts', ids);
+  }
+
+  private async reorder(fn: 'reorder_site_posts' | 'reorder_site_courses', ids: string[]): Promise<{ error?: string }> {
     const lost = await sessionError();
     if (lost) return { error: lost };
-    const results = await Promise.all(
-      ids.map((id, i) => this.supabase.from('site_posts').update({ sort_order: i + 1 }).eq('id', id).select('id, updated_at').single()),
-    );
-    const failed = results.find(r => r.error);
-    if (failed?.error) return { error: writeErrorMessage(failed.error) };
-    return { stamps: Object.fromEntries(results.map(r => [r.data!.id, r.data!.updated_at])) };
+    const { error } = await this.supabase.rpc(fn, { p_ids: ids });
+    return error ? { error: writeErrorMessage(error) } : {};
   }
 
   // ---------------------------------------------------------------------------
@@ -185,15 +197,8 @@ export class SiteAdminService {
     return error ? { error: writeErrorMessage(error) } : {};
   }
 
-  async reorderCourses(ids: string[]): Promise<{ stamps?: Record<string, string>; error?: string }> {
-    const lost = await sessionError();
-    if (lost) return { error: lost };
-    const results = await Promise.all(
-      ids.map((id, i) => this.supabase.from('site_courses').update({ sort_order: i + 1 }).eq('id', id).select('id, updated_at').single()),
-    );
-    const failed = results.find(r => r.error);
-    if (failed?.error) return { error: writeErrorMessage(failed.error) };
-    return { stamps: Object.fromEntries(results.map(r => [r.data!.id, r.data!.updated_at])) };
+  reorderCourses(ids: string[]): Promise<{ error?: string }> {
+    return this.reorder('reorder_site_courses', ids);
   }
 }
 

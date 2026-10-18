@@ -36,6 +36,10 @@ export class ClassFormComponent implements OnInit {
 
   private readonly courseService = inject(CourseService);
   protected readonly courses = computed(() => this.courseService.names() ?? []);
+
+  constructor() {
+    void this.courseService.loadNames();
+  }
   protected readonly statusOptions = Object.entries(CLASS_STATUS_LABELS) as [ClassStatus, string][];
   protected readonly roleLabels = STAFF_ROLE_LABELS;
 

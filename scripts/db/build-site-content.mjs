@@ -124,6 +124,14 @@ const contact = {
 
 const sections = { hero, about, teachers, courses, gallery, contact };
 writeFileSync('public/site-content.json', JSON.stringify(sections) + '\n');
+writeFileSync('src/app/features/landing/data/site-hero.initial.ts', [
+  '// SINH TỰ ĐỘNG bởi scripts/db/build-site-content.mjs — phần mở đầu hiện ngay ở lần truy cập đầu (chưa có cache),',
+  '// trước khi tải xong nội dung từ DB. Có thể cũ hơn bản trong DB (sửa ở /admin/site) — tải xong DB sẽ thay.',
+  "import type { HeroContent } from '../models/site-content.model';",
+  '',
+  `export const INITIAL_HERO: HeroContent = ${JSON.stringify(hero, null, 2)};`,
+  '',
+].join('\n'));
 
 // Dollar-quote có nhãn riêng để nội dung không thể đóng chuỗi SQL
 const json = c => `$mcc$${JSON.stringify(c)}$mcc$::jsonb`;

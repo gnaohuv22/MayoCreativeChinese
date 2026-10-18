@@ -44,9 +44,14 @@ export class SiteImageFieldComponent {
   private async upload(file: File): Promise<void> {
     this.uploading.set(true);
     this.error.set(null);
-    const res = await this.siteAdmin.uploadImage(file, this.folder());
-    this.uploading.set(false);
-    if (res.url) this.srcChange.emit(res.url);
-    else this.error.set(res.error ?? 'Tải ảnh thất bại');
+    try {
+      const res = await this.siteAdmin.uploadImage(file, this.folder());
+      if (res.url) this.srcChange.emit(res.url);
+      else this.error.set(res.error ?? 'Tải ảnh thất bại');
+    } catch {
+      this.error.set('Tải ảnh thất bại, kiểm tra kết nối mạng rồi thử lại');
+    } finally {
+      this.uploading.set(false);
+    }
   }
 }

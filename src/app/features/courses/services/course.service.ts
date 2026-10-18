@@ -5,6 +5,7 @@ import type { CourseDetail } from '../models/course-detail.model';
 export interface CourseName {
   slug: string;
   name: string;
+  is_published: boolean;
   /** Tab đối tượng (VD: Trẻ em | Người lớn) — thẻ khóa học trên trang chủ có thể mở sẵn 1 tab */
   audiences: string[] | null;
 }
@@ -14,13 +15,16 @@ export interface CourseName {
 export class CourseService {
   private readonly supabase = getSupabase();
 
-  /** slug + tên theo thứ tự (chọn khóa cho lớp học, link từ thẻ khóa học); null = chưa tải xong */
+  /**
+   * slug + tên theo thứ tự, kể cả khóa đang ẩn (lớp học vẫn gắn khóa đã ẩn) — RPC site_course_names (032),
+   * chỉ cho tài khoản đã đăng nhập. null = chưa tải xong
+   */
   readonly names = signal<CourseName[] | null>(null);
   private loadingNames: Promise<void> | null = null;
 
   loadNames(): Promise<void> {
     this.loadingNames ??= (async () => {
-      const { data, error } = await this.supabase.from('site_courses').select('slug, name, audiences:content->audiences').order('sort_order').order('created_at');
+      const { data, error } = await this.supabase.rpc('site_course_names');
       if (error) {
         console.error('Không tải được danh sách khóa học:', error);
         this.loadingNames = null;
@@ -32,11 +36,19 @@ export class CourseService {
     return this.loadingNames;
   }
 
-  nameOf(slug: string | null | undefined): string {
-    return (slug && this.names()?.find(c => c.slug === slug)?.name) || '';
+  /** Tải lại sau khi quản trị thêm / sửa / xoá khóa (dropdown ở /admin/site, form lớp học) */
+  refreshNames(): void {
+    this.loadingNames = null;
+    void this.loadNames();
   }
 
-  /** Khóa đã xuất bản theo slug; null = không có / đang ẩn */
+  nameOf(slug: string | null | undefined): string {
+    if (!slug) return '';
+    // Chưa tải xong / khóa đã xoá: hiện slug còn hơn để trống
+    return this.names()?.find(c => c.slug === slug)?.name || slug;
+  }
+
+  /** Khóa đã xuất bản theo slug; null = không có / đang ẩn; lỗi mạng / DB thì ném lỗi */
   async get(slug: string): Promise<CourseDetail | null> {
     const { data, error } = await this.supabase
       .from('site_courses')
@@ -44,7 +56,8 @@ export class CourseService {
       .eq('slug', slug)
       .eq('is_published', true)
       .maybeSingle();
-    if (error || !data) return null;
+    if (error) throw error;
+    if (!data) return null;
     return { ...(data.content as Omit<CourseDetail, 'slug' | 'name'>), slug: data.slug, name: data.name };
   }
 }

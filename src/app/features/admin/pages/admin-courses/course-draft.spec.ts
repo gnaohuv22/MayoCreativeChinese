@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockToDraft, draftToBlock, linesToText, textToLines } from './course-draft';
+import { blockToDraft, draftToBlock, linesToText, textToLine, textToLines } from './course-draft';
 import type { CourseBlock, RichLine } from '../../../courses/models/course-detail.model';
 
 describe('course-draft', () => {
@@ -30,5 +30,24 @@ describe('course-draft', () => {
       ],
     };
     expect(draftToBlock(blockToDraft(block))).toEqual(block);
+  });
+
+  it('không gộp nhiều đoạn **…** trên một dòng thành một', () => {
+    expect(textToLine('**Buổi 1** – **Buổi 2**')).toEqual({ text: '**Buổi 1** – **Buổi 2**' });
+    expect(textToLine('**Lưu ý:** mang vở')).toEqual({ text: '**Lưu ý:** mang vở' });
+  });
+
+  it('đậm + nghiêng cùng lúc', () => {
+    const line: RichLine = { text: 'Quan trọng', bold: true, italic: true };
+    expect(linesToText([line])).toBe('**_Quan trọng_**');
+    expect(textToLine('**_Quan trọng_**')).toEqual(line);
+  });
+
+  it('dòng thường trông giống cú pháp được giữ nguyên bằng \\', () => {
+    const lines: RichLine[] = [{ text: '- không phải gạch đầu dòng' }, { text: '_nghiêng giả_' }, { text: 'tên_biến_x' }, { text: '**x**' }, { text: '\\ đầu dòng' }];
+    const text = linesToText(lines);
+    // 4 dòng giống cú pháp được thêm \, "tên_biến_x" không cần
+    expect(text.split('\n').filter(l => l.startsWith('\\')).length).toBe(4);
+    expect(textToLines(text)).toEqual(lines);
   });
 });

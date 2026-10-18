@@ -115,6 +115,16 @@ html.dark body {
     background: rgb(30 30 69 / 0.55);
     backdrop-filter: blur(2px);
   }
+  /* Nội dung khung "Hướng dẫn sử dụng" (<app-admin-guide>) */
+  .mcc-guide ul {
+    @apply list-disc pl-5 space-y-1.5 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 marker:text-brand-pink;
+  }
+  .mcc-guide b {
+    @apply font-bold text-brand-navy dark:text-white;
+  }
+  .mcc-guide code {
+    @apply px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-white/10 text-[13px] font-mono text-brand-navy dark:text-white;
+  }
   .mcc-chip {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap;
   }

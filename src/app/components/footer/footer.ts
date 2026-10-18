@@ -16,12 +16,12 @@ export class FooterComponent {
   protected readonly i18n = inject(I18nService);
   private readonly site = inject(SiteContentService);
 
-  readonly contact = computed(() => this.site.content()?.contact);
+  readonly contact = this.site.contact;
   readonly telUrl = computed(() => `tel:${phoneDigits(this.contact()?.phone ?? '')}`);
   readonly zaloUrl = computed(() => `https://zalo.me/${phoneDigits(this.contact()?.phone ?? '')}`);
 
   constructor() {
-    // Chân trang có cả ở trang khoá học, pháp lý, bài đăng — không chỉ trang chủ
-    void this.site.load();
+    // Chân trang có cả ở trang khoá học, pháp lý, bài đăng — ở đó chỉ cần khối liên hệ
+    void this.site.loadContact();
   }
 }

@@ -15,6 +15,17 @@
       </div>
     </div>
 
+    <app-admin-guide storageKey="stories">
+      <ul>
+        <li>Bấm vào một bài để sửa. <b>Thêm bài</b> tạo bản nháp: bài chỉ hiện trên trang chủ khi chọn <b>Hiện trên trang chủ</b> và có ít nhất 1 ảnh.</li>
+        <li>Mũi tên trong danh sách đổi thứ tự trên trang chủ (lưu ngay). Bài đầu tiên là bài nổi bật (thẻ lớn); trang khóa học hiện 3 bài đầu.</li>
+        <li>Đường dẫn tự tạo theo tiêu đề khi thêm bài mới. Đổi đường dẫn của bài đã đăng thì link cũ (đã chia sẻ trên Facebook…) sẽ không mở được.</li>
+        <li>Ảnh đầu tiên là <b>ảnh bìa</b>; dùng mũi tên để đổi thứ tự ảnh.</li>
+        <li>Nội dung gồm các khối: <b>Đoạn mở đầu</b> (chữ to, đậm), <b>Đoạn văn</b>, <b>Danh sách</b> (mỗi dòng một ý), <b>Bảng kết quả</b> (họ tên, cấp, điểm, ghi chú).</li>
+        <li>Chuyên mục: chọn trong danh sách hoặc <b>+ Chuyên mục mới…</b>. Đổi tên ở khung <b>Chuyên mục</b> áp dụng cho mọi bài; đổi trùng tên một chuyên mục có sẵn là gộp hai chuyên mục.</li>
+      </ul>
+    </app-admin-guide>
+
     @if (loading()) {
       <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải bài viết…</p>
     } @else if (loadError()) {

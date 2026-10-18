@@ -9,6 +9,18 @@
       </a>
     </div>
 
+    <app-admin-guide storageKey="site">
+      <ul>
+        <li>Chọn khối cần sửa ở hàng nút phía trên. Mỗi khối lưu riêng bằng nút <b>Lưu</b> ở góc dưới; chấm vàng trên nút khối là khối còn thay đổi chưa lưu.</li>
+        <li>Chọn ngôn ngữ để sửa bản dịch. <b>Tiếng Việt</b> là bản gốc; ô của ngôn ngữ khác để trống thì trang web hiện tiếng Việt (chữ mờ trong ô chính là bản tiếng Việt).</li>
+        <li>Ảnh: bấm <b>Chọn ảnh / Đổi ảnh</b>, hoặc bấm vào khung ảnh rồi dán ảnh (Ctrl+V). Ảnh được tự thu nhỏ trước khi tải lên.</li>
+        <li>Danh sách (số liệu, giáo viên, khóa học, ảnh…): mũi tên để đổi thứ tự, thùng rác để xoá; bấm vào thẻ giáo viên / khóa học để mở hoặc thu gọn.</li>
+        <li>Khóa học: <b>Trang chi tiết</b> chọn trang mở ra khi bấm “Xem chi tiết”; nội dung trang đó sửa ở mục <b>Trang khóa học</b>.</li>
+        <li>Liên hệ: số hotline cũng là số Zalo trên các nút của trang chủ.</li>
+        <li>Lưu xong là trang web cập nhật ngay; ai đang mở trang chỉ cần tải lại.</li>
+      </ul>
+    </app-admin-guide>
+
     @if (loading()) {
       <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải nội dung…</p>
     } @else if (loadError()) {
@@ -26,7 +38,8 @@
               [attr.aria-current]="tab() === id ? 'page' : null">
               <span>{{ sectionLabels[id] }}</span>
               @if (isDirty(id)) {
-                <span class="w-2 h-2 rounded-full bg-amber-500" aria-label="Chưa lưu"></span>
+                <span class="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+                <span class="sr-only">(chưa lưu)</span>
               }
             </button>
           }
@@ -152,7 +165,7 @@
                         <span class="mcc-label block">Thành tích</span>
                         @for (cred of teacher.credentials; track $index; let ci = $index; let cfirst = $first; let clast = $last) {
                           <div class="flex gap-1.5 items-center">
-                            <app-ltext-input class="flex-1" [value]="cred" [lang]="lang()" [maxlength]="200" />
+                            <app-ltext-input class="flex-1" ariaLabel="Thành tích" [value]="cred" [lang]="lang()" [maxlength]="200" />
                             <button type="button" (click)="move(teacher.credentials, ci, -1)" [disabled]="cfirst" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
                             <button type="button" (click)="move(teacher.credentials, ci, 1)" [disabled]="clast" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
                             <button type="button" (click)="remove(teacher.credentials, ci, 'thành tích này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá thành tích"><app-icon name="trash" size="xs" /></button>
@@ -248,7 +261,7 @@
             <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Danh mục</h2>
             @for (cat of d.gallery.categories; track cat.id; let i = $index; let first = $first; let last = $last) {
               <div class="flex gap-1.5 items-center">
-                <app-ltext-input class="flex-1" [value]="cat.label" [lang]="lang()" [maxlength]="40" />
+                <app-ltext-input class="flex-1" ariaLabel="Tên danh mục" [value]="cat.label" [lang]="lang()" [maxlength]="40" />
                 <button type="button" (click)="move(d.gallery.categories, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
                 <button type="button" (click)="move(d.gallery.categories, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
                 <button type="button" (click)="remove(d.gallery.categories, i, 'danh mục ' + previewName(cat.label))" [disabled]="categoryInUse(cat.id)"

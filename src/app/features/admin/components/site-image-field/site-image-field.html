@@ -4,6 +4,8 @@
   }
   <div
     tabindex="0"
+    role="group"
+    [attr.aria-label]="(label() || 'Ảnh') + ' — bấm vào đây rồi dán ảnh (Ctrl+V) để thay'"
     (paste)="onPaste($event)"
     class="relative w-full overflow-hidden rounded-xl border border-brand-navy/10 dark:border-white/10 bg-zinc-100 dark:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink"
     [class]="aspectClass()"
