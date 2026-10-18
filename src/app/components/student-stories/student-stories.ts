@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
 import { AppIconComponent } from '../shared/icon/app-icon';
-import { STUDENT_STORIES } from '../../features/posts/data/student-stories.data';
+import { StoryService } from '../../features/posts/services/story.service';
 
 @Component({
   selector: 'app-student-stories',
@@ -15,6 +15,12 @@ import { STUDENT_STORIES } from '../../features/posts/data/student-stories.data'
 export class StudentStoriesComponent {
   protected readonly i18n = inject(I18nService);
 
-  readonly featured = STUDENT_STORIES[0];
-  readonly rest = STUDENT_STORIES.slice(1);
+  private readonly stories = inject(StoryService);
+
+  readonly featured = computed(() => this.stories.summaries()?.[0] ?? null);
+  readonly rest = computed(() => this.stories.summaries()?.slice(1) ?? []);
+
+  constructor() {
+    void this.stories.loadSummaries();
+  }
 }

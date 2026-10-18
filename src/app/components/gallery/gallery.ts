@@ -1,15 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { AppIconComponent } from '../shared/icon/app-icon';
-import { I18nService } from '../../services/i18n.service';
+import { I18nService, type LocalizedText } from '../../services/i18n.service';
+import { SiteContentService } from '../../features/landing/services/site-content.service';
+import type { GalleryItem } from '../../features/landing/models/site-content.model';
 import { ThemeService } from '../../services/theme.service';
-
-interface GalleryItem {
-  id: string;
-  src: string;
-  category: 'tet' | 'hsk' | 'women';
-  captionKey: string;
-}
 
 @Component({
   selector: 'app-gallery',
@@ -24,93 +19,36 @@ interface GalleryItem {
 export class GalleryComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly theme = inject(ThemeService);
+  private readonly site = inject(SiteContentService);
 
   readonly selectedFilter = signal<string>('all');
   readonly selectedItem = signal<GalleryItem | null>(null);
 
-  readonly filters = [
-    { value: 'all', labelKey: 'gallery.filter.all' },
-    { value: 'tet', labelKey: 'gallery.filter.tet' },
-    { value: 'hsk', labelKey: 'gallery.filter.hsk' },
-    { value: 'women', labelKey: 'gallery.filter.women' }
-  ];
-
-  readonly items: GalleryItem[] = [
-    // Tet 2026 Activity
-    {
-      id: 'tet1',
-      src: 'tet-2026-activity/IMG_1970.webp',
-      category: 'tet',
-      captionKey: 'gallery.caption.tet1'
-    },
-    {
-      id: 'tet2',
-      src: 'tet-2026-activity/IMG_1979.webp',
-      category: 'tet',
-      captionKey: 'gallery.caption.tet2'
-    },
-    {
-      id: 'tet3',
-      src: 'tet-2026-activity/IMG_1963.webp',
-      category: 'tet',
-      captionKey: 'gallery.caption.tet3'
-    },
-    // HSK Achievements
-    {
-      id: 'hsk1',
-      src: 'hsk-achievement/IMG_2771.webp',
-      category: 'hsk',
-      captionKey: 'gallery.caption.hsk1'
-    },
-    {
-      id: 'hsk2',
-      src: 'hsk-achievement/ddb4b26f-f9af-4aa3-823e-689b479eb9c0.webp',
-      category: 'hsk',
-      captionKey: 'gallery.caption.hsk2'
-    },
-    {
-      id: 'hsk3',
-      src: 'hsk-achievement/fb1d0525-373d-4ba7-8842-61437fc4f80e.webp',
-      category: 'hsk',
-      captionKey: 'gallery.caption.hsk3'
-    },
-    // Women's Day Activity
-    {
-      id: 'women1',
-      src: 'hsk-achievement/women-day-2025/IMG_4816.webp',
-      category: 'women',
-      captionKey: 'gallery.caption.women1'
-    },
-    {
-      id: 'women2',
-      src: 'hsk-achievement/women-day-2025/IMG_4825.webp',
-      category: 'women',
-      captionKey: 'gallery.caption.women2'
-    },
-    {
-      id: 'women3',
-      src: 'hsk-achievement/women-day-2025/IMG_4833.webp',
-      category: 'women',
-      captionKey: 'gallery.caption.women3'
-    }
-  ];
+  readonly section = computed(() => this.site.content()?.gallery);
+  readonly items = computed(() => this.section()?.items ?? []);
+  /** Bộ lọc: Tất cả + các danh mục có ảnh */
+  readonly filters = computed(() => [
+    { value: 'all', label: null as LocalizedText | null },
+    ...(this.section()?.categories ?? [])
+      .filter(c => this.items().some(i => i.category === c.id))
+      .map(c => ({ value: c.id, label: c.label })),
+  ]);
 
   // Derived filter computation
   readonly filteredItems = computed(() => {
     const filter = this.selectedFilter();
     if (filter === 'all') {
-      return this.items;
+      return this.items();
     }
-    return this.items.filter(item => item.category === filter);
+    return this.items().filter(item => item.category === filter);
   });
 
   setFilter(filter: string): void {
     this.selectedFilter.set(filter);
   }
 
-  getFilterLabelKey(category: string): string {
-    const found = this.filters.find(f => f.value === category);
-    return found ? found.labelKey : '';
+  categoryLabel(category: string): LocalizedText | null {
+    return this.section()?.categories.find(c => c.id === category)?.label ?? null;
   }
 
   openLightbox(item: GalleryItem): void {

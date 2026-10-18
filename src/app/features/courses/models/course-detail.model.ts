@@ -1,6 +1,6 @@
 /**
  * MAYO CREATIVE CHINESE — TRANG CHI TIẾT KHÓA HỌC
- * Dữ liệu sinh tự động từ brief bằng `scripts/course-brief-to-ts.py`.
+ * Lưu ở public.site_courses (migration 031): slug + name là cột, phần còn lại nằm trong content.
  */
 
 /** Một dòng văn bản trong ô bảng / đoạn văn, giữ định dạng đậm / nghiêng của brief */

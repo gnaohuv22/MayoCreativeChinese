@@ -234,5 +234,7 @@
   "stories.badge": "Câu Chuyện",
   "stories.title": "Câu Chuyện Học Viên",
   "stories.subtitle": "Thành tích, hành trình và những khoảnh khắc đáng nhớ của học viên MCC",
-  "stories.read_more": "Đọc tiếp"
+  "stories.read_more": "Đọc tiếp",
+  "contact.phone_label": "Hotline/Zalo",
+  "contact.email_label": "Email"
 }

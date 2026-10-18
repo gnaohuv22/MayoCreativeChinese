@@ -3,6 +3,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { AppIconComponent } from '../shared/icon/app-icon';
 import { I18nService } from '../../services/i18n.service';
 import { RegisterModalService } from '../../services/register-modal.service';
+import { SiteContentService } from '../../features/landing/services/site-content.service';
 
 @Component({
   selector: 'app-hero',
@@ -14,6 +15,9 @@ import { RegisterModalService } from '../../services/register-modal.service';
 export class HeroComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly registerModal = inject(RegisterModalService);
+  protected readonly site = inject(SiteContentService);
+
+  readonly hero = this.site.hero;
 
   openRegisterModal(): void {
     this.registerModal.open();

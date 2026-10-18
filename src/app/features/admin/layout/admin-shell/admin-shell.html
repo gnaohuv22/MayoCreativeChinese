@@ -14,7 +14,7 @@
 
   <nav class="relative flex-1 min-h-0 overflow-y-auto px-3 pt-4 pb-4 space-y-1" aria-label="Quản trị">
     <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/40">Nội dung</p>
-    @for (item of navItems; track item.route) {
+    @for (item of visibleNavItems(); track item.route) {
       <a
         [routerLink]="item.route"
         routerLinkActive="is-active"

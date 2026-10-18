@@ -1,0 +1,241 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    @if (draft(); as d) {
+      <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10 flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+          <button type="button" (click)="close()" class="inline-flex items-center gap-1 text-xs font-bold text-brand-pink cursor-pointer hover:underline">
+            <app-icon name="chevron-left" size="xs" />
+            <span>Trang khóa học</span>
+          </button>
+          <h1 class="mt-1 text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display truncate">{{ d.name || 'Khóa học mới' }}</h1>
+        </div>
+        @if (d.id && d.is_published) {
+          <a [routerLink]="['/khoa-hoc', d.slug]" target="_blank" class="mcc-btn mcc-btn-secondary">
+            <app-icon name="eye" size="xs" />
+            <span>Xem trang</span>
+          </a>
+        }
+      </div>
+
+      <app-admin-guide storageKey="courses">
+        <ul>
+          <li>Bấm vào một khóa để sửa. Mỗi lần <b>Lưu khóa học</b> là lưu cả trang của khóa đó.</li>
+          <li>Đường dẫn không đổi được sau khi tạo vì lớp học gắn với khóa theo đường dẫn. Muốn tạm gỡ khóa khỏi trang web, bỏ chọn <b>Hiện trên trang web</b> thay vì xoá.</li>
+          <li>Trong <b>Đoạn văn</b> và ô <b>Bảng</b>, mỗi dòng là một dòng trên trang: <code>- chữ</code> là gạch đầu dòng, <code>**chữ**</code> là in đậm, <code>_chữ_</code> là in nghiêng (chữ hồng). Muốn giữ nguyên các ký tự đó, thêm <code>\</code> ở đầu dòng.</li>
+          <li><b>Bảng</b> và <b>Giai đoạn</b> thu gọn sẵn, bấm vào tên để mở. Giai đoạn chứa các khối bên trong và hiện trên trang dạng mục đóng/mở.</li>
+          <li><b>Chặng</b> dùng cho khóa có nhiều lựa chọn (VD: Nhập Môn / Thông Thạo / Tinh Anh). Khi có chặng, trang hiện nội dung và thông tin của chặng đang chọn.</li>
+          <li><b>Tab đối tượng</b>: mỗi dòng một tab (VD: Trẻ em / Người lớn); thẻ khóa học ở trang chủ có thể mở sẵn một tab.</li>
+          <li><b>Thông tin khóa học</b>: nhãn có chữ Thời lượng, Tần suất, Sĩ số, Cam kết, Giáo trình hoặc Học phí sẽ có biểu tượng riêng.</li>
+        </ul>
+      </app-admin-guide>
+
+      <section class="mcc-card p-5 sm:p-6 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label for="course-name" class="mcc-label">Tên khóa học</label>
+            <input id="course-name" maxlength="120" class="mcc-input" [value]="d.name" (input)="setName(d, $any($event.target).value)" />
+          </div>
+          <div class="space-y-1.5">
+            <label for="course-slug" class="mcc-label">Đường dẫn</label>
+            <div class="flex items-center rounded-xl bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 focus-within:ring-2 focus-within:ring-brand-pink/40"
+              [class.!border-red-400]="!d.id && d.slug && !slugValid(d.slug)">
+              <span class="pl-3.5 text-sm text-zinc-500 dark:text-zinc-400 shrink-0">/khoa-hoc/</span>
+              <input id="course-slug" maxlength="120" class="w-full min-w-0 py-2.5 pr-3.5 bg-transparent text-sm text-brand-navy dark:text-white focus:outline-none disabled:text-zinc-500 dark:disabled:text-zinc-400"
+                [disabled]="!!d.id" [value]="d.slug" (input)="setSlug(d, $any($event.target).value)" />
+            </div>
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label for="course-goal" class="mcc-label">Mục tiêu</label>
+          <textarea id="course-goal" rows="2" maxlength="600" class="mcc-input resize-y leading-relaxed"
+            [value]="d.goal" (input)="d.goal = $any($event.target).value"></textarea>
+        </div>
+        <label class="inline-flex items-center gap-2.5 cursor-pointer text-sm font-bold text-brand-navy dark:text-white">
+          <input type="checkbox" class="accent-brand-pink w-4 h-4" [checked]="d.is_published" (change)="d.is_published = $any($event.target).checked" />
+          <span>Hiện trên trang web</span>
+        </label>
+      </section>
+
+      <section class="mcc-card p-5 sm:p-6 space-y-3">
+        <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Giới thiệu</h2>
+        @for (l of d.lead; track l; let i = $index; let first = $first; let last = $last) {
+          <div class="grid sm:grid-cols-[160px_1fr_auto] gap-2 items-start">
+            <input class="mcc-input font-bold" maxlength="40" placeholder="Nhãn" aria-label="Nhãn" [value]="l.label" (input)="l.label = $any($event.target).value" />
+            <textarea class="mcc-input resize-y leading-relaxed" rows="2" aria-label="Nội dung" [value]="l.text" (input)="l.text = $any($event.target).value"></textarea>
+            <div class="flex gap-1.5">
+              <button type="button" (click)="move(d.lead, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+              <button type="button" (click)="move(d.lead, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+              <button type="button" (click)="remove(d.lead, i, 'dòng giới thiệu này')" class="mcc-btn mcc-btn-secondary !px-2.5 !text-red-600 dark:!text-red-400" aria-label="Xoá dòng"><app-icon name="trash" size="xs" /></button>
+            </div>
+          </div>
+        }
+        <button type="button" (click)="addLead(d)" class="mcc-btn mcc-btn-secondary"><app-icon name="plus" size="xs" /><span>Thêm dòng</span></button>
+      </section>
+
+      <div class="grid lg:grid-cols-2 gap-6 items-start">
+        <section class="mcc-card p-5 sm:p-6 space-y-3">
+          <label for="course-chips" class="text-base font-black font-display text-brand-navy dark:text-white block">Nhãn nổi bật</label>
+          <textarea id="course-chips" rows="4" class="mcc-input resize-y leading-relaxed" [value]="d.chipsText" (input)="d.chipsText = $any($event.target).value"></textarea>
+        </section>
+        <section class="mcc-card p-5 sm:p-6 space-y-3">
+          <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Số liệu</h2>
+          @for (s of d.stats; track s; let i = $index) {
+            <div class="flex gap-1.5 items-center">
+              <input class="mcc-input w-28 shrink-0 font-bold" maxlength="20" placeholder="60+" aria-label="Con số" [value]="s.value" (input)="s.value = $any($event.target).value" />
+              <input class="mcc-input" maxlength="80" aria-label="Ý nghĩa" [value]="s.label" (input)="s.label = $any($event.target).value" />
+              <button type="button" (click)="remove(d.stats, i, 'số liệu này')" class="mcc-btn mcc-btn-secondary !px-2.5 !text-red-600 dark:!text-red-400" aria-label="Xoá số liệu"><app-icon name="trash" size="xs" /></button>
+            </div>
+          }
+          <button type="button" (click)="addStat(d)" class="mcc-btn mcc-btn-secondary"><app-icon name="plus" size="xs" /><span>Thêm số liệu</span></button>
+        </section>
+      </div>
+
+      <section class="mcc-card p-5 sm:p-6 space-y-3">
+        <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Nội dung</h2>
+        <app-course-blocks-editor [blocks]="d.blocks" />
+      </section>
+
+      <section class="mcc-card p-5 sm:p-6 space-y-3">
+        <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Thông tin khóa học</h2>
+        <app-course-info-editor [rows]="d.info" />
+      </section>
+
+      <section class="mcc-card p-5 sm:p-6 space-y-3">
+        <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Chặng</h2>
+        @for (t of d.tracks; track t; let i = $index; let first = $first; let last = $last) {
+          <div class="rounded-xl border border-brand-navy/10 dark:border-white/10">
+            <div class="flex items-center gap-2 px-3 py-2">
+              <button type="button" (click)="toggleTrack(t)" class="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer" [attr.aria-expanded]="openTrack() === t">
+                <app-icon name="chevron-down" size="xs" [customClass]="'shrink-0 text-brand-pink transition-transform ' + (openTrack() === t ? 'rotate-180' : '')" />
+                <span class="text-sm font-bold text-brand-navy dark:text-white truncate">{{ t.title || '(chưa có tên)' }}</span>
+                <span class="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">{{ t.sessions }}</span>
+              </button>
+              <div class="flex gap-1.5 shrink-0">
+                <button type="button" (click)="move(d.tracks, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                <button type="button" (click)="move(d.tracks, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                <button type="button" (click)="remove(d.tracks, i, 'chặng ' + (t.title || 'này') + ' và toàn bộ nội dung')" class="mcc-btn mcc-btn-secondary !px-2.5 !text-red-600 dark:!text-red-400" aria-label="Xoá chặng"><app-icon name="trash" size="xs" /></button>
+              </div>
+            </div>
+            @if (openTrack() === t) {
+              <div class="px-3 pb-4 space-y-4 border-t border-brand-navy/5 dark:border-white/5 pt-3">
+                <div class="grid sm:grid-cols-[1fr_200px] gap-3">
+                  <div class="space-y-1.5">
+                    <label [for]="'track-title-' + t.id" class="mcc-label">Tên chặng</label>
+                    <input [id]="'track-title-' + t.id" maxlength="80" class="mcc-input" [value]="t.title" (input)="t.title = $any($event.target).value" />
+                  </div>
+                  <div class="space-y-1.5">
+                    <label [for]="'track-sessions-' + t.id" class="mcc-label">Số buổi</label>
+                    <input [id]="'track-sessions-' + t.id" maxlength="40" class="mcc-input" [value]="t.sessions" (input)="t.sessions = $any($event.target).value" />
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <label [for]="'track-summary-' + t.id" class="mcc-label">Tóm tắt</label>
+                  <textarea [id]="'track-summary-' + t.id" rows="2" class="mcc-input resize-y leading-relaxed" [value]="t.summary" (input)="t.summary = $any($event.target).value"></textarea>
+                </div>
+                <div class="space-y-2">
+                  <span class="mcc-label block">Nội dung chặng</span>
+                  <app-course-blocks-editor [blocks]="t.blocks" />
+                </div>
+                <div class="space-y-2">
+                  <span class="mcc-label block">Thông tin chặng</span>
+                  <app-course-info-editor [rows]="t.info" />
+                </div>
+              </div>
+            }
+          </div>
+        }
+        <button type="button" (click)="addTrack(d)" class="mcc-btn mcc-btn-secondary"><app-icon name="plus" size="xs" /><span>Thêm chặng</span></button>
+      </section>
+
+      <div class="grid lg:grid-cols-2 gap-6 items-start">
+        <section class="mcc-card p-5 sm:p-6 space-y-3">
+          <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Tab đối tượng</h2>
+          <textarea rows="2" class="mcc-input resize-y leading-relaxed" aria-label="Các tab, mỗi dòng một tab"
+            [value]="d.audiencesText" (input)="d.audiencesText = $any($event.target).value"></textarea>
+          <div class="space-y-1.5">
+            <label for="course-audience-note" class="mcc-label">Ghi chú dưới tab</label>
+            <textarea id="course-audience-note" rows="2" class="mcc-input resize-y leading-relaxed"
+              [value]="d.audienceNote" (input)="d.audienceNote = $any($event.target).value"></textarea>
+          </div>
+        </section>
+        <section class="mcc-card p-5 sm:p-6 space-y-3">
+          <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Banner dẫn sang khóa khác</h2>
+          <input class="mcc-input" maxlength="160" aria-label="Chữ trên banner" [value]="d.bannerText" (input)="d.bannerText = $any($event.target).value" />
+          <select class="mcc-input" aria-label="Khóa được dẫn tới" (change)="d.bannerSlug = $any($event.target).value">
+            <option value="" [selected]="!d.bannerSlug">Không có</option>
+            @for (o of bannerOptions(); track o.slug) {
+              @if (o.slug !== d.slug) {
+                <option [value]="o.slug" [selected]="d.bannerSlug === o.slug">{{ o.name }}</option>
+              }
+            }
+          </select>
+        </section>
+      </div>
+
+      <div class="sticky bottom-4 z-20 flex justify-end">
+        <div class="px-3 py-2.5 flex items-center gap-2 rounded-2xl border border-brand-navy/10 dark:border-white/10 bg-white/70 dark:bg-brand-dark/60 backdrop-blur-md shadow-lg">
+          @if (isDirty()) {
+            <span class="text-xs font-semibold text-amber-700 dark:text-amber-300 px-1">Chưa lưu</span>
+          }
+          <button type="button" (click)="close()" [disabled]="saving()" class="mcc-btn mcc-btn-secondary">Đóng</button>
+          <button type="button" (click)="save()" [disabled]="!isDirty() || saving()" class="mcc-btn mcc-btn-primary">
+            <app-icon name="check" size="xs" />
+            <span>{{ saving() ? 'Đang lưu…' : 'Lưu khóa học' }}</span>
+          </button>
+        </div>
+      </div>
+
+    } @else {
+      <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10 flex flex-wrap items-end justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Trang khóa học</h1>
+        <button type="button" (click)="addCourse()" class="mcc-btn mcc-btn-primary">
+          <app-icon name="plus" size="xs" />
+          <span>Thêm khóa học</span>
+        </button>
+      </div>
+
+      <app-admin-guide storageKey="courses">
+        <ul>
+          <li>Bấm vào một khóa để sửa. Mỗi lần <b>Lưu khóa học</b> là lưu cả trang của khóa đó.</li>
+          <li>Đường dẫn không đổi được sau khi tạo vì lớp học gắn với khóa theo đường dẫn. Muốn tạm gỡ khóa khỏi trang web, bỏ chọn <b>Hiện trên trang web</b> thay vì xoá.</li>
+          <li>Trong <b>Đoạn văn</b> và ô <b>Bảng</b>, mỗi dòng là một dòng trên trang: <code>- chữ</code> là gạch đầu dòng, <code>**chữ**</code> là in đậm, <code>_chữ_</code> là in nghiêng (chữ hồng).</li>
+          <li><b>Bảng</b> và <b>Giai đoạn</b> thu gọn sẵn, bấm vào tên để mở. Giai đoạn chứa các khối bên trong và hiện trên trang dạng mục đóng/mở.</li>
+          <li><b>Chặng</b> dùng cho khóa có nhiều lựa chọn (VD: Nhập Môn / Thông Thạo / Tinh Anh). Khi có chặng, trang hiện nội dung và thông tin của chặng đang chọn.</li>
+          <li><b>Tab đối tượng</b>: mỗi dòng một tab (VD: Trẻ em / Người lớn); thẻ khóa học ở trang chủ có thể mở sẵn một tab.</li>
+          <li><b>Thông tin khóa học</b>: nhãn có chữ Thời lượng, Tần suất, Sĩ số, Cam kết, Giáo trình hoặc Học phí sẽ có biểu tượng riêng.</li>
+        </ul>
+      </app-admin-guide>
+
+      @if (loading()) {
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải khóa học…</p>
+      } @else if (loadError()) {
+        <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được khóa học: {{ loadError() }}</p>
+      } @else {
+        <ul class="space-y-3">
+          @for (row of rows(); track row.id; let i = $index; let first = $first; let last = $last) {
+            <li class="mcc-card flex items-center gap-3 p-3 sm:p-4">
+              <button type="button" (click)="edit(row)" class="min-w-0 flex-1 text-left cursor-pointer">
+                <span class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-brand-navy dark:text-white truncate">{{ row.name }}</span>
+                  @if (!row.is_published) {
+                    <span class="mcc-chip bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Đang ẩn</span>
+                  }
+                </span>
+                <span class="block text-xs text-zinc-500 dark:text-zinc-400 truncate">/khoa-hoc/{{ row.slug }}</span>
+              </button>
+              <div class="flex gap-1.5 shrink-0">
+                <button type="button" (click)="moveCourse(i, -1)" [disabled]="first || reordering()" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                <button type="button" (click)="moveCourse(i, 1)" [disabled]="last || reordering()" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                <button type="button" (click)="edit(row)" class="mcc-btn mcc-btn-secondary" [attr.aria-label]="'Sửa ' + row.name"><app-icon name="pencil" size="xs" /></button>
+                <button type="button" (click)="deleteCourse(row)" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá ' + row.name"><app-icon name="trash" size="xs" /></button>
+              </div>
+            </li>
+          } @empty {
+            <li class="text-sm text-zinc-500 dark:text-zinc-400">Chưa có khóa học nào.</li>
+          }
+        </ul>
+      }
+    }
+  </div>
+</div>

@@ -7,7 +7,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { ToastService } from '../../../../services/toast.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { VISIBILITY_LABELS, type ContentVisibility } from '../../../../components/shared/visibility/content-visibility';
-import { COURSE_DETAILS } from '../../../courses/data/course-details.data';
+import { CourseService } from '../../../courses/services/course.service';
 import { VOCAB_COLLECTIONS, VOCAB_COLLECTION_KEYS, parseLevelParam, type VocabCollection } from '../../../flashcards/models/vocab-card.model';
 import { VocabService, levelVisibility, type VocabVisibilityMap } from '../../../flashcards/services/vocab.service';
 import { ClassService } from '../../services/class.service';
@@ -90,7 +90,8 @@ export class ClassDetailComponent {
   readonly importOpen = signal(false);
   readonly confirmAction = signal<'archive' | 'restore' | 'delete' | null>(null);
 
-  readonly courseName = computed(() => COURSE_DETAILS.find(c => c.slug === this.cls()?.course_slug)?.name ?? '');
+  private readonly courseService = inject(CourseService);
+  readonly courseName = computed(() => this.courseService.nameOf(this.cls()?.course_slug));
   readonly activeStudents = computed(() => this.students().filter(s => s.status !== 'archived'));
   readonly archivedStudents = computed(() => this.students().filter(s => s.status === 'archived'));
   readonly showArchivedStudents = signal(false);
@@ -140,6 +141,7 @@ export class ClassDetailComponent {
   readonly studentNames = computed(() => new Map(this.students().map(s => [s.user_id, s.full_name])));
 
   constructor() {
+    void this.courseService.loadNames();
     effect(() => {
       const id = this.id();
       if (id) this.load(id);

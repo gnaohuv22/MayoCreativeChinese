@@ -213,7 +213,7 @@
         </div>
 
         <ul class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          @for (s of stories; track s.slug) {
+          @for (s of stories(); track s.slug) {
             <li>
               <a [routerLink]="['/bai-viet', s.slug]" class="block h-full p-5 rounded-2xl bg-brand-light dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 hover:border-brand-pink/40 transition-colors">
                 <span class="text-[11px] font-black uppercase tracking-wider text-brand-pink">{{ s.category }}</span>
@@ -255,6 +255,14 @@
         Đăng ký ngay
       </button>
     </div>
+  </main>
+} @else if (loadFailed()) {
+  <main class="min-h-[70vh] flex flex-col items-center justify-center gap-4 px-4 pt-28 pb-16 text-center">
+    <p class="text-base font-semibold text-brand-navy dark:text-white">Không tải được trang. Kiểm tra kết nối mạng rồi thử lại.</p>
+    <button type="button" (click)="retry()" class="mcc-btn mcc-btn-primary">
+      <app-icon name="arrow-path" size="xs" />
+      <span>Thử lại</span>
+    </button>
   </main>
 }
 

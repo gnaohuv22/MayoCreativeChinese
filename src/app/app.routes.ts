@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 import { guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
+import type { AdminSiteComponent } from './features/admin/pages/admin-site/admin-site';
+import type { AdminStoriesComponent } from './features/admin/pages/admin-stories/admin-stories';
+import type { AdminCoursesComponent } from './features/admin/pages/admin-courses/admin-courses';
 
 export const routes: Routes = [
   {
@@ -9,7 +12,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing').then(m => m.LandingComponent),
   },
   {
-    // Trang chi tiết khóa học (nội dung từ brief — scripts/course-brief-to-ts.py)
+    // Trang chi tiết khóa học (public.site_courses, sửa ở /admin/courses)
     path: 'khoa-hoc/:slug',
     loadComponent: () =>
       import('./features/courses/pages/course-detail/course-detail').then(m => m.CourseDetailComponent),
@@ -177,6 +180,30 @@ export const routes: Routes = [
         canActivate: [permissionGuard('activity.read')],
         loadComponent: () =>
           import('./features/admin/pages/admin-activity/admin-activity').then(m => m.AdminActivityComponent),
+      },
+      {
+        path: 'site',
+        title: 'Trang chủ',
+        canActivate: [permissionGuard('site.manage')],
+        canDeactivate: [(page: AdminSiteComponent) => page.confirmLeave()],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-site/admin-site').then(m => m.AdminSiteComponent),
+      },
+      {
+        path: 'stories',
+        title: 'Câu chuyện học viên',
+        canActivate: [permissionGuard('site.manage')],
+        canDeactivate: [(page: AdminStoriesComponent) => page.confirmLeave()],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-stories/admin-stories').then(m => m.AdminStoriesComponent),
+      },
+      {
+        path: 'courses',
+        title: 'Trang khóa học',
+        canActivate: [permissionGuard('site.manage')],
+        canDeactivate: [(page: AdminCoursesComponent) => page.confirmLeave()],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-courses/admin-courses').then(m => m.AdminCoursesComponent),
       },
       {
         path: 'vocab',

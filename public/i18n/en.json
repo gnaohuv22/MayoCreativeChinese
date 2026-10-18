@@ -234,5 +234,7 @@
   "stories.badge": "Stories",
   "stories.title": "Student Stories",
   "stories.subtitle": "Achievements, journeys and memorable moments of MCC students",
-  "stories.read_more": "Read more"
+  "stories.read_more": "Read more",
+  "contact.phone_label": "Hotline/Zalo",
+  "contact.email_label": "Email"
 }

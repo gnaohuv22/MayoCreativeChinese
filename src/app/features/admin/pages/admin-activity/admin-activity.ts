@@ -37,6 +37,7 @@ const ENTITIES: Record<string, { label: string; icon: IconName }> = {
   class: { label: 'Lớp học', icon: 'calendar' },
   student: { label: 'Học viên', icon: 'users' },
   auth: { label: 'Tài khoản', icon: 'cog' },
+  site: { label: 'Trang chủ', icon: 'sparkles' },
 };
 
 const FIELD_LABELS: Record<string, string> = {

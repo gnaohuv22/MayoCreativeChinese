@@ -1,0 +1,41 @@
+<div class="space-y-1.5">
+  @if (label()) {
+    <span class="mcc-label block">{{ label() }}</span>
+  }
+  <div
+    tabindex="0"
+    role="group"
+    [attr.aria-label]="(label() || 'Ảnh') + ' — bấm vào đây rồi dán ảnh (Ctrl+V) để thay'"
+    (paste)="onPaste($event)"
+    class="relative w-full overflow-hidden rounded-xl border border-brand-navy/10 dark:border-white/10 bg-zinc-100 dark:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink"
+    [class]="aspectClass()"
+  >
+    @if (src()) {
+      <img [src]="src()" alt="" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+    } @else {
+      <div class="absolute inset-0 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+        <app-icon name="image" size="lg" />
+      </div>
+    }
+    @if (uploading()) {
+      <div class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-black/60 text-sm font-bold text-brand-navy dark:text-white">
+        Đang tải ảnh…
+      </div>
+    }
+  </div>
+  <div class="flex flex-wrap gap-1.5">
+    <label class="mcc-btn mcc-btn-secondary cursor-pointer" [class.pointer-events-none]="uploading()" [class.opacity-60]="uploading()">
+      <app-icon name="upload" size="xs" />
+      <span>{{ src() ? 'Đổi ảnh' : 'Chọn ảnh' }}</span>
+      <input type="file" accept="image/*" class="sr-only" [disabled]="uploading()" (change)="onFileSelected($event)" />
+    </label>
+    @if (removable() && src()) {
+      <button type="button" (click)="srcChange.emit('')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá ảnh">
+        <app-icon name="trash" size="xs" />
+      </button>
+    }
+  </div>
+  @if (error()) {
+    <p class="text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{{ error() }}</p>
+  }
+</div>

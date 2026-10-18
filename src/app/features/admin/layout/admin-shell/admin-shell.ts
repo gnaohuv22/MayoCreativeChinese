@@ -31,6 +31,11 @@ export class AdminShellComponent {
     { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open' },
   ];
 
+  private readonly siteItem: AdminNavItem = { label: 'Trang chủ', hint: 'Giáo viên, khóa học, ảnh', route: '/admin/site', icon: 'sparkles', permission: 'site.manage' };
+  private readonly storiesItem: AdminNavItem = { label: 'Câu chuyện', hint: 'Bài viết học viên', route: '/admin/stories', icon: 'document-text', permission: 'site.manage' };
+  private readonly coursesItem: AdminNavItem = { label: 'Trang khóa học', hint: 'Lộ trình, bảng buổi học', route: '/admin/courses', icon: 'book-open', permission: 'site.manage' };
+  readonly visibleNavItems = computed(() => [...this.navItems, ...(this.auth.can('site.manage') ? [this.siteItem, this.storiesItem, this.coursesItem] : [])]);
+
   private readonly classItems: AdminNavItem[] = [
     { label: 'Lớp học', hint: 'Thông báo, gợi ý, kết quả', route: '/admin/classes', icon: 'calendar', permission: 'class.manage' },
     { label: 'Học viên', hint: 'Tài khoản, chuyển lớp', route: '/admin/students', icon: 'users', permission: 'student.manage' },
@@ -46,7 +51,7 @@ export class AdminShellComponent {
 
   readonly accountItem: AdminNavItem = { label: 'Hồ sơ của tôi', hint: 'Họ tên, đổi mật khẩu', route: '/admin/profile', icon: 'users' };
   readonly mobileTabs = computed<AdminNavItem[]>(() => [
-    ...this.navItems,
+    ...this.visibleNavItems(),
     ...this.visibleClassItems(),
     ...this.visibleManageItems().map(i => ({ ...i, label: i.route === '/admin/activity' ? 'Nhật ký' : i.route === '/admin/roles' ? 'Vai trò' : i.label })),
     { ...this.accountItem, label: 'Hồ sơ' },

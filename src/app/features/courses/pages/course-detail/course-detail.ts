@@ -10,12 +10,11 @@ import { ScrollToTopComponent } from '../../../../components/shared/scroll-to-to
 import { AppIconComponent, type IconName } from '../../../../components/shared/icon/app-icon';
 import { RegisterModalService } from '../../../../services/register-modal.service';
 import { CourseBlocksComponent } from '../../components/course-blocks/course-blocks';
-import { COURSE_DETAILS } from '../../data/course-details.data';
-import { CLASS_MOMENTS, STUDENT_STORIES } from '../../../posts/data/student-stories.data';
-import type { CourseInfoRow } from '../../models/course-detail.model';
-
-/** Query param chọn đối tượng trên trang có tab (VD: /khoa-hoc/tieng-trung-tre-em?doi-tuong=nguoi-lon) */
-export const AUDIENCE_PARAM = 'doi-tuong';
+import { CourseService } from '../../services/course.service';
+import { AUDIENCE_PARAM, slugify } from '../../course-links';
+import { CLASS_MOMENTS } from '../../../posts/data/student-stories.data';
+import { StoryService } from '../../../posts/services/story.service';
+import type { CourseDetail, CourseInfoRow } from '../../models/course-detail.model';
 
 @Component({
   selector: 'app-course-detail',
@@ -46,7 +45,13 @@ export class CourseDetailComponent {
     { initialValue: null }
   );
 
-  readonly course = computed(() => COURSE_DETAILS.find(c => c.slug === this.slug()) ?? null);
+  private readonly courses = inject(CourseService);
+  /** undefined = đang tải, null = không có khóa */
+  private readonly loaded = signal<CourseDetail | null | undefined>(undefined);
+  readonly course = computed(() => this.loaded() ?? null);
+  readonly loadFailed = signal(false);
+  /** Tăng để tải lại khóa sau lỗi */
+  private readonly attempt = signal(0);
 
   /** Chặng đang chọn (khóa có nhiều lựa chọn) */
   readonly trackIndex = signal(0);
@@ -84,14 +89,36 @@ export class CourseDetailComponent {
   });
 
   readonly moments = CLASS_MOMENTS;
-  readonly stories = STUDENT_STORIES.slice(0, 3);
+  private readonly storyService = inject(StoryService);
+  readonly stories = computed(() => this.storyService.summaries()?.slice(0, 3) ?? []);
 
   constructor() {
     // Trả lại tiêu đề trang chủ khi rời trang
     const originalTitle = this.title.getTitle();
     inject(DestroyRef).onDestroy(() => this.title.setTitle(originalTitle));
+    void this.storyService.loadSummaries();
+
+    // Đổi slug → tải khóa mới; bỏ kết quả của slug cũ nếu về muộn
+    effect(() => {
+      const slug = this.slug();
+      this.attempt();
+      this.loaded.set(undefined);
+      this.loadFailed.set(false);
+      this.trackIndex.set(0);
+      this.audienceIndex.set(0);
+      if (!slug) return;
+      this.courses.get(slug).then(
+        course => {
+          if (this.slug() === slug) this.loaded.set(course);
+        },
+        () => {
+          if (this.slug() === slug) this.loadFailed.set(true);
+        },
+      );
+    });
 
     effect(() => {
+      if (this.loaded() === undefined) return;
       const c = this.course();
       if (!c && this.slug()) {
         // Khóa không tồn tại → quay về danh sách khóa học trên trang chủ
@@ -125,6 +152,10 @@ export class CourseDetailComponent {
     });
   }
 
+  retry(): void {
+    this.attempt.update(n => n + 1);
+  }
+
   selectTrack(index: number): void {
     this.trackIndex.set(index);
   }
@@ -151,15 +182,4 @@ export class CourseDetailComponent {
   isCommitment(row: CourseInfoRow): boolean {
     return row.label.toLowerCase().includes('cam kết');
   }
-}
-
-/** 'Người lớn (người đi làm, sinh viên)' → 'nguoi-lon-nguoi-di-lam-sinh-vien' */
-export function slugify(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/đ/gi, 'd')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
 }

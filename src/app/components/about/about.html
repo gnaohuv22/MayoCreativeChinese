@@ -7,10 +7,10 @@
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-20">
       <h2 class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
-        {{ i18n.translate()('about.title') }}
+        {{ i18n.pick()(about()?.title) }}
       </h2>
       <p class="text-base sm:text-lg text-brand-navy/85 dark:text-white/80 mt-5 leading-relaxed">
-        {{ i18n.translate()('about.subtitle') }}
+        {{ i18n.pick()(about()?.subtitle) }}
       </p>
     </div>
 
@@ -24,10 +24,10 @@
         <div class="relative z-10">
           <span class="text-brand-pink text-3xl font-display font-black">“</span>
           <h3 class="text-xl sm:text-2xl font-display font-bold mb-6 text-brand-accent">
-            {{ i18n.translate()('about.motto_title') }}
+            {{ i18n.pick()(about()?.mottoTitle) }}
           </h3>
           <p class="text-base sm:text-lg font-medium leading-relaxed font-sans italic text-white/90">
-            {{ i18n.translate()('about.motto_content') }}
+            {{ i18n.pick()(about()?.mottoContent) }}
           </p>
         </div>
         
@@ -52,11 +52,11 @@
               </svg>
             </div>
             <h3 class="text-base sm:text-lg font-bold text-brand-navy dark:text-white font-display">
-              {{ i18n.translate()('about.pillar.sessions') }}
+              {{ i18n.pick()(about()?.pillars?.[0]?.title) }}
             </h3>
           </div>
           <p class="text-sm text-brand-navy/85 dark:text-white/75 leading-relaxed font-sans">
-            {{ i18n.translate()('about.pillar.sessions_desc') }}
+            {{ i18n.pick()(about()?.pillars?.[0]?.desc) }}
           </p>
         </div>
 
@@ -69,11 +69,11 @@
               </svg>
             </div>
             <h3 class="text-base sm:text-lg font-bold text-brand-navy dark:text-white font-display">
-              {{ i18n.translate()('about.pillar.hsk') }}
+              {{ i18n.pick()(about()?.pillars?.[1]?.title) }}
             </h3>
           </div>
           <p class="text-sm text-brand-navy/85 dark:text-white/75 leading-relaxed font-sans">
-            {{ i18n.translate()('about.pillar.hsk_desc') }}
+            {{ i18n.pick()(about()?.pillars?.[1]?.desc) }}
           </p>
         </div>
 
@@ -86,11 +86,11 @@
               </svg>
             </div>
             <h3 class="text-base sm:text-lg font-bold text-brand-navy dark:text-white font-display">
-              {{ i18n.translate()('about.pillar.practical') }}
+              {{ i18n.pick()(about()?.pillars?.[2]?.title) }}
             </h3>
           </div>
           <p class="text-sm text-brand-navy/85 dark:text-white/75 leading-relaxed font-sans">
-            {{ i18n.translate()('about.pillar.practical_desc') }}
+            {{ i18n.pick()(about()?.pillars?.[2]?.desc) }}
           </p>
         </div>
 
@@ -103,11 +103,11 @@
               </svg>
             </div>
             <h3 class="text-base sm:text-lg font-bold text-brand-navy dark:text-white font-display">
-              {{ i18n.translate()('about.pillar.classroom') }}
+              {{ i18n.pick()(about()?.pillars?.[3]?.title) }}
             </h3>
           </div>
           <p class="text-sm text-brand-navy/85 dark:text-white/75 leading-relaxed font-sans">
-            {{ i18n.translate()('about.pillar.classroom_desc') }}
+            {{ i18n.pick()(about()?.pillars?.[3]?.desc) }}
           </p>
         </div>
 

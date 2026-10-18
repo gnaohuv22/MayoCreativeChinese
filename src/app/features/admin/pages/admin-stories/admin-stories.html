@@ -1,0 +1,254 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10 flex flex-wrap items-end justify-between gap-4">
+      <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Câu chuyện học viên</h1>
+      <div class="flex flex-wrap gap-2">
+        <a routerLink="/" fragment="stories" target="_blank" class="mcc-btn mcc-btn-secondary">
+          <app-icon name="eye" size="xs" />
+          <span>Xem trang chủ</span>
+        </a>
+        <button type="button" (click)="addPost()" class="mcc-btn mcc-btn-primary">
+          <app-icon name="plus" size="xs" />
+          <span>Thêm bài</span>
+        </button>
+      </div>
+    </div>
+
+    <app-admin-guide storageKey="stories">
+      <ul>
+        <li>Bấm vào một bài để sửa. <b>Thêm bài</b> tạo bản nháp: bài chỉ hiện trên trang chủ khi chọn <b>Hiện trên trang chủ</b> và có ít nhất 1 ảnh.</li>
+        <li>Mũi tên trong danh sách đổi thứ tự trên trang chủ (lưu ngay). Bài đầu tiên là bài nổi bật (thẻ lớn); trang khóa học hiện 3 bài đầu.</li>
+        <li>Đường dẫn tự tạo theo tiêu đề khi thêm bài mới. Đổi đường dẫn của bài đã đăng thì link cũ (đã chia sẻ trên Facebook…) sẽ không mở được.</li>
+        <li>Ảnh đầu tiên là <b>ảnh bìa</b>; dùng mũi tên để đổi thứ tự ảnh.</li>
+        <li>Nội dung gồm các khối: <b>Đoạn mở đầu</b> (chữ to, đậm), <b>Đoạn văn</b>, <b>Danh sách</b> (mỗi dòng một ý), <b>Bảng kết quả</b> (họ tên, cấp, điểm, ghi chú).</li>
+        <li>Chuyên mục: chọn trong danh sách hoặc <b>+ Chuyên mục mới…</b>. Đổi tên ở khung <b>Chuyên mục</b> áp dụng cho mọi bài; đổi trùng tên một chuyên mục có sẵn là gộp hai chuyên mục.</li>
+      </ul>
+    </app-admin-guide>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải bài viết…</p>
+    } @else if (loadError()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được bài viết: {{ loadError() }}</p>
+    } @else {
+      @if (categoryCounts().length) {
+        <section class="mcc-card p-4 sm:p-5 space-y-2">
+          <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Chuyên mục</h2>
+          <ul class="divide-y divide-brand-navy/5 dark:divide-white/5">
+            @for (c of categoryCounts(); track c.name) {
+              <li class="flex items-center gap-2 py-2">
+                @if (renaming() === c.name) {
+                  <input class="mcc-input flex-1" maxlength="60" aria-label="Tên mới của chuyên mục"
+                    [value]="renameText()" (input)="renameText.set($any($event.target).value)"
+                    (keydown.enter)="applyRename(c.name)" (keydown.escape)="renaming.set(null)" />
+                  <button type="button" (click)="renaming.set(null)" [disabled]="renameSaving()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+                  <button type="button" (click)="applyRename(c.name)" [disabled]="renameSaving()" class="mcc-btn mcc-btn-primary">
+                    {{ renameSaving() ? 'Đang lưu…' : 'Lưu' }}
+                  </button>
+                } @else {
+                  <span class="flex-1 min-w-0 truncate text-sm font-bold text-brand-navy dark:text-white">{{ c.name }}</span>
+                  <span class="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">{{ c.count }} bài</span>
+                  <button type="button" (click)="startRename(c.name)" class="mcc-btn mcc-btn-secondary" [attr.aria-label]="'Đổi tên chuyên mục ' + c.name">
+                    <app-icon name="pencil" size="xs" />
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <ul class="space-y-3">
+        @for (row of rows(); track row.id; let i = $index; let first = $first; let last = $last) {
+          <li class="mcc-card overflow-hidden">
+            <div class="flex items-center gap-3 p-3 sm:p-4">
+              <button type="button" (click)="edit(row)" class="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
+                [attr.aria-expanded]="draft()?.id === row.id">
+                <span class="w-16 h-12 rounded-xl overflow-hidden bg-zinc-100 dark:bg-white/10 shrink-0 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+                  @if (row.images[0]?.src; as cover) {
+                    <img [src]="cover" alt="" class="w-full h-full object-cover" loading="lazy" />
+                  } @else {
+                    <app-icon name="image" size="sm" />
+                  }
+                </span>
+                <span class="min-w-0">
+                  <span class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-brand-navy dark:text-white truncate">{{ row.title }}</span>
+                    @if (!row.is_published) {
+                      <span class="mcc-chip bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Bản nháp</span>
+                    }
+                  </span>
+                  <span class="block text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ row.category }}</span>
+                </span>
+              </button>
+              <div class="flex gap-1.5 shrink-0">
+                <button type="button" (click)="movePost(i, -1)" [disabled]="first || reordering()" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                <button type="button" (click)="movePost(i, 1)" [disabled]="last || reordering()" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                <button type="button" (click)="deletePost(row)" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá ' + row.title"><app-icon name="trash" size="xs" /></button>
+              </div>
+            </div>
+            @if (draft(); as d) {
+              @if (d.id === row.id) {
+                <ng-container [ngTemplateOutlet]="editor" />
+              }
+            }
+          </li>
+        } @empty {
+          <li class="text-sm text-zinc-500 dark:text-zinc-400">Chưa có bài nào.</li>
+        }
+        @if (draft(); as d) {
+          @if (d.id === null) {
+            <li class="mcc-card overflow-hidden ring-2 ring-brand-pink/40">
+              <p class="px-4 pt-4 text-sm font-black font-display text-brand-navy dark:text-white">Bài mới</p>
+              <ng-container [ngTemplateOutlet]="editor" />
+            </li>
+          }
+        }
+      </ul>
+
+      @if (draft()) {
+        <div class="sticky bottom-4 z-20 flex justify-end">
+          <div class="px-3 py-2.5 flex items-center gap-2 rounded-2xl border border-brand-navy/10 dark:border-white/10 bg-white/70 dark:bg-brand-dark/60 backdrop-blur-md shadow-lg">
+            @if (isDirty()) {
+              <span class="text-xs font-semibold text-amber-700 dark:text-amber-300 px-1">Chưa lưu</span>
+            }
+            <button type="button" (click)="close()" [disabled]="saving()" class="mcc-btn mcc-btn-secondary">Đóng</button>
+            <button type="button" (click)="save()" [disabled]="!isDirty() || saving()" class="mcc-btn mcc-btn-primary">
+              <app-icon name="check" size="xs" />
+              <span>{{ saving() ? 'Đang lưu…' : 'Lưu bài' }}</span>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<ng-template #editor>
+  @if (draft(); as d) {
+  <div class="p-4 sm:p-5 space-y-6 border-t border-brand-navy/5 dark:border-white/5">
+
+    <div class="space-y-4">
+      <div class="space-y-1.5">
+        <label for="story-title" class="mcc-label">Tiêu đề</label>
+        <input id="story-title" maxlength="200" class="mcc-input" [value]="d.title" (input)="setTitle(d, $any($event.target).value)" />
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label for="story-slug" class="mcc-label">Đường dẫn</label>
+          <div class="flex items-center rounded-xl bg-zinc-50 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 focus-within:ring-2 focus-within:ring-brand-pink/40"
+            [class.!border-red-400]="d.slug && !slugValid(d.slug)">
+            <span class="pl-3.5 text-sm text-zinc-500 dark:text-zinc-400 shrink-0">/bai-viet/</span>
+            <input id="story-slug" maxlength="120" class="w-full min-w-0 py-2.5 pr-3.5 bg-transparent text-sm text-brand-navy dark:text-white focus:outline-none"
+              [value]="d.slug" (input)="setSlug(d, $any($event.target).value)" />
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label for="story-category" class="mcc-label">Chuyên mục</label>
+          @if (d.customCategory) {
+            <div class="flex gap-1.5">
+              <input id="story-category" maxlength="60" class="mcc-input" placeholder="Tên chuyên mục mới"
+                [value]="d.category" (input)="d.category = $any($event.target).value" />
+              @if (categories().length) {
+                <button type="button" (click)="cancelCustomCategory(d)" class="mcc-btn mcc-btn-secondary shrink-0" aria-label="Chọn chuyên mục có sẵn">
+                  <app-icon name="x-mark" size="xs" />
+                </button>
+              }
+            </div>
+          } @else {
+            <select id="story-category" class="mcc-input" (change)="onCategorySelect(d, $any($event.target).value)">
+              @for (c of categories(); track c) {
+                <option [value]="c" [selected]="d.category === c">{{ c }}</option>
+              }
+              <option [value]="newCategory">+ Chuyên mục mới…</option>
+            </select>
+          }
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label for="story-excerpt" class="mcc-label">Tóm tắt</label>
+        <textarea id="story-excerpt" rows="2" maxlength="400" class="mcc-input resize-y leading-relaxed"
+          [value]="d.excerpt" (input)="d.excerpt = $any($event.target).value"></textarea>
+      </div>
+      <label class="inline-flex items-center gap-2.5 cursor-pointer text-sm font-bold text-brand-navy dark:text-white">
+        <input type="checkbox" class="accent-brand-pink w-4 h-4" [checked]="d.is_published" (change)="d.is_published = $any($event.target).checked" />
+        <span>Hiện trên trang chủ</span>
+      </label>
+    </div>
+
+    <section class="space-y-3">
+      <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Ảnh</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        @for (img of d.images; track img.src; let i = $index; let first = $first; let last = $last) {
+          <div class="space-y-1.5">
+            <div class="relative aspect-[4/3] rounded-xl overflow-hidden bg-zinc-100 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10">
+              <img [src]="img.src" [alt]="img.alt" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              @if (first) {
+                <span class="absolute top-2 left-2 mcc-chip bg-brand-pink text-white">Ảnh bìa</span>
+              }
+            </div>
+            <div class="flex gap-1.5 justify-end">
+              <button type="button" (click)="move(d.images, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trước"><app-icon name="chevron-left" size="xs" /></button>
+              <button type="button" (click)="move(d.images, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Ra sau"><app-icon name="chevron-right" size="xs" /></button>
+              <button type="button" (click)="remove(d.images, i, 'ảnh này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá ảnh"><app-icon name="trash" size="xs" /></button>
+            </div>
+          </div>
+        }
+        <app-site-image-field folder="stories" (srcChange)="addImage(d, $event)" />
+      </div>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Nội dung</h2>
+      @for (block of d.body; track $index; let i = $index; let first = $first; let last = $last) {
+        <div class="rounded-xl border border-brand-navy/10 dark:border-white/10 p-3 sm:p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mcc-label">{{ blockLabels[block.kind] }}</span>
+            <div class="flex gap-1.5">
+              <button type="button" (click)="move(d.body, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+              <button type="button" (click)="move(d.body, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+              <button type="button" (click)="remove(d.body, i, blockLabels[block.kind].toLowerCase())" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá khối"><app-icon name="trash" size="xs" /></button>
+            </div>
+          </div>
+          @switch (block.kind) {
+            @case ('results') {
+              <div class="space-y-2">
+                @for (r of block.items; track $index; let ri = $index) {
+                  <div class="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-2 items-center">
+                    <input class="mcc-input" placeholder="Họ tên" aria-label="Họ tên" [value]="r.name" (input)="r.name = $any($event.target).value" />
+                    <input class="mcc-input" placeholder="HSK3" aria-label="Cấp" [value]="r.level" (input)="r.level = $any($event.target).value" />
+                    <input class="mcc-input" placeholder="280/300" aria-label="Điểm" [value]="r.score" (input)="r.score = $any($event.target).value" />
+                    <input class="mcc-input" placeholder="Ghi chú" aria-label="Ghi chú" [value]="r.note ?? ''" (input)="r.note = $any($event.target).value" />
+                    <button type="button" (click)="remove(block.items, ri, 'dòng này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá dòng"><app-icon name="trash" size="xs" /></button>
+                  </div>
+                }
+                <button type="button" (click)="addResult(block)" class="mcc-btn mcc-btn-secondary">
+                  <app-icon name="plus" size="xs" />
+                  <span>Thêm dòng</span>
+                </button>
+              </div>
+            }
+            @case ('list') {
+              <textarea rows="4" class="mcc-input resize-y leading-relaxed" aria-label="Danh sách, mỗi dòng một ý"
+                [value]="block.text" (input)="block.text = $any($event.target).value"></textarea>
+            }
+            @default {
+              <textarea [rows]="block.kind === 'lead' ? 3 : 4" class="mcc-input resize-y leading-relaxed" [attr.aria-label]="blockLabels[block.kind]"
+                [class.font-semibold]="block.kind === 'lead'"
+                [value]="block.text" (input)="block.text = $any($event.target).value"></textarea>
+            }
+          }
+        </div>
+      }
+      <div class="flex flex-wrap gap-1.5">
+        @for (k of blockKinds; track k.kind) {
+          <button type="button" (click)="addBlock(d, k.kind)" class="mcc-btn mcc-btn-secondary">
+            <app-icon name="plus" size="xs" />
+            <span>{{ k.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+  }
+</ng-template>
