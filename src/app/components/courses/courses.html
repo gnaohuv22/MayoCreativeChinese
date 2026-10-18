@@ -7,10 +7,10 @@
     <!-- Header -->
     <div class="text-center max-w-3xl mx-auto mb-14">
       <h2 class="text-3xl sm:text-4xl font-display font-black text-brand-navy dark:text-white leading-tight" style="text-wrap: balance">
-        {{ i18n.translate()('courses.title') }}
+        {{ i18n.pick()(section()?.title) }}
       </h2>
       <p class="text-base sm:text-lg text-brand-navy/75 dark:text-white/80 mt-5 leading-relaxed">
-        {{ i18n.translate()('courses.subtitle') }}
+        {{ i18n.pick()(section()?.subtitle) }}
       </p>
     </div>
 
@@ -41,7 +41,7 @@
          class="course-slider flex gap-8 overflow-x-auto snap-x snap-mandatory pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-0"
          (scroll)="onSliderScroll()">
 
-      @for (course of courses; track course.id) {
+      @for (course of courses(); track course.id) {
         <div class="course-card snap-start shrink-0 w-[85vw] sm:w-[420px] lg:w-[calc(33.333%-22px)] bg-brand-light dark:bg-brand-dark/50 rounded-2xl border border-brand-navy/5 dark:border-white/5 hover:border-brand-pink/20 dark:hover:border-brand-pink/20 hover:shadow-lg transition-all duration-300 flex flex-col justify-between group overflow-hidden">
 
           <!-- Top accent line -->
@@ -87,20 +87,20 @@
 
               <!-- Title (+ nhãn nổi bật nếu có) -->
               <div class="min-w-0">
-                @if (course.badgeKey) {
+                @if (i18n.pick()(course.badge); as badge) {
                   <span class="inline-block mb-1.5 px-2.5 py-0.5 rounded-full bg-brand-pink text-white text-[11px] font-black uppercase tracking-wider shadow-sm">
-                    {{ i18n.translate()(course.badgeKey) }}
+                    {{ badge }}
                   </span>
                 }
                 <h3 class="text-base sm:text-lg lg:text-xl font-display font-black text-brand-navy dark:text-white group-hover:text-brand-pink transition-colors duration-300 leading-snug">
-                  {{ i18n.translate()(course.titleKey) }}
+                  {{ i18n.pick()(course.title) }}
                 </h3>
               </div>
             </div>
 
             <!-- Description -->
             <p class="text-sm text-brand-navy/75 dark:text-white/75 leading-relaxed font-sans mb-8 flex-1">
-              {{ i18n.translate()(course.descKey) }}
+              {{ i18n.pick()(course.desc) }}
             </p>
 
             <!-- Metadata -->
@@ -113,7 +113,7 @@
                   </svg>
                   {{ i18n.translate()('course.duration') }}
                 </span>
-                <span class="text-brand-navy dark:text-white font-bold">{{ i18n.translate()(course.durationKey) }}</span>
+                <span class="text-brand-navy dark:text-white font-bold">{{ i18n.pick()(course.duration) }}</span>
               </div>
               <!-- Class Size -->
               <div class="flex items-center justify-between text-xs sm:text-sm">
@@ -123,7 +123,7 @@
                   </svg>
                   {{ i18n.translate()('course.class_size') }}
                 </span>
-                <span class="text-brand-navy dark:text-white font-bold">{{ i18n.translate()(course.classSizeKey) }}</span>
+                <span class="text-brand-navy dark:text-white font-bold">{{ i18n.pick()(course.classSize) }}</span>
               </div>
               <!-- Objective -->
               <div class="flex items-start justify-between text-xs sm:text-sm gap-4">
@@ -133,7 +133,7 @@
                   </svg>
                   {{ i18n.translate()('course.objective') }}
                 </span>
-                <span class="text-brand-navy dark:text-white font-bold text-right leading-snug">{{ i18n.translate()(course.objectiveKey) }}</span>
+                <span class="text-brand-navy dark:text-white font-bold text-right leading-snug">{{ i18n.pick()(course.objective) }}</span>
               </div>
             </div>
           </div>
@@ -142,7 +142,7 @@
           <div class="px-8 pb-8">
             @if (course.detailSlug) {
               <a [routerLink]="['/khoa-hoc', course.detailSlug]"
-                 [queryParams]="course.detailQuery ?? null"
+                 [queryParams]="course.detailQuery"
                  class="block w-full py-3.5 bg-brand-navy dark:bg-brand-pink hover:bg-brand-pink dark:hover:bg-brand-pink/90 text-white rounded-2xl text-center text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
                 {{ i18n.translate()('course.view_detail') }}
               </a>
@@ -162,7 +162,7 @@
 
     <!-- Mobile swipe indicator -->
     <div class="lg:hidden flex items-center justify-center gap-2 mt-4" role="tablist" aria-label="Phân trang khóa học">
-      @for (course of courses; track course.id; let i = $index) {
+      @for (course of courses(); track course.id; let i = $index) {
         <button
           (click)="scrollToCard(i)"
           [class.w-4]="activeCardIndex() === i"
@@ -173,7 +173,7 @@
           class="h-2 rounded-full transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-pink focus:ring-offset-2"
           role="tab"
           [aria-selected]="activeCardIndex() === i"
-          [aria-label]="i18n.translate()(course.titleKey)">
+          [aria-label]="i18n.pick()(course.title)">
         </button>
       }
     </div>

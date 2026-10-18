@@ -1,0 +1,305 @@
+<div class="py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <div class="pb-6 border-b border-brand-navy/10 dark:border-white/10 flex flex-wrap items-end justify-between gap-4">
+      <h1 class="text-2xl sm:text-3xl font-black text-brand-navy dark:text-white tracking-tight font-display">Trang chủ</h1>
+      <a routerLink="/" target="_blank" class="mcc-btn mcc-btn-secondary">
+        <app-icon name="eye" size="xs" />
+        <span>Xem trang chủ</span>
+      </a>
+    </div>
+
+    @if (loading()) {
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">Đang tải nội dung…</p>
+    } @else if (loadError()) {
+      <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được nội dung: {{ loadError() }}</p>
+    } @else if (draft(); as d) {
+
+      <div class="flex flex-col gap-3">
+        <nav class="flex gap-1.5 overflow-x-auto pb-1" aria-label="Khối trên trang chủ">
+          @for (id of sectionIds; track id) {
+            <button type="button" (click)="selectTab(id)"
+              class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold border transition-colors cursor-pointer"
+              [class]="tab() === id
+                ? 'bg-brand-navy text-white border-brand-navy dark:bg-brand-pink dark:border-brand-pink'
+                : 'bg-white text-brand-navy border-brand-navy/10 hover:border-brand-pink/40 dark:bg-white/5 dark:text-white dark:border-white/10'"
+              [attr.aria-current]="tab() === id ? 'page' : null">
+              <span>{{ sectionLabels[id] }}</span>
+              @if (isDirty(id)) {
+                <span class="w-2 h-2 rounded-full bg-amber-500" aria-label="Chưa lưu"></span>
+              }
+            </button>
+          }
+        </nav>
+
+        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Ngôn ngữ đang sửa">
+          @for (l of i18n.languages; track l.code) {
+            <button type="button" (click)="lang.set(l.code)"
+              class="mcc-chip cursor-pointer border"
+              [class]="lang() === l.code
+                ? 'bg-brand-pink/10 text-brand-pink border-brand-pink/30'
+                : 'bg-transparent text-zinc-600 border-brand-navy/10 dark:text-zinc-300 dark:border-white/10'"
+              [attr.aria-pressed]="lang() === l.code">
+              {{ l.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @switch (tab()) {
+
+        @case ('hero') {
+          <div class="grid lg:grid-cols-[1fr_260px] gap-6 items-start">
+            <section class="mcc-card p-5 sm:p-6 space-y-4">
+              <app-ltext-input label="Nhãn nhỏ" [value]="d.hero.badge" [lang]="lang()" />
+              <app-ltext-input label="Tiêu đề" [value]="d.hero.titlePart1" [lang]="lang()" />
+              <app-ltext-input label="Tiêu đề (dòng màu hồng)" [value]="d.hero.titleHighlight" [lang]="lang()" />
+              <app-ltext-input label="Mô tả" [value]="d.hero.subtitle" [lang]="lang()" [multiline]="true" />
+              <app-ltext-input label="Chú thích ảnh" [value]="d.hero.imageCaption" [lang]="lang()" />
+            </section>
+            <section class="mcc-card p-5 sm:p-6">
+              <app-site-image-field label="Ảnh" folder="hero" aspectClass="aspect-[3/4]"
+                [src]="d.hero.image" (srcChange)="d.hero.image = $event" />
+            </section>
+          </div>
+
+          <section class="mcc-card p-5 sm:p-6 space-y-4">
+            <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Số liệu</h2>
+            @for (stat of d.hero.stats; track $index; let i = $index; let first = $first; let last = $last) {
+              <div class="flex flex-col sm:flex-row gap-3 sm:items-end pb-4 border-b border-brand-navy/5 dark:border-white/5 last:border-0 last:pb-0">
+                <app-ltext-input class="sm:w-36" label="Con số" [value]="stat.value" [lang]="lang()" [maxlength]="20" />
+                <app-ltext-input class="flex-1" label="Ý nghĩa" [value]="stat.label" [lang]="lang()" />
+                <div class="flex gap-1.5 shrink-0">
+                  <button type="button" (click)="move(d.hero.stats, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                  <button type="button" (click)="move(d.hero.stats, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                  <button type="button" (click)="remove(d.hero.stats, i, 'số liệu này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá số liệu"><app-icon name="trash" size="xs" /></button>
+                </div>
+              </div>
+            }
+            <button type="button" (click)="addStat()" class="mcc-btn mcc-btn-secondary">
+              <app-icon name="plus" size="xs" />
+              <span>Thêm số liệu</span>
+            </button>
+          </section>
+        }
+
+        @case ('about') {
+          <section class="mcc-card p-5 sm:p-6 space-y-4">
+            <app-ltext-input label="Tiêu đề" [value]="d.about.title" [lang]="lang()" />
+            <app-ltext-input label="Mô tả" [value]="d.about.subtitle" [lang]="lang()" [multiline]="true" [rows]="2" />
+            <app-ltext-input label="Tiêu đề triết lý" [value]="d.about.mottoTitle" [lang]="lang()" />
+            <app-ltext-input label="Triết lý" [value]="d.about.mottoContent" [lang]="lang()" [multiline]="true" [rows]="5" />
+          </section>
+          <div class="grid md:grid-cols-2 gap-4">
+            @for (pillar of d.about.pillars; track $index; let i = $index) {
+              <section class="mcc-card p-5 space-y-3">
+                <h2 class="text-sm font-black font-display text-brand-navy dark:text-white">Thẻ {{ i + 1 }}</h2>
+                <app-ltext-input label="Tiêu đề" [value]="pillar.title" [lang]="lang()" />
+                <app-ltext-input label="Nội dung" [value]="pillar.desc" [lang]="lang()" [multiline]="true" [rows]="4" />
+              </section>
+            }
+          </div>
+        }
+
+        @case ('teachers') {
+          <section class="mcc-card p-5 sm:p-6 grid lg:grid-cols-2 gap-5">
+            <div class="space-y-4">
+              <app-ltext-input label="Tiêu đề" [value]="d.teachers.title" [lang]="lang()" />
+              <app-ltext-input label="Mô tả" [value]="d.teachers.subtitle" [lang]="lang()" [multiline]="true" [rows]="2" />
+              <app-ltext-input label="Tiêu đề trên ảnh tập thể" [value]="d.teachers.bannerTitle" [lang]="lang()" />
+              <app-ltext-input label="Mô tả trên ảnh tập thể" [value]="d.teachers.bannerDesc" [lang]="lang()" [multiline]="true" [rows]="3" />
+            </div>
+            <app-site-image-field label="Ảnh tập thể" folder="teachers" aspectClass="aspect-[24/9]"
+              [src]="d.teachers.bannerImage" (srcChange)="d.teachers.bannerImage = $event" />
+          </section>
+
+          <ul class="space-y-3">
+            @for (teacher of d.teachers.items; track teacher.id; let i = $index; let first = $first; let last = $last) {
+              <li class="mcc-card overflow-hidden">
+                <div class="flex items-center gap-3 p-3 sm:p-4">
+                  <button type="button" (click)="toggleItem(teacher.id)" class="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
+                    [attr.aria-expanded]="openItem() === teacher.id">
+                    <span class="w-12 h-12 rounded-xl overflow-hidden bg-zinc-100 dark:bg-white/10 shrink-0 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+                      @if (teacher.image) {
+                        <img [src]="teacher.image" alt="" class="w-full h-full object-cover object-top" loading="lazy" />
+                      } @else {
+                        <app-icon name="users" size="sm" />
+                      }
+                    </span>
+                    <span class="min-w-0">
+                      <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ previewName(teacher.name) }}</span>
+                      <span class="block text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ teacher.role.vi }}</span>
+                    </span>
+                  </button>
+                  <div class="flex gap-1.5 shrink-0">
+                    <button type="button" (click)="move(d.teachers.items, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                    <button type="button" (click)="move(d.teachers.items, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                    <button type="button" (click)="remove(d.teachers.items, i, previewName(teacher.name))" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá ' + previewName(teacher.name)"><app-icon name="trash" size="xs" /></button>
+                  </div>
+                </div>
+
+                @if (openItem() === teacher.id) {
+                  <div class="p-4 sm:p-5 pt-0 sm:pt-0 grid sm:grid-cols-[180px_1fr] gap-5 border-t border-brand-navy/5 dark:border-white/5">
+                    <app-site-image-field class="pt-4" label="Ảnh" folder="teachers" aspectClass="aspect-[3/4]" [removable]="true"
+                      [src]="teacher.image" (srcChange)="teacher.image = $event" />
+                    <div class="space-y-4 pt-4">
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <app-ltext-input label="Họ tên" [value]="teacher.name" [lang]="lang()" />
+                        <app-ltext-input label="Vai trò" [value]="teacher.role" [lang]="lang()" />
+                      </div>
+                      <app-ltext-input label="Giới thiệu" [value]="teacher.bio" [lang]="lang()" [multiline]="true" [rows]="5" />
+                      <div class="space-y-2">
+                        <span class="mcc-label block">Thành tích</span>
+                        @for (cred of teacher.credentials; track $index; let ci = $index; let cfirst = $first; let clast = $last) {
+                          <div class="flex gap-1.5 items-center">
+                            <app-ltext-input class="flex-1" [value]="cred" [lang]="lang()" [maxlength]="200" />
+                            <button type="button" (click)="move(teacher.credentials, ci, -1)" [disabled]="cfirst" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                            <button type="button" (click)="move(teacher.credentials, ci, 1)" [disabled]="clast" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                            <button type="button" (click)="remove(teacher.credentials, ci, 'thành tích này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá thành tích"><app-icon name="trash" size="xs" /></button>
+                          </div>
+                        }
+                        <button type="button" (click)="addCredential(teacher)" class="mcc-btn mcc-btn-secondary">
+                          <app-icon name="plus" size="xs" />
+                          <span>Thêm thành tích</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+          <button type="button" (click)="addTeacher()" class="mcc-btn mcc-btn-secondary">
+            <app-icon name="plus" size="xs" />
+            <span>Thêm giáo viên</span>
+          </button>
+        }
+
+        @case ('courses') {
+          <section class="mcc-card p-5 sm:p-6 space-y-4">
+            <app-ltext-input label="Tiêu đề" [value]="d.courses.title" [lang]="lang()" />
+            <app-ltext-input label="Mô tả" [value]="d.courses.subtitle" [lang]="lang()" />
+          </section>
+
+          <ul class="space-y-3">
+            @for (course of d.courses.items; track course.id; let i = $index; let first = $first; let last = $last) {
+              <li class="mcc-card overflow-hidden">
+                <div class="flex items-center gap-3 p-3 sm:p-4">
+                  <button type="button" (click)="toggleItem(course.id)" class="min-w-0 flex-1 text-left cursor-pointer"
+                    [attr.aria-expanded]="openItem() === course.id">
+                    <span class="block text-sm font-bold text-brand-navy dark:text-white truncate">{{ previewName(course.title) }}</span>
+                    <span class="block text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ course.duration.vi }}</span>
+                  </button>
+                  <div class="flex gap-1.5 shrink-0">
+                    <button type="button" (click)="move(d.courses.items, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                    <button type="button" (click)="move(d.courses.items, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                    <button type="button" (click)="remove(d.courses.items, i, previewName(course.title))" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá ' + previewName(course.title)"><app-icon name="trash" size="xs" /></button>
+                  </div>
+                </div>
+
+                @if (openItem() === course.id) {
+                  <div class="p-4 sm:p-5 space-y-4 border-t border-brand-navy/5 dark:border-white/5">
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      <app-ltext-input label="Tên khóa học" [value]="course.title" [lang]="lang()" />
+                      <app-ltext-input label="Nhãn nổi bật" [value]="course.badge" [lang]="lang()" [maxlength]="30" />
+                    </div>
+                    <app-ltext-input label="Mô tả" [value]="course.desc" [lang]="lang()" [multiline]="true" [rows]="4" />
+                    <div class="grid sm:grid-cols-3 gap-4">
+                      <app-ltext-input label="Thời lượng" [value]="course.duration" [lang]="lang()" />
+                      <app-ltext-input label="Sĩ số" [value]="course.classSize" [lang]="lang()" />
+                      <app-ltext-input label="Mục tiêu" [value]="course.objective" [lang]="lang()" />
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      <div class="space-y-1.5">
+                        <label [for]="'icon-' + course.id" class="mcc-label">Biểu tượng</label>
+                        <select [id]="'icon-' + course.id" class="mcc-input" (change)="course.icon = $any($event.target).value">
+                          @for (o of courseIcons; track o.value) {
+                            <option [value]="o.value" [selected]="course.icon === o.value">{{ o.label }}</option>
+                          }
+                        </select>
+                      </div>
+                      <div class="space-y-1.5">
+                        <label [for]="'detail-' + course.id" class="mcc-label">Trang chi tiết</label>
+                        <select [id]="'detail-' + course.id" class="mcc-input" (change)="course.detail = $any($event.target).value">
+                          @for (o of detailOptions(course.detail); track o.value) {
+                            <option [value]="o.value" [selected]="course.detail === o.value">{{ o.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+          <button type="button" (click)="addCourse()" class="mcc-btn mcc-btn-secondary">
+            <app-icon name="plus" size="xs" />
+            <span>Thêm khóa học</span>
+          </button>
+        }
+
+        @case ('gallery') {
+          <section class="mcc-card p-5 sm:p-6 space-y-4">
+            <app-ltext-input label="Tiêu đề" [value]="d.gallery.title" [lang]="lang()" />
+            <app-ltext-input label="Mô tả" [value]="d.gallery.subtitle" [lang]="lang()" [multiline]="true" [rows]="2" />
+          </section>
+
+          <section class="mcc-card p-5 sm:p-6 space-y-3">
+            <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Danh mục</h2>
+            @for (cat of d.gallery.categories; track cat.id; let i = $index; let first = $first; let last = $last) {
+              <div class="flex gap-1.5 items-center">
+                <app-ltext-input class="flex-1" [value]="cat.label" [lang]="lang()" [maxlength]="40" />
+                <button type="button" (click)="move(d.gallery.categories, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+                <button type="button" (click)="move(d.gallery.categories, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+                <button type="button" (click)="remove(d.gallery.categories, i, 'danh mục ' + previewName(cat.label))" [disabled]="categoryInUse(cat.id)"
+                  class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá danh mục"><app-icon name="trash" size="xs" /></button>
+              </div>
+            }
+            <button type="button" (click)="addCategory()" class="mcc-btn mcc-btn-secondary">
+              <app-icon name="plus" size="xs" />
+              <span>Thêm danh mục</span>
+            </button>
+          </section>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (photo of d.gallery.items; track photo.id; let i = $index; let first = $first; let last = $last) {
+              <section class="mcc-card p-4 space-y-3">
+                <app-site-image-field folder="gallery" [src]="photo.src" (srcChange)="photo.src = $event" />
+                <div class="space-y-1.5">
+                  <label [for]="'cat-' + photo.id" class="mcc-label">Danh mục</label>
+                  <select [id]="'cat-' + photo.id" class="mcc-input" (change)="photo.category = $any($event.target).value">
+                    @for (cat of d.gallery.categories; track cat.id) {
+                      <option [value]="cat.id" [selected]="photo.category === cat.id">{{ previewName(cat.label) }}</option>
+                    }
+                  </select>
+                </div>
+                <app-ltext-input label="Chú thích" [value]="photo.caption" [lang]="lang()" [multiline]="true" [rows]="2" />
+                <div class="flex gap-1.5 justify-end">
+                  <button type="button" (click)="move(d.gallery.items, i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary" aria-label="Lên trước"><app-icon name="chevron-left" size="xs" /></button>
+                  <button type="button" (click)="move(d.gallery.items, i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary" aria-label="Ra sau"><app-icon name="chevron-right" size="xs" /></button>
+                  <button type="button" (click)="remove(d.gallery.items, i, 'ảnh này')" class="mcc-btn mcc-btn-secondary !text-red-600 dark:!text-red-400" aria-label="Xoá ảnh"><app-icon name="trash" size="xs" /></button>
+                </div>
+              </section>
+            }
+            <section class="mcc-card p-4">
+              <app-site-image-field label="Thêm ảnh" folder="gallery" (srcChange)="addPhoto($event)" />
+            </section>
+          </div>
+        }
+      }
+
+      <div class="sticky bottom-4 z-20 flex justify-end">
+        <div class="mcc-card px-3 py-2.5 flex items-center gap-2 shadow-lg">
+          @if (isDirty(tab())) {
+            <span class="text-xs font-semibold text-amber-700 dark:text-amber-300 px-1">Chưa lưu</span>
+          }
+          <button type="button" (click)="discard()" [disabled]="!isDirty(tab()) || saving()" class="mcc-btn mcc-btn-secondary">Huỷ thay đổi</button>
+          <button type="button" (click)="save()" [disabled]="!isDirty(tab()) || saving()" class="mcc-btn mcc-btn-primary">
+            <app-icon name="check" size="xs" />
+            <span>{{ saving() ? 'Đang lưu…' : 'Lưu ' + sectionLabels[tab()].toLowerCase() }}</span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

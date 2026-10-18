@@ -44,6 +44,7 @@ export type IconName =
   | 'cog'
   | 'document-duplicate'
   | 'chevron-down'
+  | 'chevron-up'
   | 'users'
   | 'calendar'
   | 'fire';

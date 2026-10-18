@@ -53,6 +53,7 @@ export type Permission =
   | 'activity.read'
   | 'role.manage'
   | 'access.manage'
+  | 'site.manage'
   | 'class.manage'
   | 'class.all'
   | 'class.delete'

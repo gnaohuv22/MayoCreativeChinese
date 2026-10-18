@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
+import type { AdminSiteComponent } from './features/admin/pages/admin-site/admin-site';
 
 export const routes: Routes = [
   {
@@ -177,6 +178,14 @@ export const routes: Routes = [
         canActivate: [permissionGuard('activity.read')],
         loadComponent: () =>
           import('./features/admin/pages/admin-activity/admin-activity').then(m => m.AdminActivityComponent),
+      },
+      {
+        path: 'site',
+        title: 'Trang chủ',
+        canActivate: [permissionGuard('site.manage')],
+        canDeactivate: [(page: AdminSiteComponent) => page.confirmLeave()],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-site/admin-site').then(m => m.AdminSiteComponent),
       },
       {
         path: 'vocab',

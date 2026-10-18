@@ -1,0 +1,27 @@
+<div class="space-y-1.5">
+  @if (label()) {
+    <label [for]="fieldId" class="mcc-label">{{ label() }}</label>
+  }
+  @if (multiline()) {
+    <textarea
+      [id]="fieldId"
+      [rows]="rows()"
+      [maxLength]="maxlength()"
+      [value]="value()[lang()] ?? ''"
+      [placeholder]="lang() === 'vi' ? '' : (value().vi ?? '')"
+      [attr.lang]="lang()"
+      (input)="update($event)"
+      class="mcc-input resize-y leading-relaxed"
+    ></textarea>
+  } @else {
+    <input
+      [id]="fieldId"
+      [maxLength]="maxlength()"
+      [value]="value()[lang()] ?? ''"
+      [placeholder]="lang() === 'vi' ? '' : (value().vi ?? '')"
+      [attr.lang]="lang()"
+      (input)="update($event)"
+      class="mcc-input"
+    />
+  }
+</div>

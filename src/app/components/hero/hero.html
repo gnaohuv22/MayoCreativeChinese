@@ -15,14 +15,14 @@
         <!-- Badge -->
         <div class="inline-flex items-center self-center lg:self-start px-4 py-1.5 rounded-full bg-brand-pink/10 dark:bg-brand-accent/10 border border-brand-pink/20 dark:border-brand-accent/30 text-brand-pink dark:text-brand-accent text-xs font-bold uppercase tracking-wider gap-1.5">
           <app-icon name="sparkles" size="xs" />
-          <span>{{ i18n.translate()('hero.badge') }}</span>
+          <span>{{ i18n.pick()(hero()?.badge) }}</span>
         </div>
         
         <!-- Headline -->
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-black leading-tight text-brand-navy dark:text-white" style="text-wrap: balance">
-          {{ i18n.translate()('hero.title_part1') }}
+          {{ i18n.pick()(hero()?.titlePart1) }}
           <span class="block text-brand-pink relative mt-2">
-            {{ i18n.translate()('hero.title_highlight') }}
+            {{ i18n.pick()(hero()?.titleHighlight) }}
             <!-- Underline vector -->
             <span class="absolute bottom-1 left-0 w-full h-2 bg-brand-pink/20 rounded-full -z-10"></span>
           </span>
@@ -30,7 +30,7 @@
         
         <!-- Subtitle -->
         <p class="text-base sm:text-lg text-brand-navy/60 dark:text-white/70 max-w-xl mx-auto lg:mx-0 leading-relaxed font-sans font-normal">
-          {{ i18n.translate()('hero.subtitle') }}
+          {{ i18n.pick()(hero()?.subtitle) }}
         </p>
         
         <!-- Action Buttons -->
@@ -58,18 +58,13 @@
 
         <!-- Stats Block -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6 pt-8 mt-8 border-t border-brand-navy/5 dark:border-white/5 w-full max-w-md sm:max-w-none mx-auto lg:mx-0">
-          <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.classes') }}</span>
-            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight">{{ i18n.translate()('hero.stats.classes_desc') }}</span>
+          @for (stat of hero()?.stats ?? []; track $index) {
+          <div class="flex flex-col items-center lg:items-start text-center lg:text-left"
+               [class.col-span-2]="$last && $count % 2 === 1" [class.sm:col-span-1]="$last && $count % 2 === 1">
+            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.pick()(stat.value) }}</span>
+            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight" [class.max-w-[280px]]="$last" [class.lg:max-w-none]="$last">{{ i18n.pick()(stat.label) }}</span>
           </div>
-          <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.graduates') }}</span>
-            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight">{{ i18n.translate()('hero.stats.graduates_desc') }}</span>
-          </div>
-          <div class="col-span-2 sm:col-span-1 flex flex-col items-center lg:items-start text-center lg:text-left">
-            <span class="text-2xl sm:text-3xl font-display font-black text-brand-pink dark:text-brand-accent leading-none">{{ i18n.translate()('hero.stats.rate') }}</span>
-            <span class="text-xs sm:text-sm font-semibold text-brand-navy/80 dark:text-brand-text-dark/80 mt-2 leading-tight max-w-[280px] lg:max-w-none">{{ i18n.translate()('hero.stats.rate_desc') }}</span>
-          </div>
+          }
         </div>
       </div>
       
@@ -81,17 +76,19 @@
         
         <!-- Real photo frame -->
         <div class="relative w-[85%] aspect-[3/4] overflow-hidden rounded-3xl shadow-2xl border-4 border-white dark:border-brand-navy bg-white dark:bg-brand-dark group">
-          <img ngSrc="tet-2026-activity/IMG_6425.webp"
+          @if (hero()?.image; as image) {
+          <img [ngSrc]="image"
                fill
                alt="Mayo Creative Chinese Students"
                class="object-cover group-hover:scale-105 transition-transform duration-700"
                priority />
+          }
                
           <!-- Class Badge -->
           <div class="absolute bottom-4 left-4 right-4 bg-brand-navy/90 dark:bg-brand-dark/90 backdrop-blur-md p-4 rounded-2xl text-white border border-white/10 shadow-lg">
             <p class="text-xs font-semibold text-brand-accent uppercase tracking-widest">Mayo Creative Chinese</p>
             <p class="text-sm font-bold font-display mt-0.5">
-              {{ i18n.translate()('hero.image_caption') }}
+              {{ i18n.pick()(hero()?.imageCaption) }}
             </p>
           </div>
         </div>

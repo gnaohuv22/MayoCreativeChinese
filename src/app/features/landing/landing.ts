@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { HeaderComponent } from '../../components/header/header';
 import { HeroComponent } from '../../components/hero/hero';
 import { AboutComponent } from '../../components/about/about';
@@ -9,6 +9,7 @@ import { StudentStoriesComponent } from '../../components/student-stories/studen
 import { FooterComponent } from '../../components/footer/footer';
 import { ScrollToTopComponent } from '../../components/shared/scroll-to-top/scroll-to-top';
 import { RegisterModalComponent } from '../../components/shared/register-modal/register-modal';
+import { SiteContentService } from './services/site-content.service';
 
 /** Trang chủ (route '') — tải riêng để các trang khác không phải tải kèm các khối landing */
 @Component({
@@ -30,4 +31,8 @@ import { RegisterModalComponent } from '../../components/shared/register-modal/r
   styleUrl: './landing.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LandingComponent {}
+export class LandingComponent {
+  constructor() {
+    void inject(SiteContentService).load();
+  }
+}

@@ -3,6 +3,9 @@ import { HttpClient } from '@angular/common/http';
 
 export type Lang = 'vi' | 'zh' | 'en' | 'ja' | 'km';
 
+/** Chữ lưu theo ngôn ngữ trong DB (VD: nội dung trang chủ); tiếng Việt là bản gốc */
+export type LocalizedText = Partial<Record<Lang, string>>;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -96,5 +99,11 @@ export class I18nService {
     return (key: string): string => {
       return active[key] ?? fallback[key] ?? key;
     };
+  });
+
+  /** Chọn bản dịch theo ngôn ngữ đang dùng, thiếu thì lấy tiếng Việt */
+  readonly pick = computed(() => {
+    const lang = this.currentLang();
+    return (text: LocalizedText | null | undefined): string => text?.[lang] || text?.vi || '';
   });
 }
