@@ -120,6 +120,15 @@ export class SiteAdminService {
     return error ? { error: writeErrorMessage(error) } : {};
   }
 
+  /** Đổi tên chuyên mục cho mọi bài đang dùng; trả về updated_at mới theo id bài */
+  async renameCategory(from: string, to: string): Promise<{ stamps?: Record<string, string>; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { data, error } = await this.supabase.from('site_posts').update({ category: to }).eq('category', from).select('id, updated_at');
+    if (error) return { error: writeErrorMessage(error) };
+    return { stamps: Object.fromEntries((data ?? []).map(r => [r.id, r.updated_at])) };
+  }
+
   /** Đánh lại thứ tự theo mảng id; trả về updated_at mới của từng bài (trigger đổi updated_at) */
   async reorderPosts(ids: string[]): Promise<{ stamps?: Record<string, string>; error?: string }> {
     const lost = await sessionError();

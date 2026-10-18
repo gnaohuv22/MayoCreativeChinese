@@ -20,6 +20,33 @@
     } @else if (loadError()) {
       <p class="text-sm font-semibold text-red-600 dark:text-red-400" role="alert">Không tải được bài viết: {{ loadError() }}</p>
     } @else {
+      @if (categoryCounts().length) {
+        <section class="mcc-card p-4 sm:p-5 space-y-2">
+          <h2 class="text-base font-black font-display text-brand-navy dark:text-white">Chuyên mục</h2>
+          <ul class="divide-y divide-brand-navy/5 dark:divide-white/5">
+            @for (c of categoryCounts(); track c.name) {
+              <li class="flex items-center gap-2 py-2">
+                @if (renaming() === c.name) {
+                  <input class="mcc-input flex-1" maxlength="60" aria-label="Tên mới của chuyên mục"
+                    [value]="renameText()" (input)="renameText.set($any($event.target).value)"
+                    (keydown.enter)="applyRename(c.name)" (keydown.escape)="renaming.set(null)" />
+                  <button type="button" (click)="renaming.set(null)" [disabled]="renameSaving()" class="mcc-btn mcc-btn-secondary">Huỷ</button>
+                  <button type="button" (click)="applyRename(c.name)" [disabled]="renameSaving()" class="mcc-btn mcc-btn-primary">
+                    {{ renameSaving() ? 'Đang lưu…' : 'Lưu' }}
+                  </button>
+                } @else {
+                  <span class="flex-1 min-w-0 truncate text-sm font-bold text-brand-navy dark:text-white">{{ c.name }}</span>
+                  <span class="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">{{ c.count }} bài</span>
+                  <button type="button" (click)="startRename(c.name)" class="mcc-btn mcc-btn-secondary" [attr.aria-label]="'Đổi tên chuyên mục ' + c.name">
+                    <app-icon name="pencil" size="xs" />
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       <ul class="space-y-3">
         @for (row of rows(); track row.id; let i = $index; let first = $first; let last = $last) {
           <li class="mcc-card overflow-hidden">
@@ -107,13 +134,24 @@
         </div>
         <div class="space-y-1.5">
           <label for="story-category" class="mcc-label">Chuyên mục</label>
-          <input id="story-category" maxlength="60" list="story-categories" class="mcc-input"
-            [value]="d.category" (input)="d.category = $any($event.target).value" />
-          <datalist id="story-categories">
-            @for (c of categories(); track c) {
-              <option [value]="c"></option>
-            }
-          </datalist>
+          @if (d.customCategory) {
+            <div class="flex gap-1.5">
+              <input id="story-category" maxlength="60" class="mcc-input" placeholder="Tên chuyên mục mới"
+                [value]="d.category" (input)="d.category = $any($event.target).value" />
+              @if (categories().length) {
+                <button type="button" (click)="cancelCustomCategory(d)" class="mcc-btn mcc-btn-secondary shrink-0" aria-label="Chọn chuyên mục có sẵn">
+                  <app-icon name="x-mark" size="xs" />
+                </button>
+              }
+            </div>
+          } @else {
+            <select id="story-category" class="mcc-input" (change)="onCategorySelect(d, $any($event.target).value)">
+              @for (c of categories(); track c) {
+                <option [value]="c" [selected]="d.category === c">{{ c }}</option>
+              }
+              <option [value]="newCategory">+ Chuyên mục mới…</option>
+            </select>
+          }
         </div>
       </div>
       <div class="space-y-1.5">

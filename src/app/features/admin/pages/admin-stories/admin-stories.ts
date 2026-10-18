@@ -21,6 +21,8 @@ interface Draft {
   slugTouched: boolean;
   is_published: boolean;
   category: string;
+  /** Đang gõ tên chuyên mục mới thay vì chọn chuyên mục có sẵn */
+  customCategory: boolean;
   title: string;
   excerpt: string;
   images: { src: string; alt: string }[];
@@ -33,6 +35,9 @@ const BLOCK_LABELS: Record<StoryBlockKind, string> = {
   list: 'Danh sách',
   results: 'Bảng kết quả',
 };
+
+/** Giá trị của dòng "+ Chuyên mục mới…" trong ô chọn */
+export const NEW_CATEGORY = '__new__';
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -57,6 +62,7 @@ function toDraft(row: StoryRow): Draft {
     slugTouched: true,
     is_published: row.is_published,
     category: row.category,
+    customCategory: false,
     title: row.title,
     excerpt: row.excerpt,
     images: row.images.map(i => ({ ...i })),
@@ -108,6 +114,7 @@ export class AdminStoriesComponent {
 
   readonly blockKinds = Object.entries(BLOCK_LABELS).map(([kind, label]) => ({ kind: kind as StoryBlockKind, label }));
   readonly blockLabels = BLOCK_LABELS;
+  readonly newCategory = NEW_CATEGORY;
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
@@ -120,6 +127,13 @@ export class AdminStoriesComponent {
   private savedSnapshot = '';
 
   readonly categories = computed(() => [...new Set(this.rows().map(r => r.category).filter(Boolean))]);
+  readonly categoryCounts = computed(() =>
+    this.categories().map(name => ({ name, count: this.rows().filter(r => r.category === name).length })));
+
+  /** Chuyên mục đang đổi tên (null = không) */
+  readonly renaming = signal<string | null>(null);
+  readonly renameText = signal('');
+  readonly renameSaving = signal(false);
 
   constructor() {
     void this.load();
@@ -165,7 +179,8 @@ export class AdminStoriesComponent {
   addPost(): void {
     if (!this.confirmLeave()) return;
     const draft: Draft = {
-      id: null, slug: '', slugTouched: false, is_published: false, category: this.categories()[0] ?? '',
+      id: null, slug: '', slugTouched: false, is_published: false,
+      category: this.categories()[0] ?? '', customCategory: this.categories().length === 0,
       title: '', excerpt: '', images: [], body: [{ kind: 'lead', text: '' }],
     };
     this.draft.set(draft);
@@ -189,6 +204,22 @@ export class AdminStoriesComponent {
   setSlug(draft: Draft, slug: string): void {
     draft.slug = slug;
     draft.slugTouched = true;
+  }
+
+  onCategorySelect(draft: Draft, value: string): void {
+    if (value !== NEW_CATEGORY) {
+      draft.category = value;
+      return;
+    }
+    draft.customCategory = true;
+    draft.category = '';
+    setTimeout(() => document.getElementById('story-category')?.focus());
+  }
+
+  /** Bỏ gõ chuyên mục mới, quay lại chọn từ danh sách */
+  cancelCustomCategory(draft: Draft): void {
+    draft.customCategory = false;
+    draft.category = this.categories()[0] ?? '';
   }
 
   slugValid(slug: string): boolean {
@@ -228,6 +259,7 @@ export class AdminStoriesComponent {
     if (!draft || this.saving()) return;
     const fields = toFields(draft);
     if (!fields.title) return this.toast.error('Chưa nhập tiêu đề');
+    if (!fields.category) return this.toast.error('Chưa chọn chuyên mục');
     if (!this.slugValid(fields.slug)) return this.toast.error('Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang');
     if (fields.is_published && fields.images.length === 0) return this.toast.error('Bài xuất bản cần ít nhất 1 ảnh (ảnh bìa)');
 
@@ -277,5 +309,42 @@ export class AdminStoriesComponent {
       return;
     }
     this.rows.set(rows.map((r, i) => ({ ...r, sort_order: i + 1, updated_at: stamps[r.id] ?? r.updated_at })));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Chuyên mục (lấy từ các bài; đổi tên = đổi cho mọi bài trong chuyên mục)
+  // ---------------------------------------------------------------------------
+
+  startRename(name: string): void {
+    this.renaming.set(name);
+    this.renameText.set(name);
+  }
+
+  async applyRename(from: string): Promise<void> {
+    const to = this.renameText().trim();
+    if (!to || to === from) {
+      this.renaming.set(null);
+      return;
+    }
+    if (this.isDirty()) {
+      this.toast.error('Lưu hoặc đóng bài đang sửa trước khi đổi tên chuyên mục');
+      return;
+    }
+    if (this.categories().includes(to) && !confirm(`Gộp “${from}” vào chuyên mục “${to}” có sẵn?`)) return;
+    this.renameSaving.set(true);
+    const { stamps, error } = await this.siteAdmin.renameCategory(from, to);
+    this.renameSaving.set(false);
+    if (error || !stamps) {
+      this.toast.error(error ?? 'Không đổi được tên chuyên mục');
+      return;
+    }
+    this.rows.update(rows => rows.map(r => (r.id in stamps ? { ...r, category: to, updated_at: stamps[r.id] } : r)));
+    const draft = this.draft();
+    if (draft?.id && draft.category === from) {
+      draft.category = to;
+      this.savedSnapshot = JSON.stringify(toFields(draft));
+    }
+    this.renaming.set(null);
+    this.toast.success(`Đã đổi tên chuyên mục thành “${to}”`);
   }
 }
