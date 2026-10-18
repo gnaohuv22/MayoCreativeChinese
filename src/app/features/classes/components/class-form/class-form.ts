@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, computed, inject, input, OnInit, ou
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../services/auth.service';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { COURSE_DETAILS } from '../../../courses/data/course-details.data';
+import { CourseService } from '../../../courses/services/course.service';
 import { ClassService } from '../../services/class.service';
 import {
   CLASS_STATUS_LABELS,
@@ -34,7 +34,8 @@ export class ClassFormComponent implements OnInit {
   saved = output<string>();
   cancelled = output<void>();
 
-  protected readonly courses = COURSE_DETAILS.map(c => ({ slug: c.slug, name: c.name }));
+  private readonly courseService = inject(CourseService);
+  protected readonly courses = computed(() => this.courseService.names() ?? []);
   protected readonly statusOptions = Object.entries(CLASS_STATUS_LABELS) as [ClassStatus, string][];
   protected readonly roleLabels = STAFF_ROLE_LABELS;
 

@@ -2,6 +2,11 @@ import { Injectable } from '@angular/core';
 import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
 import type { SiteContent, SiteSectionId } from '../../landing/models/site-content.model';
 import type { StoryRow } from '../../posts/models/student-story.model';
+import type { CourseRow } from '../pages/admin-courses/course-draft';
+
+/** Cột sửa được của site_courses (migration 031) — slug cố định sau khi tạo */
+export type CourseFields = Pick<CourseRow, 'name' | 'is_published' | 'content'>;
+const COURSE_COLUMNS = 'id, slug, sort_order, is_published, name, content, updated_at';
 
 /** Cột người dùng sửa được của site_posts (migration 030) */
 export type StoryFields = Omit<StoryRow, 'id' | 'updated_at' | 'sort_order'>;
@@ -135,6 +140,56 @@ export class SiteAdminService {
     if (lost) return { error: lost };
     const results = await Promise.all(
       ids.map((id, i) => this.supabase.from('site_posts').update({ sort_order: i + 1 }).eq('id', id).select('id, updated_at').single()),
+    );
+    const failed = results.find(r => r.error);
+    if (failed?.error) return { error: writeErrorMessage(failed.error) };
+    return { stamps: Object.fromEntries(results.map(r => [r.data!.id, r.data!.updated_at])) };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Trang chi tiết khóa học (public.site_courses)
+  // ---------------------------------------------------------------------------
+
+  async listCourses(): Promise<{ rows?: CourseRow[]; error?: string }> {
+    const { data, error } = await this.supabase.from('site_courses').select(COURSE_COLUMNS).order('sort_order').order('created_at');
+    if (error) return { error: error.message };
+    return { rows: (data ?? []) as CourseRow[] };
+  }
+
+  async createCourse(fields: CourseFields & { slug: string; sort_order: number }): Promise<{ row?: CourseRow; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { data, error } = await this.supabase.from('site_courses').insert(fields).select(COURSE_COLUMNS).single();
+    if (error) return { error: postErrorMessage(error) };
+    return { row: data as CourseRow };
+  }
+
+  async updateCourse(id: string, fields: CourseFields, expectedUpdatedAt: string): Promise<{ row?: CourseRow; conflict?: boolean; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { data, error } = await this.supabase
+      .from('site_courses')
+      .update(fields)
+      .eq('id', id)
+      .eq('updated_at', expectedUpdatedAt)
+      .select(COURSE_COLUMNS);
+    if (error) return { error: writeErrorMessage(error) };
+    if (!data?.length) return { conflict: true };
+    return { row: data[0] as CourseRow };
+  }
+
+  async deleteCourse(id: string): Promise<{ error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { error } = await this.supabase.from('site_courses').delete().eq('id', id);
+    return error ? { error: writeErrorMessage(error) } : {};
+  }
+
+  async reorderCourses(ids: string[]): Promise<{ stamps?: Record<string, string>; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const results = await Promise.all(
+      ids.map((id, i) => this.supabase.from('site_courses').update({ sort_order: i + 1 }).eq('id', id).select('id, updated_at').single()),
     );
     const failed = results.find(r => r.error);
     if (failed?.error) return { error: writeErrorMessage(failed.error) };

@@ -22,7 +22,7 @@
       <span class="mcc-label">Khoá học</span>
       <select name="course" [(ngModel)]="form.course_slug" class="mcc-input">
         <option [ngValue]="null">—</option>
-        @for (c of courses; track c.slug) {
+        @for (c of courses(); track c.slug) {
           <option [ngValue]="c.slug">{{ c.name }}</option>
         }
       </select>

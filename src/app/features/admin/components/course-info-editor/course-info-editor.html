@@ -1,0 +1,19 @@
+<div class="space-y-2">
+  @for (row of rows(); track row; let i = $index; let first = $first; let last = $last) {
+    <div class="grid sm:grid-cols-[180px_1fr_auto] gap-2 items-start">
+      <input class="mcc-input font-bold" maxlength="60" placeholder="Nhãn" aria-label="Nhãn"
+        [value]="row.label" (input)="row.label = $any($event.target).value" />
+      <textarea class="mcc-input resize-y leading-snug" [rows]="rowsFor(row.text)" aria-label="Giá trị, mỗi dòng một ý"
+        [value]="row.text" (input)="row.text = $any($event.target).value"></textarea>
+      <div class="flex gap-1.5">
+        <button type="button" (click)="move(i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+        <button type="button" (click)="move(i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+        <button type="button" (click)="remove(i)" class="mcc-btn mcc-btn-secondary !px-2.5 !text-red-600 dark:!text-red-400" aria-label="Xoá dòng"><app-icon name="trash" size="xs" /></button>
+      </div>
+    </div>
+  }
+  <button type="button" (click)="add()" class="mcc-btn mcc-btn-secondary">
+    <app-icon name="plus" size="xs" />
+    <span>Thêm dòng</span>
+  </button>
+</div>

@@ -1,0 +1,117 @@
+<div class="space-y-3">
+  @for (block of blocks(); track block; let i = $index; let first = $first; let last = $last) {
+    <div class="rounded-xl border border-brand-navy/10 dark:border-white/10 bg-white/50 dark:bg-white/[0.02]">
+      <div class="flex items-center gap-2 px-3 py-2">
+        @if (block.kind === 'table' || block.kind === 'stage') {
+          <button type="button" (click)="toggle(block)" class="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer" [attr.aria-expanded]="isOpen(block)">
+            <app-icon name="chevron-down" size="xs" [customClass]="'shrink-0 text-brand-pink transition-transform ' + (isOpen(block) ? 'rotate-180' : '')" />
+            <span class="mcc-label shrink-0">{{ labels[block.kind] }}</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ summary(block) }}</span>
+          </button>
+        } @else {
+          <span class="mcc-label flex-1">{{ labels[block.kind] }}</span>
+        }
+        <div class="flex gap-1.5 shrink-0">
+          <button type="button" (click)="move(i, -1)" [disabled]="first" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Lên trên"><app-icon name="chevron-up" size="xs" /></button>
+          <button type="button" (click)="move(i, 1)" [disabled]="last" class="mcc-btn mcc-btn-secondary !px-2.5" aria-label="Xuống dưới"><app-icon name="chevron-down" size="xs" /></button>
+          <button type="button" (click)="remove(i)" class="mcc-btn mcc-btn-secondary !px-2.5 !text-red-600 dark:!text-red-400" [attr.aria-label]="'Xoá ' + labels[block.kind].toLowerCase()"><app-icon name="trash" size="xs" /></button>
+        </div>
+      </div>
+
+      @switch (block.kind) {
+        @case ('heading') {
+          <div class="px-3 pb-3">
+            <input class="mcc-input font-bold" maxlength="200" [attr.aria-label]="labels[block.kind]" [value]="block.text" (input)="block.text = $any($event.target).value" />
+          </div>
+        }
+        @case ('subheading') {
+          <div class="px-3 pb-3">
+            <input class="mcc-input font-semibold" maxlength="200" [attr.aria-label]="labels[block.kind]" [value]="block.text" (input)="block.text = $any($event.target).value" />
+          </div>
+        }
+        @case ('paragraph') {
+          <div class="px-3 pb-3">
+            <textarea class="mcc-input resize-y leading-relaxed" [rows]="rowsFor(block.text)" aria-label="Đoạn văn"
+              [value]="block.text" (input)="block.text = $any($event.target).value"></textarea>
+          </div>
+        }
+        @case ('list') {
+          <div class="px-3 pb-3 space-y-2">
+            <input class="mcc-input" maxlength="200" placeholder="Tiêu đề danh sách" aria-label="Tiêu đề danh sách"
+              [value]="block.title" (input)="block.title = $any($event.target).value" />
+            <textarea class="mcc-input resize-y leading-relaxed" [rows]="rowsFor(block.text)" aria-label="Các ý, mỗi dòng một ý"
+              [value]="block.text" (input)="block.text = $any($event.target).value"></textarea>
+          </div>
+        }
+        @case ('table') {
+          @if (isOpen(block)) {
+            <div class="px-3 pb-3 space-y-2">
+              <div class="overflow-x-auto">
+                <table class="w-full border-separate border-spacing-1.5 -mx-1.5">
+                  <thead>
+                    <tr>
+                      @for (h of block.head; track $index; let c = $index) {
+                        <th class="min-w-48 align-bottom">
+                          <div class="flex gap-1">
+                            <input class="mcc-input !py-2 font-bold" maxlength="80" [attr.aria-label]="'Tên cột ' + (c + 1)"
+                              [value]="h" (input)="block.head[c] = $any($event.target).value" />
+                            <button type="button" (click)="removeColumn(block, c)" [disabled]="block.head.length <= 1"
+                              class="mcc-btn mcc-btn-secondary !px-2 !text-red-600 dark:!text-red-400" aria-label="Xoá cột"><app-icon name="x-mark" size="xs" /></button>
+                          </div>
+                        </th>
+                      }
+                      <th class="w-px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of block.rows; track $index; let r = $index; let rfirst = $first; let rlast = $last) {
+                      <tr>
+                        @for (cell of row; track $index; let c = $index) {
+                          <td class="align-top">
+                            <textarea class="mcc-input !py-2 resize-y leading-snug text-xs" [rows]="rowsFor(cell)" [attr.aria-label]="'Dòng ' + (r + 1) + ', cột ' + (c + 1)"
+                              [value]="cell" (input)="row[c] = $any($event.target).value"></textarea>
+                          </td>
+                        }
+                        <td class="align-top">
+                          <div class="flex flex-col gap-1">
+                            <button type="button" (click)="moveRow(block, r, -1)" [disabled]="rfirst" class="mcc-btn mcc-btn-secondary !px-2" aria-label="Dòng lên"><app-icon name="chevron-up" size="xs" /></button>
+                            <button type="button" (click)="moveRow(block, r, 1)" [disabled]="rlast" class="mcc-btn mcc-btn-secondary !px-2" aria-label="Dòng xuống"><app-icon name="chevron-down" size="xs" /></button>
+                            <button type="button" (click)="removeRow(block, r)" class="mcc-btn mcc-btn-secondary !px-2 !text-red-600 dark:!text-red-400" aria-label="Xoá dòng"><app-icon name="trash" size="xs" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" (click)="addRow(block)" class="mcc-btn mcc-btn-secondary"><app-icon name="plus" size="xs" /><span>Thêm dòng</span></button>
+                <button type="button" (click)="addColumn(block)" class="mcc-btn mcc-btn-secondary"><app-icon name="plus" size="xs" /><span>Thêm cột</span></button>
+              </div>
+            </div>
+          }
+        }
+        @case ('stage') {
+          @if (isOpen(block)) {
+            <div class="px-3 pb-3 space-y-3">
+              <input class="mcc-input font-bold" maxlength="200" aria-label="Tên giai đoạn"
+                [value]="block.title" (input)="block.title = $any($event.target).value" />
+              <div class="pl-3 border-l-2 border-brand-pink/30">
+                <app-course-blocks-editor [blocks]="block.blocks" [nested]="true" />
+              </div>
+            </div>
+          }
+        }
+      }
+    </div>
+  }
+
+  <div class="flex flex-wrap gap-1.5">
+    @for (k of addKinds(); track k.kind) {
+      <button type="button" (click)="add(k.kind)" class="mcc-btn mcc-btn-secondary">
+        <app-icon name="plus" size="xs" />
+        <span>{{ k.label }}</span>
+      </button>
+    }
+  </div>
+</div>

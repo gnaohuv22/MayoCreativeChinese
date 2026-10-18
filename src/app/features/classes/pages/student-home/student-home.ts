@@ -4,7 +4,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { NavHeaderComponent } from '../../../../components/shared/nav-header/nav-header';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { HskBadgeComponent } from '../../../../components/shared/badge/hsk-badge';
-import { COURSE_DETAILS } from '../../../courses/data/course-details.data';
+import { CourseService } from '../../../courses/services/course.service';
 import { scopeRoutes } from '../../../flashcards/utils/vocab-scope.util';
 import { VOCAB_COLLECTIONS } from '../../../flashcards/models/vocab-card.model';
 import { StudentService } from '../../services/student.service';
@@ -51,7 +51,8 @@ export class StudentHomeComponent {
   readonly hasClosedModule = computed(() => this.paidModules().some(m => !m.open));
 
   readonly cls = computed(() => this.auth.student()?.class ?? null);
-  readonly courseName = computed(() => COURSE_DETAILS.find(c => c.slug === this.cls()?.course_slug)?.name ?? '');
+  private readonly courseService = inject(CourseService);
+  readonly courseName = computed(() => this.courseService.nameOf(this.cls()?.course_slug));
   readonly announcements = signal<ClassAnnouncement[]>([]);
   readonly suggestions = signal<ClassSuggestion[]>([]);
   readonly attempts = signal<ExamAttempt[]>([]);
@@ -71,6 +72,7 @@ export class StudentHomeComponent {
   });
 
   constructor() {
+    void this.courseService.loadNames();
     // Quyền Mayo+ có thể vừa được cấp trong lúc đang đăng nhập
     this.auth.loadContext();
     this.load();

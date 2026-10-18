@@ -1,9 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
 import { I18nService, type Lang, type LocalizedText } from '../../../../services/i18n.service';
 import { ToastService } from '../../../../services/toast.service';
 import { SiteContentService } from '../../../landing/services/site-content.service';
+import { CourseService } from '../../../courses/services/course.service';
+import { AUDIENCE_PARAM, slugify } from '../../../courses/course-links';
 import {
   COURSE_ICONS,
   SITE_SECTION_IDS,
@@ -36,17 +38,6 @@ const ICON_LABELS: Record<CourseIcon, string> = {
   logistics: 'Vận chuyển',
 };
 
-/** Trang chi tiết khóa học có sẵn (features/courses/data/course-details.data.ts) */
-const DETAIL_OPTIONS = [
-  { value: '', label: 'Không có' },
-  { value: 'hsk-3-0', label: 'HSK 3.0' },
-  { value: 'bo-sung-hsk-2-len-3', label: 'Bổ sung HSK 2.0 lên 3.0' },
-  { value: 'tieng-trung-tre-em', label: 'Tiếng Trung trẻ em' },
-  { value: 'tieng-trung-tre-em?doi-tuong=nguoi-lon', label: 'Giao tiếp người lớn' },
-  { value: 'gia-su', label: 'Gia sư' },
-  { value: 'hsk-2-0', label: 'HSK 2.0' },
-];
-
 const newId = () => crypto.randomUUID().slice(0, 8);
 const clone = <T>(value: T): T => structuredClone(value);
 
@@ -65,6 +56,19 @@ export class AdminSiteComponent {
   private readonly siteContent = inject(SiteContentService);
   private readonly toast = inject(ToastService);
   protected readonly i18n = inject(I18nService);
+  private readonly courseService = inject(CourseService);
+
+  /** Trang chi tiết khóa học (site_courses), mỗi tab đối tượng là 1 lựa chọn riêng */
+  private readonly detailChoices = computed(() => [
+    { value: '', label: 'Không có' },
+    ...(this.courseService.names() ?? []).flatMap(c => [
+      { value: c.slug, label: c.name },
+      ...(c.audiences ?? []).slice(1).map(a => {
+        const short = a.replace(/\s*\(.*\)$/, '');
+        return { value: `${c.slug}?${AUDIENCE_PARAM}=${slugify(short)}`, label: `${c.name} – ${short}` };
+      }),
+    ]),
+  ]);
 
   readonly sectionIds = SITE_SECTION_IDS;
   readonly sectionLabels = SECTION_LABELS;
@@ -85,6 +89,7 @@ export class AdminSiteComponent {
 
   constructor() {
     void this.load();
+    void this.courseService.loadNames();
   }
 
   private async load(): Promise<void> {
@@ -252,7 +257,8 @@ export class AdminSiteComponent {
   }
 
   detailOptions(current: string): { value: string; label: string }[] {
-    return DETAIL_OPTIONS.some(o => o.value === current) ? DETAIL_OPTIONS : [...DETAIL_OPTIONS, { value: current, label: current }];
+    const choices = this.detailChoices();
+    return choices.some(o => o.value === current) ? choices : [...choices, { value: current, label: current }];
   }
 
   /** Tên trên thẻ thu gọn */
