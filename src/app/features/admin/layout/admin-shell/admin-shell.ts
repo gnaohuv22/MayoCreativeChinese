@@ -32,7 +32,8 @@ export class AdminShellComponent {
   ];
 
   private readonly siteItem: AdminNavItem = { label: 'Trang chủ', hint: 'Giáo viên, khóa học, ảnh', route: '/admin/site', icon: 'sparkles', permission: 'site.manage' };
-  readonly visibleNavItems = computed(() => [...this.navItems, ...(this.auth.can('site.manage') ? [this.siteItem] : [])]);
+  private readonly storiesItem: AdminNavItem = { label: 'Câu chuyện', hint: 'Bài viết học viên', route: '/admin/stories', icon: 'document-text', permission: 'site.manage' };
+  readonly visibleNavItems = computed(() => [...this.navItems, ...(this.auth.can('site.manage') ? [this.siteItem, this.storiesItem] : [])]);
 
   private readonly classItems: AdminNavItem[] = [
     { label: 'Lớp học', hint: 'Thông báo, gợi ý, kết quả', route: '/admin/classes', icon: 'calendar', permission: 'class.manage' },

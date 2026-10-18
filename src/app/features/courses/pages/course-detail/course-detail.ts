@@ -11,7 +11,8 @@ import { AppIconComponent, type IconName } from '../../../../components/shared/i
 import { RegisterModalService } from '../../../../services/register-modal.service';
 import { CourseBlocksComponent } from '../../components/course-blocks/course-blocks';
 import { COURSE_DETAILS } from '../../data/course-details.data';
-import { CLASS_MOMENTS, STUDENT_STORIES } from '../../../posts/data/student-stories.data';
+import { CLASS_MOMENTS } from '../../../posts/data/student-stories.data';
+import { StoryService } from '../../../posts/services/story.service';
 import type { CourseInfoRow } from '../../models/course-detail.model';
 
 /** Query param chọn đối tượng trên trang có tab (VD: /khoa-hoc/tieng-trung-tre-em?doi-tuong=nguoi-lon) */
@@ -84,12 +85,14 @@ export class CourseDetailComponent {
   });
 
   readonly moments = CLASS_MOMENTS;
-  readonly stories = STUDENT_STORIES.slice(0, 3);
+  private readonly storyService = inject(StoryService);
+  readonly stories = computed(() => this.storyService.summaries()?.slice(0, 3) ?? []);
 
   constructor() {
     // Trả lại tiêu đề trang chủ khi rời trang
     const originalTitle = this.title.getTitle();
     inject(DestroyRef).onDestroy(() => this.title.setTitle(originalTitle));
+    void this.storyService.loadSummaries();
 
     effect(() => {
       const c = this.course();

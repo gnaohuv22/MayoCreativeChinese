@@ -1,5 +1,6 @@
 /**
  * MAYO CREATIVE CHINESE — BÀI ĐĂNG "CÂU CHUYỆN HỌC VIÊN"
+ * Lưu ở public.site_posts (migration 030), sửa ở /admin/stories
  */
 
 export interface StoryImage {
@@ -21,12 +22,35 @@ export type StoryBlock =
   | { kind: 'results'; items: StoryResult[] }
   | { kind: 'list'; items: string[] };
 
-export interface StudentStory {
+export type StoryBlockKind = StoryBlock['kind'];
+
+/** Thẻ bài trên trang chủ / trang khóa học (không tải nội dung bài) */
+export interface StorySummary {
   slug: string;
   category: string;
   title: string;
   excerpt: string;
+  /** Ảnh đầu tiên của bài */
   cover: StoryImage;
+}
+
+export interface StudentStory extends StorySummary {
   images: StoryImage[];
   body: StoryBlock[];
 }
+
+/** Một dòng public.site_posts (khu quản trị) */
+export interface StoryRow {
+  id: string;
+  slug: string;
+  sort_order: number;
+  is_published: boolean;
+  category: string;
+  title: string;
+  excerpt: string;
+  images: StoryImage[];
+  body: StoryBlock[];
+  updated_at: string;
+}
+
+export const EMPTY_IMAGE: StoryImage = { src: '', alt: '' };

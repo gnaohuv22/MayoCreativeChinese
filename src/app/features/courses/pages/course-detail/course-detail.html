@@ -213,7 +213,7 @@
         </div>
 
         <ul class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          @for (s of stories; track s.slug) {
+          @for (s of stories(); track s.slug) {
             <li>
               <a [routerLink]="['/bai-viet', s.slug]" class="block h-full p-5 rounded-2xl bg-brand-light dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 hover:border-brand-pink/40 transition-colors">
                 <span class="text-[11px] font-black uppercase tracking-wider text-brand-pink">{{ s.category }}</span>

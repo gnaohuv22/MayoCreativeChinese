@@ -8,7 +8,8 @@ import { FooterComponent } from '../../../../components/footer/footer';
 import { RegisterModalComponent } from '../../../../components/shared/register-modal/register-modal';
 import { ScrollToTopComponent } from '../../../../components/shared/scroll-to-top/scroll-to-top';
 import { AppIconComponent } from '../../../../components/shared/icon/app-icon';
-import { STUDENT_STORIES } from '../../data/student-stories.data';
+import { StoryService } from '../../services/story.service';
+import type { StudentStory } from '../../models/student-story.model';
 
 @Component({
   selector: 'app-story-detail',
@@ -31,8 +32,12 @@ export class StoryDetailComponent {
 
   private readonly slug = toSignal(this.route.paramMap.pipe(map(p => p.get('slug') ?? '')), { initialValue: '' });
 
-  readonly story = computed(() => STUDENT_STORIES.find(s => s.slug === this.slug()) ?? null);
-  readonly others = computed(() => STUDENT_STORIES.filter(s => s.slug !== this.slug()).slice(0, 3));
+  private readonly stories = inject(StoryService);
+
+  /** undefined = đang tải, null = không có bài */
+  private readonly loaded = signal<StudentStory | null | undefined>(undefined);
+  readonly story = computed(() => this.loaded() ?? null);
+  readonly others = computed(() => (this.stories.summaries() ?? []).filter(s => s.slug !== this.slug()).slice(0, 3));
 
   /** Ảnh đang xem phóng to (null = đóng) */
   readonly lightboxIndex = signal<number | null>(null);
@@ -46,8 +51,22 @@ export class StoryDetailComponent {
     const originalTitle = this.title.getTitle();
     inject(DestroyRef).onDestroy(() => this.title.setTitle(originalTitle));
 
+    void this.stories.loadSummaries();
+
+    // Đổi slug (bấm sang bài khác) → tải bài mới; bỏ kết quả của slug cũ nếu về muộn
     effect(() => {
-      const s = this.story();
+      const slug = this.slug();
+      this.loaded.set(undefined);
+      if (!slug) return;
+      void this.stories.get(slug).then(story => {
+        if (this.slug() === slug) this.loaded.set(story);
+      });
+    });
+
+    effect(() => {
+      const loaded = this.loaded();
+      if (loaded === undefined) return;
+      const s = loaded;
       if (!s && this.slug()) {
         this.router.navigateByUrl('/#stories');
         return;

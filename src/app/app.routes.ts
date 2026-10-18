@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
 import type { AdminSiteComponent } from './features/admin/pages/admin-site/admin-site';
+import type { AdminStoriesComponent } from './features/admin/pages/admin-stories/admin-stories';
 
 export const routes: Routes = [
   {
@@ -186,6 +187,14 @@ export const routes: Routes = [
         canDeactivate: [(page: AdminSiteComponent) => page.confirmLeave()],
         loadComponent: () =>
           import('./features/admin/pages/admin-site/admin-site').then(m => m.AdminSiteComponent),
+      },
+      {
+        path: 'stories',
+        title: 'Câu chuyện học viên',
+        canActivate: [permissionGuard('site.manage')],
+        canDeactivate: [(page: AdminStoriesComponent) => page.confirmLeave()],
+        loadComponent: () =>
+          import('./features/admin/pages/admin-stories/admin-stories').then(m => m.AdminStoriesComponent),
       },
       {
         path: 'vocab',

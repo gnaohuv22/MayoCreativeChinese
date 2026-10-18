@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { getSupabase, sessionError, writeErrorMessage } from '../../../services/supabase.client';
 import type { SiteContent, SiteSectionId } from '../../landing/models/site-content.model';
+import type { StoryRow } from '../../posts/models/student-story.model';
+
+/** Cột người dùng sửa được của site_posts (migration 030) */
+export type StoryFields = Omit<StoryRow, 'id' | 'updated_at' | 'sort_order'>;
+const STORY_COLUMNS = 'id, slug, sort_order, is_published, category, title, excerpt, images, body, updated_at';
 
 export interface SiteSectionRow<K extends SiteSectionId = SiteSectionId> {
   id: K;
@@ -74,4 +79,63 @@ export class SiteAdminService {
     if (error) return { error: writeErrorMessage(error) };
     return { url: this.supabase.storage.from('site-media').getPublicUrl(path).data.publicUrl };
   }
+
+  // ---------------------------------------------------------------------------
+  // Câu chuyện học viên (public.site_posts)
+  // ---------------------------------------------------------------------------
+
+  async listPosts(): Promise<{ rows?: StoryRow[]; error?: string }> {
+    const { data, error } = await this.supabase.from('site_posts').select(STORY_COLUMNS).order('sort_order').order('created_at');
+    if (error) return { error: error.message };
+    return { rows: (data ?? []) as StoryRow[] };
+  }
+
+  async createPost(fields: StoryFields & { sort_order: number }): Promise<{ row?: StoryRow; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { data, error } = await this.supabase.from('site_posts').insert(fields).select(STORY_COLUMNS).single();
+    if (error) return { error: postErrorMessage(error) };
+    return { row: data as StoryRow };
+  }
+
+  /** Như save(): chỉ ghi khi updated_at còn khớp, người khác vừa lưu thì báo conflict */
+  async updatePost(id: string, fields: StoryFields, expectedUpdatedAt: string): Promise<{ row?: StoryRow; conflict?: boolean; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { data, error } = await this.supabase
+      .from('site_posts')
+      .update(fields)
+      .eq('id', id)
+      .eq('updated_at', expectedUpdatedAt)
+      .select(STORY_COLUMNS);
+    if (error) return { error: postErrorMessage(error) };
+    if (!data?.length) return { conflict: true };
+    return { row: data[0] as StoryRow };
+  }
+
+  async deletePost(id: string): Promise<{ error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const { error } = await this.supabase.from('site_posts').delete().eq('id', id);
+    return error ? { error: writeErrorMessage(error) } : {};
+  }
+
+  /** Đánh lại thứ tự theo mảng id; trả về updated_at mới của từng bài (trigger đổi updated_at) */
+  async reorderPosts(ids: string[]): Promise<{ stamps?: Record<string, string>; error?: string }> {
+    const lost = await sessionError();
+    if (lost) return { error: lost };
+    const results = await Promise.all(
+      ids.map((id, i) => this.supabase.from('site_posts').update({ sort_order: i + 1 }).eq('id', id).select('id, updated_at').single()),
+    );
+    const failed = results.find(r => r.error);
+    if (failed?.error) return { error: writeErrorMessage(failed.error) };
+    return { stamps: Object.fromEntries(results.map(r => [r.data!.id, r.data!.updated_at])) };
+  }
+}
+
+/** Trùng đường dẫn (unique slug) → câu dễ hiểu */
+function postErrorMessage(error: { code?: string; message: string }): string {
+  if (error.code === '23505') return 'Đường dẫn này đã có bài khác dùng';
+  if (error.code === '23514') return 'Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang';
+  return writeErrorMessage(error);
 }
