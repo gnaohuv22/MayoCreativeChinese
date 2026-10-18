@@ -79,13 +79,32 @@ export interface GalleryContent {
   items: GalleryItem[];
 }
 
+/** Chân trang (mọi trang công khai) + số Zalo / link Facebook trên trang chủ */
+export interface ContactContent {
+  /** Câu giới thiệu dưới logo */
+  description: LocalizedText;
+  address: LocalizedText;
+  /** Hotline, cũng là số Zalo (VD: 0353 149 176) */
+  phone: string;
+  email: string;
+  facebookUrl: string;
+  messengerUrl: string;
+  copyright: LocalizedText;
+}
+
+/** Chỉ giữ chữ số: dùng cho tel: và zalo.me */
+export function phoneDigits(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
 export interface SiteContent {
   hero: HeroContent;
   about: AboutContent;
   teachers: TeachersContent;
   courses: CoursesContent;
   gallery: GalleryContent;
+  contact: ContactContent;
 }
 
 export type SiteSectionId = keyof SiteContent;
-export const SITE_SECTION_IDS: SiteSectionId[] = ['hero', 'about', 'teachers', 'courses', 'gallery'];
+export const SITE_SECTION_IDS: SiteSectionId[] = ['hero', 'about', 'teachers', 'courses', 'gallery', 'contact'];

@@ -15,7 +15,7 @@ import { SiteContentService } from '../../features/landing/services/site-content
 export class HeroComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly registerModal = inject(RegisterModalService);
-  private readonly site = inject(SiteContentService);
+  protected readonly site = inject(SiteContentService);
 
   readonly hero = computed(() => this.site.content()?.hero);
 

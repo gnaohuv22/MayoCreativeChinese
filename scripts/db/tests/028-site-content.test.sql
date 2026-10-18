@@ -1,5 +1,5 @@
 -- Kiểm tra migration 028 — luôn kèm --dry-run:
---   node scripts/db/run-sql.mjs --dry-run src/app/features/landing/data/028-site-content.sql src/app/features/landing/data/028b-site-content-seed.sql scripts/db/tests/028-site-content.test.sql
+--   node scripts/db/run-sql.mjs --dry-run src/app/features/landing/data/028-site-content.sql src/app/features/landing/data/028b-site-content-seed.sql src/app/features/landing/data/029-site-contact.sql src/app/features/landing/data/029b-site-contact-seed.sql scripts/db/tests/028-site-content.test.sql
 
 create or replace function pg_temp.act_as(p_user uuid)
 returns void
@@ -17,13 +17,13 @@ declare
   v_rows integer;
   v_logs integer := (select count(*) from public.activity_log where entity_type = 'site');
 begin
-  assert (select count(*) from public.site_sections) = 5, '5 khối';
+  assert (select count(*) from public.site_sections) = 6, '6 khối';
   assert (select content #>> '{items,0,name,vi}' from public.site_sections where id = 'teachers') = 'Chị giáo Lưu Ngọc Mai', 'có giáo viên';
 
   -- Khách: đọc được, không sửa được
   set local role anon;
   perform pg_temp.act_as(null);
-  assert (select count(*) from public.site_sections) = 5, 'anon đọc được';
+  assert (select count(*) from public.site_sections) = 6, 'anon đọc được';
   begin
     update public.site_sections set content = '{}' where id = 'hero';
     raise exception 'anon không được sửa';
@@ -52,6 +52,7 @@ begin
   assert (select content #>> '{badge,vi}' from public.site_sections where id = 'hero') = 'Thử 028', 'đã lưu';
   assert (select updated_by from public.site_sections where id = 'hero') = v_admin, 'updated_by';
   assert (select count(*) from public.activity_log where entity_type = 'site') = v_logs + 1, 'có nhật ký';
+  assert (select content ->> 'phone' from public.site_sections where id = 'contact') = '0353 149 176', 'có liên hệ';
   raise notice '028 OK';
 end;
 $$;

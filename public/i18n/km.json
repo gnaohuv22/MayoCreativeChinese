@@ -234,5 +234,7 @@
   "stories.badge": "រឿងរ៉ាវ",
   "stories.title": "រឿងរ៉ាវសិស្ស",
   "stories.subtitle": "សមិទ្ធផល ដំណើរ និងពេលវេលាគួរឱ្យចងចាំរបស់សិស្ស MCC",
-  "stories.read_more": "អានបន្ត"
+  "stories.read_more": "អានបន្ត",
+  "contact.phone_label": "ទូរស័ព្ទ/Zalo",
+  "contact.email_label": "អ៊ីមែល"
 }

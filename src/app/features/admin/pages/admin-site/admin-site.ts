@@ -24,6 +24,7 @@ const SECTION_LABELS: Record<SiteSectionId, string> = {
   teachers: 'Giáo viên',
   courses: 'Khóa học',
   gallery: 'Thư viện ảnh',
+  contact: 'Liên hệ',
 };
 
 const ICON_LABELS: Record<CourseIcon, string> = {
@@ -187,6 +188,8 @@ export class AdminSiteComponent {
         const c = draft.gallery.categories.find(i => empty(i.label));
         return c ? 'tên danh mục ảnh' : null;
       }
+      case 'contact':
+        return !draft.contact.phone.trim() ? 'hotline' : !draft.contact.email.trim() ? 'email' : null;
       default:
         return null;
     }

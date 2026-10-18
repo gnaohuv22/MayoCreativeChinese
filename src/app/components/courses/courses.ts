@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, computed, inject, signal, ElementRe
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
 import { SiteContentService } from '../../features/landing/services/site-content.service';
+import { phoneDigits } from '../../features/landing/models/site-content.model';
 
 /** "slug?a=b" → link trang chi tiết /khoa-hoc/<slug> kèm query */
 function detailLink(detail: string): { detailSlug: string | null; detailQuery: Record<string, string> | null } {
@@ -27,6 +28,7 @@ export class CoursesComponent {
   readonly activeCardIndex = signal(0);
 
   readonly section = computed(() => this.site.content()?.courses);
+  readonly zaloUrl = computed(() => `https://zalo.me/${phoneDigits(this.site.content()?.contact.phone ?? '')}`);
   readonly courses = computed(() => (this.section()?.items ?? []).map(course => ({ ...course, ...detailLink(course.detail) })));
 
   scrollSlider(direction: 'left' | 'right'): void {

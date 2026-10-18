@@ -234,5 +234,7 @@
   "stories.badge": "学员故事",
   "stories.title": "学员故事",
   "stories.subtitle": "MCC学员的成绩、学习历程与难忘瞬间",
-  "stories.read_more": "阅读全文"
+  "stories.read_more": "阅读全文",
+  "contact.phone_label": "电话/Zalo",
+  "contact.email_label": "邮箱"
 }

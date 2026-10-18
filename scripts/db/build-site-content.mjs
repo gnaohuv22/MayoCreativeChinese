@@ -1,6 +1,6 @@
 // Dựng nội dung trang chủ ban đầu (migration 028) từ dữ liệu cứng cũ: các mảng trong component landing + public/i18n/*.json.
 // Usage: node scripts/db/build-site-content.mjs
-//   → src/app/features/landing/data/028b-site-content-seed.sql (chèn nếu chưa có, không ghi đè bản Mai đã sửa)
+//   → src/app/features/landing/data/028b-site-content-seed.sql, 029b-site-contact-seed.sql (chèn nếu chưa có, không ghi đè bản Mai đã sửa)
 //   → public/site-content.json (bản dự phòng khi không đọc được DB)
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -112,18 +112,32 @@ const gallery = {
   items: GALLERY.map(([id, src, category]) => ({ id, src, category, caption: t(`gallery.caption.${id}`) })),
 };
 
-const sections = { hero, about, teachers, courses, gallery };
+const contact = {
+  description: t('about.pillar.practical_desc'),
+  address: t('contact.address'),
+  phone: '0353 149 176',
+  email: 'mayocreativechinese.mcc@gmail.com',
+  facebookUrl: 'https://www.facebook.com/mayocreativechinese',
+  messengerUrl: 'https://m.me/mayocreativechinese',
+  copyright: t('footer.copyright'),
+};
+
+const sections = { hero, about, teachers, courses, gallery, contact };
 writeFileSync('public/site-content.json', JSON.stringify(sections) + '\n');
 
 // Dollar-quote có nhãn riêng để nội dung không thể đóng chuỗi SQL
-const json = s => `$mcc$${JSON.stringify(s)}$mcc$::jsonb`;
-const sql = [
-  '-- 028b — Nội dung trang chủ ban đầu (sinh bởi scripts/db/build-site-content.mjs, đừng sửa tay).',
-  '-- Chỉ chèn khi chưa có: chạy lại không ghi đè nội dung đã sửa trong /admin/site.',
-  'insert into public.site_sections (id, content) values',
-  Object.entries(sections).map(([id, c]) => `  ('${id}', ${json(c)})`).join(',\n'),
-  'on conflict (id) do nothing;',
-  '',
-].join('\n');
-writeFileSync('src/app/features/landing/data/028b-site-content-seed.sql', sql);
+const json = c => `$mcc$${JSON.stringify(c)}$mcc$::jsonb`;
+function seed(file, migration, ids) {
+  const sql = [
+    `-- ${migration} — Nội dung trang chủ ban đầu (sinh bởi scripts/db/build-site-content.mjs, đừng sửa tay).`,
+    '-- Chỉ chèn khi chưa có: chạy lại không ghi đè nội dung đã sửa trong /admin/site.',
+    'insert into public.site_sections (id, content) values',
+    ids.map(id => `  ('${id}', ${json(sections[id])})`).join(',\n'),
+    'on conflict (id) do nothing;',
+    '',
+  ].join('\n');
+  writeFileSync(file, sql);
+}
+seed('src/app/features/landing/data/028b-site-content-seed.sql', '028b', ['hero', 'about', 'teachers', 'courses', 'gallery']);
+seed('src/app/features/landing/data/029b-site-contact-seed.sql', '029b', ['contact']);
 console.log('OK', Object.keys(sections).join(', '));
