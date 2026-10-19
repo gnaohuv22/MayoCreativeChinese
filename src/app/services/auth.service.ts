@@ -511,8 +511,10 @@ export class AuthService {
     const check = await this.supabase.auth.signInWithPassword({ email, password: currentPassword });
     if (check.error) return { error: 'Mật khẩu hiện tại không đúng.' };
 
-    const { error } = await this.supabase.auth.updateUser({ password: newPassword });
+    // Supabase đang bật "Require current password when updating" nên phải gửi kèm mật khẩu hiện tại
+    const { error } = await this.supabase.auth.updateUser({ password: newPassword, current_password: currentPassword });
     if (error) {
+      if (error.code === 'current_password_mismatch') return { error: 'Mật khẩu hiện tại không đúng.' };
       if (error.code === 'same_password') return { error: 'Mật khẩu mới phải khác mật khẩu hiện tại.' };
       if (error.code === 'weak_password') return { error: 'Mật khẩu mới quá yếu, hãy chọn mật khẩu khác.' };
       return { error: error.message };
