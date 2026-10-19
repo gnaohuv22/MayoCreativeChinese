@@ -32,8 +32,8 @@ begin
   assert public.is_student(), 'trong thời gian gia hạn';
   assert (public.my_student_context() ->> 'student_access_until')::timestamptz > now(), 'hạn ở tương lai';
 
-  -- Kết thúc 30 ngày trước: hết quyền học viên nhưng vẫn là người học
-  update public.classes set end_date = v_today - 30 where id = v_class;
+  -- Kết thúc 31 ngày trước (hôm nay là ngày thứ 31): hết quyền học viên nhưng vẫn là người học
+  update public.classes set end_date = v_today - 31 where id = v_class;
   assert not public.is_student(), 'hết gia hạn';
   assert public.is_learner(), 'vẫn là người học';
   assert not (public.my_student_context() ->> 'student_access')::boolean, 'ngữ cảnh báo hết quyền';
