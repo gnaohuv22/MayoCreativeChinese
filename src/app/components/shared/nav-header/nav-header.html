@@ -16,14 +16,6 @@
         </div>
       </a>
 
-      <!-- Badge: Đang phát triển (ẩn trên tablet khi có nút quay lại để tránh chật chội) -->
-      @if (activeModule() === 'flashcards' || showDevBadge()) {
-        <span [class.hidden]="showBack()" [class.xl:inline-flex]="showBack()" class="hidden xs:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-          Đang phát triển
-        </span>
-      }
-
       <!-- Back Link (optional) -->
       @if (showBack() && backLink()) {
         <span class="text-brand-navy/20 dark:text-white/20">|</span>

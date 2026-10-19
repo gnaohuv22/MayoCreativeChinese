@@ -41,11 +41,15 @@ export class StudentHomeComponent {
 
   protected readonly unlockUrl = UNLOCK_CONTACT_URL;
 
-  /** Quyền Mayo+ của khách: còn hạn đến ngày nào */
+  /** Quyền Mayo+ của khách / học viên lớp đã kết thúc: còn hạn đến ngày nào */
   readonly paidModules = computed(() =>
     (Object.keys(ACCESS_MODULE_LABELS) as AccessModule[]).map(module => {
       const grant = this.auth.accessGrants().find(g => g.module === module);
-      return { module, label: ACCESS_MODULE_LABELS[module], open: this.auth.hasAccess(module), expiresAt: grant?.expires_at ?? null };
+      let expiresAt = grant?.expires_at ?? null;
+      // Còn trong gia hạn lớp: lấy hạn muộn hơn giữa quyền cấp riêng và hạn học viên lớp
+      const until = this.auth.isStudent() ? this.auth.studentAccessUntil() : null;
+      if (until && (!grant || (expiresAt && new Date(expiresAt) < new Date(until)))) expiresAt = until;
+      return { module, label: ACCESS_MODULE_LABELS[module], open: this.auth.hasAccess(module), expiresAt };
     }),
   );
   readonly hasClosedModule = computed(() => this.paidModules().some(m => !m.open));

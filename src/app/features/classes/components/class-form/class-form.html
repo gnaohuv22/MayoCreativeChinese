@@ -71,7 +71,7 @@
     </label>
     <label class="block space-y-1.5">
       <span class="mcc-label">Kết thúc</span>
-      <input name="end_date" type="date" [(ngModel)]="form.end_date" class="mcc-input" />
+      <input name="end_date" type="date" [(ngModel)]="form.end_date" [attr.min]="form.status === 'finished' ? null : today" class="mcc-input" />
     </label>
   </div>
 
