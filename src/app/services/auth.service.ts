@@ -80,6 +80,10 @@ export interface StudentContext {
   class: StudentClassInfo | null;
   /** Quyền Mayo+ còn hạn (migration 024); expires_at null = không thời hạn */
   access?: AccessGrant[];
+  /** Còn quyền học viên lớp: lớp chưa kết thúc hoặc còn trong 30 ngày gia hạn (migration 033) */
+  student_access?: boolean;
+  /** Hạn quyền học viên lớp; null = lớp chưa có mốc kết thúc */
+  student_access_until?: string | null;
 }
 
 /** Thiết bị đăng nhập của học viên (migration 026) */
@@ -179,7 +183,13 @@ export class AuthService {
   /** Người học đã đăng nhập (học viên lớp hoặc khách): lưu tiến độ, bài thi */
   readonly isLearner = computed(() => this.studentContext() !== null);
   /** Học viên lớp: mở nội dung "Học viên" */
-  readonly isStudent = computed(() => this.studentContext()?.account_type === 'student');
+  readonly isStudent = computed(() => {
+    const ctx = this.studentContext();
+    return ctx?.account_type === 'student' && ctx.student_access !== false;
+  });
+  /** Hạn quyền học viên lớp (lớp đã có ngày kết thúc) */
+  readonly studentAccessUntil = computed(() =>
+    this.studentContext()?.account_type === 'student' ? (this.studentContext()?.student_access_until ?? null) : null);
   readonly isGuest = computed(() => this.studentContext()?.account_type === 'guest');
   /** Quyền Mayo+ được cấp còn hạn */
   readonly accessGrants = computed<AccessGrant[]>(() => this.studentContext()?.access ?? []);
