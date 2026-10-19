@@ -20,7 +20,6 @@ export class NavHeaderComponent {
   backLabel = input<string>('');
   showBack = input<boolean>(false);
   showNavLinks = input<boolean>(true);
-  showDevBadge = input<boolean>(false);
 
   /** Học viên / nhân sự đang đăng nhập (cờ nhẹ, không kéo supabase-js vào bundle) */
   protected readonly presence = inject(AdminPresence);
