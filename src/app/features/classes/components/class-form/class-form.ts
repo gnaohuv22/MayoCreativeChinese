@@ -14,6 +14,12 @@ import {
   type StaffDirectoryEntry,
 } from '../../models/class.model';
 
+/** Ngày hôm nay theo giờ máy, dạng YYYY-MM-DD như input type="date" */
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /** Form tạo / sửa lớp (đặt trong <dialog> của trang cha) */
 @Component({
   selector: 'app-class-form',
@@ -42,6 +48,7 @@ export class ClassFormComponent implements OnInit {
   }
   protected readonly statusOptions = Object.entries(CLASS_STATUS_LABELS) as [ClassStatus, string][];
   protected readonly roleLabels = STAFF_ROLE_LABELS;
+  protected readonly today = localToday();
 
   form: ClassInput = {
     code: '', name: '', course_slug: null, hsk_level: null, hsk_version: null, study_mode: null,
@@ -98,6 +105,12 @@ export class ClassFormComponent implements OnInit {
     if (!this.form.code.trim() || !this.form.name.trim()) return;
     if (this.form.start_date && this.form.end_date && this.form.end_date < this.form.start_date) {
       this.error.set('Ngày kết thúc phải sau ngày khai giảng.');
+      return;
+    }
+    // Chỉ chặn khi vừa nhập / đổi ngày, để lớp cũ vẫn sửa được các mục khác
+    const endChanged = this.form.end_date && this.form.end_date !== this.cls()?.end_date;
+    if (endChanged && this.form.status !== 'finished' && this.form.end_date! < localToday()) {
+      this.error.set('Ngày kết thúc không được ở quá khứ (trừ lớp "Đã kết thúc").');
       return;
     }
     this.saving.set(true);
