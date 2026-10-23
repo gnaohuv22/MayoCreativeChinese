@@ -10,36 +10,38 @@
     
     <!-- Tab Bar -->
     <div class="flex flex-wrap gap-2 p-1.5 bg-brand-navy/5 dark:bg-white/5 rounded-full inline-flex border border-brand-navy/5 dark:border-white/10">
-      <button 
-        (click)="activeTab.set('add')"
-        [class.bg-brand-pink]="activeTab() === 'add'"
-        [class.text-white]="activeTab() === 'add'"
-        [class.shadow-md]="activeTab() === 'add'"
-        [class.text-brand-navy/70]="activeTab() !== 'add'"
-        [class.dark:text-brand-text-dark/70]="activeTab() !== 'add'"
-        [class.hover:bg-brand-navy/5]="activeTab() !== 'add'"
-        [class.dark:hover:bg-white/5]="activeTab() !== 'add'"
-        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Thêm từ
-      </button>
-      <button 
-        (click)="activeTab.set('import')"
-        [class.bg-brand-pink]="activeTab() === 'import'"
-        [class.text-white]="activeTab() === 'import'"
-        [class.shadow-md]="activeTab() === 'import'"
-        [class.text-brand-navy/70]="activeTab() !== 'import'"
-        [class.dark:text-brand-text-dark/70]="activeTab() !== 'import'"
-        [class.hover:bg-brand-navy/5]="activeTab() !== 'import'"
-        [class.dark:hover:bg-white/5]="activeTab() !== 'import'"
-        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        Import
-      </button>
+      @if (canCreate()) {
+        <button 
+          (click)="activeTab.set('add')"
+          [class.bg-brand-pink]="activeTab() === 'add'"
+          [class.text-white]="activeTab() === 'add'"
+          [class.shadow-md]="activeTab() === 'add'"
+          [class.text-brand-navy/70]="activeTab() !== 'add'"
+          [class.dark:text-brand-text-dark/70]="activeTab() !== 'add'"
+          [class.hover:bg-brand-navy/5]="activeTab() !== 'add'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'add'"
+          class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Thêm từ
+        </button>
+        <button 
+          (click)="activeTab.set('import')"
+          [class.bg-brand-pink]="activeTab() === 'import'"
+          [class.text-white]="activeTab() === 'import'"
+          [class.shadow-md]="activeTab() === 'import'"
+          [class.text-brand-navy/70]="activeTab() !== 'import'"
+          [class.dark:text-brand-text-dark/70]="activeTab() !== 'import'"
+          [class.hover:bg-brand-navy/5]="activeTab() !== 'import'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'import'"
+          class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          Import
+        </button>
+      }
       <button 
         (click)="activeTab.set('browse')"
         [class.bg-brand-pink]="activeTab() === 'browse'"
@@ -53,29 +55,31 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
         </svg>
-        Duyệt & Sửa
+        {{ canUpdate() ? 'Duyệt & Sửa' : 'Duyệt' }}
       </button>
-      <button 
-        (click)="activeTab.set('visibility')"
-        [class.bg-brand-pink]="activeTab() === 'visibility'"
-        [class.text-white]="activeTab() === 'visibility'"
-        [class.shadow-md]="activeTab() === 'visibility'"
-        [class.text-brand-navy/70]="activeTab() !== 'visibility'"
-        [class.dark:text-brand-text-dark/70]="activeTab() !== 'visibility'"
-        [class.hover:bg-brand-navy/5]="activeTab() !== 'visibility'"
-        [class.dark:hover:bg-white/5]="activeTab() !== 'visibility'"
-        class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
-        <app-icon name="eye" size="xs" />
-        Hiển thị
-      </button>
+      @if (canUpdate()) {
+        <button 
+          (click)="activeTab.set('visibility')"
+          [class.bg-brand-pink]="activeTab() === 'visibility'"
+          [class.text-white]="activeTab() === 'visibility'"
+          [class.shadow-md]="activeTab() === 'visibility'"
+          [class.text-brand-navy/70]="activeTab() !== 'visibility'"
+          [class.dark:text-brand-text-dark/70]="activeTab() !== 'visibility'"
+          [class.hover:bg-brand-navy/5]="activeTab() !== 'visibility'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'visibility'"
+          class="rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+          <app-icon name="eye" size="xs" />
+          Hiển thị
+        </button>
+      }
     </div>
 
-    @if (activeTab() === 'visibility') {
+    @if (activeTab() === 'visibility' && canUpdate()) {
       <app-vocab-visibility />
     }
 
     <!-- TAB 1: Thêm từ -->
-    @if (activeTab() === 'add') {
+    @if (activeTab() === 'add' && canCreate()) {
       <div class="backdrop-blur-md bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 shadow-xl shadow-brand-navy/5 dark:shadow-none rounded-3xl p-6 md:p-8 space-y-6">
         
         @if (addStatus()) {
@@ -199,7 +203,7 @@
     }
 
     <!-- TAB 2: Import -->
-    @if (activeTab() === 'import') {
+    @if (activeTab() === 'import' && canCreate()) {
       <div class="space-y-6">
         <!-- Template Download Section -->
         <div class="flex flex-wrap items-center justify-between gap-4 p-5 bg-white dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-3xl shadow-sm">
@@ -523,15 +527,16 @@
                         <td class="p-3.5 text-center">
                           @if (card.id) {
                             <div class="flex items-center justify-center gap-1">
-                              <!-- Pencil Edit Button -->
-                              <button
-                                type="button"
-                                (click)="startEdit(card)"
-                                class="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-brand-pink hover:bg-brand-pink/10 rounded-xl transition-colors cursor-pointer"
-                                title="Chỉnh sửa từ vựng"
-                              >
-                                <app-icon name="pencil" size="xs" />
-                              </button>
+                              @if (canUpdate()) {
+                                <button
+                                  type="button"
+                                  (click)="startEdit(card)"
+                                  class="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-brand-pink hover:bg-brand-pink/10 rounded-xl transition-colors cursor-pointer"
+                                  title="Chỉnh sửa từ vựng"
+                                >
+                                  <app-icon name="pencil" size="xs" />
+                                </button>
+                              }
 
                               @if (canDelete()) {
                                 <button

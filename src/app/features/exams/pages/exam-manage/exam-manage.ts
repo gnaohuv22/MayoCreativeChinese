@@ -30,6 +30,8 @@ export class ExamManageComponent implements OnInit {
   private readonly examService = inject(ExamService);
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
+  protected readonly canCreate = computed(() => this.auth.can('content.create'));
+  protected readonly canUpdate = computed(() => this.auth.can('content.update'));
   protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
   protected readonly visibilityOptions = VISIBILITY_OPTIONS;

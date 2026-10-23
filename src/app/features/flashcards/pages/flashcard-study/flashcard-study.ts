@@ -10,6 +10,11 @@ import { VOCAB_COLLECTIONS } from '../../models/vocab-card.model';
 import type { VocabCard, CardProgress, VocabCollection, VocabScope } from '../../models/vocab-card.model';
 import { scopeFromRoute, scopeLevelLabel, scopeRoutes, scopeTitle } from '../../utils/vocab-scope.util';
 
+type StudyFilter = 'all' | 'unmastered' | 'new' | 'hard' | 'bookmarked';
+const STUDY_FILTERS: StudyFilter[] = ['all', 'unmastered', 'new', 'hard', 'bookmarked'];
+/** Thẻ chấm Khó quay lại sau ngần này thẻ */
+const HARD_REPEAT_GAP = 3;
+
 @Component({
   selector: 'app-flashcard-study',
   standalone: true,
@@ -34,7 +39,9 @@ export class FlashcardStudyComponent implements OnInit {
   flipped = signal(false);
   loading = signal(true);
   shuffled = signal(false);
-  filter = signal<'all' | 'new' | 'hard' | 'bookmarked'>('all');
+  filter = signal<StudyFilter>('all');
+  /** Lượt học hiện tại: thẻ theo bộ lọc lúc bắt đầu, thẻ chấm Khó / Biết được xếp lại để ôn tiếp */
+  deck = signal<VocabCard[]>([]);
   isTransitioning = signal(false);
   readonly progressKey = progressKey;
 
@@ -43,16 +50,19 @@ export class FlashcardStudyComponent implements OnInit {
   backLink = computed(() => this.routes().back.join('/'));
   backLabel = computed(() => this.routes().backLabel);
 
-  filteredCards = computed(() => {
-    const filter = this.filter();
-    const cards = this.cards();
+  /** Số thẻ của từng bộ lọc (hiện trong ô chọn) */
+  filterCounts = computed(() => {
     const map = this.progressMap();
-
-    if (filter === 'all') return cards;
-    return cards.filter(card => this.matchesFilter(filter, map.get(progressKey(card))));
+    const counts: Record<StudyFilter, number> = { all: 0, unmastered: 0, new: 0, hard: 0, bookmarked: 0 };
+    for (const card of this.cards()) {
+      const p = map.get(progressKey(card));
+      for (const f of STUDY_FILTERS) if (this.matchesFilter(f, p)) counts[f]++;
+    }
+    return counts;
   });
 
-  private matchesFilter(filter: 'all' | 'new' | 'hard' | 'bookmarked', p: CardProgress | undefined): boolean {
+  private matchesFilter(filter: StudyFilter, p: CardProgress | undefined): boolean {
+    if (filter === 'unmastered') return !p || p.confidence !== 3;
     if (filter === 'new') return !p || p.reviewCount === 0;
     if (filter === 'hard') return !!p && (p.confidence === 1 || (p.reviewCount > 0 && p.confidence === 0));
     if (filter === 'bookmarked') return p?.bookmarked === true;
@@ -60,7 +70,7 @@ export class FlashcardStudyComponent implements OnInit {
   }
 
   currentCard = computed(() => {
-    const list = this.filteredCards();
+    const list = this.deck();
     const idx = this.currentIndex();
     return list.length > 0 && idx < list.length ? list[idx] : null;
   });
@@ -82,14 +92,40 @@ export class FlashcardStudyComponent implements OnInit {
       this.originalCards = [...vocabList];
       this.cards.set(vocabList);
       this.progressMap.set(progress);
-      this.currentIndex.set(0);
-      this.flipped.set(false);
       this.shuffled.set(false);
+      // Đã thuộc một phần bộ này → mở thẳng những từ chưa thuộc
+      const counts = this.filterCounts();
+      this.filter.set(counts.unmastered > 0 && counts.unmastered < counts.all ? 'unmastered' : 'all');
+      this.restartDeck();
     } catch (error) {
       console.error('Error loading study cards:', error);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Bắt đầu lại lượt học theo bộ lọc + thứ tự hiện tại */
+  private restartDeck() {
+    const filter = this.filter();
+    const map = this.progressMap();
+    this.deck.set(this.cards().filter(card => this.matchesFilter(filter, map.get(progressKey(card)))));
+    this.currentIndex.set(0);
+    this.flipped.set(false);
+  }
+
+  /**
+   * Xếp lại thẻ vừa chấm trong lượt học: Khó → gặp lại sau vài thẻ, Biết → gặp lại cuối lượt,
+   * Thuộc → không lặp lại nữa (bỏ các lần xếp lại trước đó).
+   */
+  private requeue(card: VocabCard, confidence: 0 | 1 | 2 | 3) {
+    const idx = this.currentIndex();
+    const key = progressKey(card);
+    this.deck.update(deck => {
+      const ahead = deck.slice(idx + 1).filter(c => progressKey(c) !== key);
+      if (confidence <= 1) ahead.splice(Math.min(HARD_REPEAT_GAP, ahead.length), 0, card);
+      else if (confidence === 2) ahead.push(card);
+      return [...deck.slice(0, idx + 1), ...ahead];
+    });
   }
 
   private get version() {
@@ -103,7 +139,7 @@ export class FlashcardStudyComponent implements OnInit {
 
   nextCard() {
     if (this.isTransitioning()) return;
-    if (this.currentIndex() >= this.filteredCards().length - 1) return;
+    if (this.currentIndex() >= this.deck().length - 1) return;
 
     if (this.flipped()) {
       this.isTransitioning.set(true);
@@ -167,32 +203,14 @@ export class FlashcardStudyComponent implements OnInit {
             bookmarked: false,
           };
 
-      const saveProgress = () => this.progressMap.update(map => {
+      this.progressMap.update(map => {
         const newMap = new Map(map);
         newMap.set(key, updated);
         return newMap;
       });
 
-      // Thẻ vừa chấm rời khỏi bộ lọc (VD "Chưa học"): thẻ kế tiếp tự trượt vào vị trí hiện tại,
-      // không tăng chỉ số nữa (nếu không sẽ bỏ qua 1 thẻ). Úp thẻ trước để không lộ mặt sau thẻ mới.
-      if (!this.matchesFilter(this.filter(), updated)) {
-        const finish = () => {
-          saveProgress();
-          this.currentIndex.update(i => Math.max(0, Math.min(i, this.filteredCards().length - 1)));
-          this.isTransitioning.set(false);
-        };
-        if (this.flipped()) {
-          this.isTransitioning.set(true);
-          this.flipped.set(false);
-          setTimeout(finish, 320);
-        } else {
-          finish();
-        }
-        return;
-      }
-
-      saveProgress();
-      if (this.currentIndex() < this.filteredCards().length - 1) {
+      this.requeue(card, confidence);
+      if (this.currentIndex() < this.deck().length - 1) {
         this.nextCard();
       } else {
         this.flipped.set(false);
@@ -251,14 +269,12 @@ export class FlashcardStudyComponent implements OnInit {
       this.cards.set([...this.originalCards]);
     }
     this.shuffled.set(!currentIsShuffled);
-    this.currentIndex.set(0);
-    this.flipped.set(false);
+    this.restartDeck();
   }
 
-  setFilter(f: 'all' | 'new' | 'hard' | 'bookmarked') {
+  setFilter(f: StudyFilter) {
     this.filter.set(f);
-    this.currentIndex.set(0);
-    this.flipped.set(false);
+    this.restartDeck();
   }
 
   // Vuốt ngang trên thẻ để chuyển thẻ (điện thoại)

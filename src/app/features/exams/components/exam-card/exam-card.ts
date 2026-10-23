@@ -29,6 +29,8 @@ export class ExamCardComponent {
   duplicate = output<Exam>();
   /** Đang nhân bản đề này (khoá nút) */
   duplicating = input<boolean>(false);
+  canCreate = input<boolean>(false);
+  canUpdate = input<boolean>(false);
   canDelete = input<boolean>(false);
   /** Trang học viên: locked = "Sắp ra mắt" (đề nội bộ, khách xem), members = đề dành cho học viên */
   access = input<ContentAccess>('open');

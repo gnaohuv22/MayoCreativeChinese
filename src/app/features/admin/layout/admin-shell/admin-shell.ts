@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, computed, effect, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, type Permission } from '../../../../services/auth.service';
+import { CONTENT_PERMISSIONS } from '../../../../services/admin.guard';
 import { AppIconComponent, type IconName } from '../../../../components/shared/icon/app-icon';
 import { ThemeToggleComponent } from '../../../../components/shared/theme-toggle/theme-toggle';
 
@@ -11,6 +12,8 @@ interface AdminNavItem {
   icon: IconName;
   /** Chỉ hiện khi vai trò có quyền này */
   permission?: Permission;
+  /** Chỉ hiện khi vai trò có ít nhất một quyền nội dung */
+  content?: boolean;
 }
 
 @Component({
@@ -27,14 +30,15 @@ export class AdminShellComponent {
 
   readonly navItems: AdminNavItem[] = [
     { label: 'Tổng quan', hint: 'Lớp học, bài thi, Mayo+', route: '/admin/dashboard', icon: 'home' },
-    { label: 'Đề thi HSK', hint: 'Soạn, xuất bản, nhân bản đề', route: '/admin/exams', icon: 'academic' },
-    { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open' },
+    { label: 'Đề thi HSK', hint: 'Soạn, xuất bản, nhân bản đề', route: '/admin/exams', icon: 'academic', content: true },
+    { label: 'Từ vựng', hint: 'Thêm, nhập Excel, chỉnh sửa', route: '/admin/vocab', icon: 'book-open', content: true },
   ];
 
   private readonly siteItem: AdminNavItem = { label: 'Trang chủ', hint: 'Giáo viên, khóa học, ảnh', route: '/admin/site', icon: 'sparkles', permission: 'site.manage' };
   private readonly storiesItem: AdminNavItem = { label: 'Câu chuyện', hint: 'Bài viết học viên', route: '/admin/stories', icon: 'document-text', permission: 'site.manage' };
   private readonly coursesItem: AdminNavItem = { label: 'Trang khóa học', hint: 'Lộ trình, bảng buổi học', route: '/admin/courses', icon: 'book-open', permission: 'site.manage' };
-  readonly visibleNavItems = computed(() => [...this.navItems, ...(this.auth.can('site.manage') ? [this.siteItem, this.storiesItem, this.coursesItem] : [])]);
+  private readonly hasContentAccess = computed(() => CONTENT_PERMISSIONS.some(p => this.auth.can(p)));
+  readonly visibleNavItems = computed(() => [...this.navItems.filter(i => !i.content || this.hasContentAccess()), ...(this.auth.can('site.manage') ? [this.siteItem, this.storiesItem, this.coursesItem] : [])]);
 
   private readonly classItems: AdminNavItem[] = [
     { label: 'Lớp học', hint: 'Thông báo, gợi ý, kết quả', route: '/admin/classes', icon: 'calendar', permission: 'class.manage' },

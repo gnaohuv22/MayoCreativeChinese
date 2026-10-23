@@ -5,6 +5,9 @@
     <button type="button" (click)="openBulk('move')" class="mcc-btn bg-white/10 hover:bg-white/20">
       <app-icon name="arrows-right-left" size="xs" /> Chuyển lớp
     </button>
+    @if (anySelectedInClass()) {
+      <button type="button" (click)="openBulk('remove')" class="mcc-btn bg-white/10 hover:bg-white/20">Bỏ khỏi lớp</button>
+    }
     @if (auth.can('access.manage')) {
       <button type="button" (click)="openGrant(selectedStudents())" class="mcc-btn bg-white/10 hover:bg-white/20">
         <app-icon name="sparkles" size="xs" /> Cấp quyền
@@ -16,7 +19,7 @@
     <button type="button" (click)="openBulk('archived')" class="mcc-btn bg-white/10 hover:bg-white/20">Lưu trữ</button>
     @if (auth.can('student.delete')) {
       <button type="button" (click)="openBulk('delete')" class="mcc-btn bg-red-500/80 hover:bg-red-500">
-        <app-icon name="trash" size="xs" /> Xoá
+        <app-icon name="trash" size="xs" /> Xoá tài khoản
       </button>
     }
     <button type="button" (click)="clearSelection()" class="ml-auto p-1.5 rounded-xl hover:bg-white/10 cursor-pointer" aria-label="Bỏ chọn">
@@ -253,9 +256,11 @@
             }
           </select>
         </label>
+      } @else if (action === 'remove') {
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">Tài khoản vẫn đăng nhập được và giữ kết quả học, nhưng không còn quyền của học viên lớp.</p>
       } @else if (action === 'delete') {
         <p class="text-sm text-red-600 dark:text-red-400 font-semibold">Tài khoản, kết quả bài thi và tiến độ flashcard sẽ bị xoá vĩnh viễn.</p>
-      } @else if (action !== 'active') {
+      } @else if (action === 'locked' || action === 'archived') {
         <p class="text-sm text-zinc-600 dark:text-zinc-300">Học viên không đăng nhập được cho đến khi được mở lại.</p>
       }
 

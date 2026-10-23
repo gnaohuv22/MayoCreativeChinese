@@ -5,7 +5,7 @@
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     @if (loading()) {
       <div class="max-w-md mx-auto mt-8 h-[380px] bg-white/80 dark:bg-white/5 border border-brand-navy/10 dark:border-white/10 shadow-lg animate-pulse rounded-3xl"></div>
-    } @else if (filteredCards().length === 0) {
+    } @else if (deck().length === 0) {
       <div class="text-center py-20">
         <div class="w-16 h-16 rounded-full bg-brand-navy/5 dark:bg-white/10 flex items-center justify-center mx-auto mb-4 text-brand-navy/50 dark:text-white/50">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
@@ -35,14 +35,15 @@
         <!-- Toolbar: bộ lọc + vị trí thẻ, các nút công cụ ở dòng dưới -->
         <div class="flex items-center justify-between gap-3">
           <select [value]="filter()" (change)="setFilter($any($event.target).value)" class="bg-white/90 dark:bg-white/5 border border-brand-navy/10 dark:border-white/15 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm text-brand-navy dark:text-white font-semibold focus:ring-2 focus:ring-brand-pink/30 cursor-pointer">
-            <option value="all">Tất cả ({{ cards().length }})</option>
-            <option value="new">Chưa học</option>
-            <option value="hard">Cần ôn lại</option>
-            <option value="bookmarked">Đã đánh dấu</option>
+            <option value="all">Tất cả ({{ filterCounts().all }})</option>
+            <option value="unmastered">Chưa thuộc ({{ filterCounts().unmastered }})</option>
+            <option value="new">Chưa học ({{ filterCounts().new }})</option>
+            <option value="hard">Cần ôn lại ({{ filterCounts().hard }})</option>
+            <option value="bookmarked">Đã đánh dấu ({{ filterCounts().bookmarked }})</option>
           </select>
 
           <div class="font-display font-extrabold text-brand-navy dark:text-white text-base sm:text-lg tabular-nums whitespace-nowrap">
-            {{ currentIndex() + 1 }} <span class="text-brand-navy/40 dark:text-white/40 font-normal">/</span> {{ filteredCards().length }}
+            {{ currentIndex() + 1 }} <span class="text-brand-navy/40 dark:text-white/40 font-normal">/</span> {{ deck().length }}
           </div>
         </div>
 
@@ -63,7 +64,7 @@
 
         <!-- Progress bar -->
         <div class="w-full bg-brand-navy/10 dark:bg-white/10 rounded-full h-1.5 mt-4 mb-5 sm:mb-6 overflow-hidden">
-          <div class="bg-brand-pink h-1.5 rounded-full transition-all duration-300 shadow-sm" [style.width]="((currentIndex() + 1) / filteredCards().length * 100) + '%'"></div>
+          <div class="bg-brand-pink h-1.5 rounded-full transition-all duration-300 shadow-sm" [style.width]="((currentIndex() + 1) / deck().length * 100) + '%'"></div>
         </div>
 
         <!-- Thẻ: mũi tên hai bên trên máy tính; điện thoại dùng hàng nút dưới thẻ hoặc vuốt ngang -->
@@ -87,7 +88,7 @@
             }
           </div>
 
-          <button (click)="nextCard()" [disabled]="currentIndex() === filteredCards().length - 1" class="hidden sm:block p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
+          <button (click)="nextCard()" [disabled]="currentIndex() === deck().length - 1" class="hidden sm:block p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
@@ -141,7 +142,7 @@
             </button>
           </div>
 
-          <button (click)="nextCard()" [disabled]="currentIndex() === filteredCards().length - 1" class="sm:hidden -mr-2 p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
+          <button (click)="nextCard()" [disabled]="currentIndex() === deck().length - 1" class="sm:hidden -mr-2 p-2.5 sm:p-3 rounded-full text-brand-navy/50 dark:text-white/50 hover:text-brand-pink hover:bg-brand-navy/5 dark:hover:bg-white/10 disabled:opacity-0 transition-all cursor-pointer" aria-label="Thẻ tiếp">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>

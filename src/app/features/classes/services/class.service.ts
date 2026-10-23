@@ -158,6 +158,11 @@ export class ClassService {
     return error ? { error: rpcError(error) } : {};
   }
 
+  async removeFromClass(userIds: string[]): Promise<{ error?: string }> {
+    const { error } = await this.supabase.rpc('remove_students_from_class', { p_students: userIds });
+    return error ? { error: rpcError(error) } : {};
+  }
+
   async setStudentsStatus(userIds: string[], status: StudentStatus): Promise<{ error?: string }> {
     const { error } = await this.supabase.rpc('set_students_status', { p_students: userIds, p_status: status });
     return error ? { error: rpcError(error) } : {};

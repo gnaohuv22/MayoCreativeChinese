@@ -11,7 +11,7 @@
         <app-visibility-picker
           [value]="exam().visibility"
           [label]="'Hiển thị: ' + exam().title"
-          [disabled]="savingVisibility()"
+          [disabled]="savingVisibility() || !canUpdate()"
           (changed)="visibilityChange.emit({ exam: exam(), visibility: $event })"
         />
       } @else if (badgeKind(); as kind) {
@@ -117,24 +117,36 @@
   } @else {
     <div class="flex items-center justify-end pt-3 border-t border-zinc-100 dark:border-white/5">
       <div class="flex items-center gap-2">
-        <a
-          [routerLink]="['/admin/exams', exam().id, 'edit']"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-colors"
-        >
-          <app-icon name="pencil" size="xs" />
-          <span>Sửa</span>
-        </a>
+        @if (canUpdate()) {
+          <a
+            [routerLink]="['/admin/exams', exam().id, 'edit']"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-colors"
+          >
+            <app-icon name="pencil" size="xs" />
+            <span>Sửa</span>
+          </a>
+        } @else {
+          <a
+            [routerLink]="['/exams', exam().id, 'take']"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-navy dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 transition-colors"
+          >
+            <app-icon name="eye" size="xs" />
+            <span>Xem đề</span>
+          </a>
+        }
 
-        <button
-          type="button"
-          (click)="duplicate.emit(exam())"
-          [disabled]="duplicating()"
-          class="p-1.5 rounded-xl text-brand-navy dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-          title="Nhân bản đề thi (tạo bản nháp)"
-          aria-label="Nhân bản đề thi"
-        >
-          <app-icon [name]="duplicating() ? 'arrow-path' : 'document-duplicate'" size="xs" [customClass]="duplicating() ? 'animate-spin' : ''" />
-        </button>
+        @if (canCreate()) {
+          <button
+            type="button"
+            (click)="duplicate.emit(exam())"
+            [disabled]="duplicating()"
+            class="p-1.5 rounded-xl text-brand-navy dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+            title="Nhân bản đề thi (tạo bản nháp)"
+            aria-label="Nhân bản đề thi"
+          >
+            <app-icon [name]="duplicating() ? 'arrow-path' : 'document-duplicate'" size="xs" [customClass]="duplicating() ? 'animate-spin' : ''" />
+          </button>
+        }
 
         @if (canDelete()) {
           <button

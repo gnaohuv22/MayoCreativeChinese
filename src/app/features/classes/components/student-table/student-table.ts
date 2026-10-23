@@ -18,7 +18,7 @@ import {
   type StudentStatus,
 } from '../../models/class.model';
 
-type BulkAction = 'move' | 'active' | 'locked' | 'archived' | 'delete';
+type BulkAction = 'move' | 'remove' | 'active' | 'locked' | 'archived' | 'delete';
 
 /** Thời hạn chọn sẵn khi cấp quyền (interval Postgres) */
 const GRANT_TERMS: { value: string; label: string }[] = [
@@ -41,10 +41,11 @@ function addTerm(from: Date, term: string): Date {
 }
 
 const BULK_CONFIRM: Record<Exclude<BulkAction, 'move'>, { title: string; verb: string; done: string }> = {
+  remove: { title: 'Bỏ khỏi lớp', verb: 'Bỏ khỏi lớp', done: 'Đã bỏ khỏi lớp' },
   active: { title: 'Mở lại tài khoản', verb: 'Mở lại', done: 'Đã mở lại' },
   locked: { title: 'Khoá tài khoản', verb: 'Khoá', done: 'Đã khoá' },
   archived: { title: 'Lưu trữ tài khoản', verb: 'Lưu trữ', done: 'Đã lưu trữ' },
-  delete: { title: 'Xoá vĩnh viễn', verb: 'Xoá vĩnh viễn', done: 'Đã xoá' },
+  delete: { title: 'Xoá vĩnh viễn tài khoản', verb: 'Xoá vĩnh viễn', done: 'Đã xoá' },
 };
 
 /** Bảng học viên dùng chung cho trang lớp và trang "Học viên": chọn nhiều, chuyển lớp, khoá, sửa, đặt lại mật khẩu */
@@ -73,6 +74,7 @@ export class StudentTableComponent {
 
   readonly selected = signal<Set<string>>(new Set());
   readonly selectedStudents = computed(() => this.students().filter(s => this.selected().has(s.user_id)));
+  readonly anySelectedInClass = computed(() => this.selectedStudents().some(s => s.class_id));
   readonly allSelected = computed(() => this.students().length > 0 && this.students().every(s => this.selected().has(s.user_id)));
   readonly busy = signal(false);
 
@@ -359,6 +361,7 @@ export class StudentTableComponent {
     this.busy.set(true);
     const res =
       action === 'move' ? await this.classService.moveStudents(ids, this.moveTarget())
+      : action === 'remove' ? await this.classService.removeFromClass(ids)
       : action === 'delete' ? await this.classService.deleteStudents(ids)
       : await this.classService.setStudentsStatus(ids, action);
     this.busy.set(false);
