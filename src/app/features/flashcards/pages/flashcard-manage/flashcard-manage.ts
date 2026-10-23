@@ -36,9 +36,11 @@ export class FlashcardManageComponent implements OnInit {
   private vocabService = inject(VocabService);
   private toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
+  protected readonly canCreate = computed(() => this.auth.can('content.create'));
+  protected readonly canUpdate = computed(() => this.auth.can('content.update'));
   protected readonly canDelete = computed(() => this.auth.can('content.delete'));
 
-  activeTab = signal<'add' | 'import' | 'browse' | 'visibility'>('add');
+  activeTab = signal<'add' | 'import' | 'browse' | 'visibility'>(this.auth.can('content.create') ? 'add' : 'browse');
 
   /** 4 bộ từ vựng độc lập */
   readonly collections = VOCAB_COLLECTION_KEYS.map(key => VOCAB_COLLECTIONS[key]);

@@ -14,7 +14,7 @@ const AUDIENCE_TEXT: Record<LoginAudience, { pageTitle: string; badge: string; i
     badge: 'Admin & Ops',
     intro: 'Chỉ dành cho quản trị viên quản lý đề thi và từ vựng.',
     account: 'Tài khoản',
-    home: '/admin/exams',
+    home: '/admin/dashboard',
   },
   student: {
     pageTitle: 'Đăng nhập',

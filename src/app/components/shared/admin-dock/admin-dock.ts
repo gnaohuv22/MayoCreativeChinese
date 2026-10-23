@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
+import { CONTENT_PERMISSIONS } from '../../../services/admin.guard';
 import { AppIconComponent, type IconName } from '../icon/app-icon';
 
 interface DockAction {
@@ -47,11 +48,15 @@ export class AdminDockComponent {
   readonly actions = computed<DockAction[]>(() => {
     const list: DockAction[] = [];
     const examId = this.url().match(/^\/exams\/([0-9a-f-]{36})\//)?.[1];
-    if (examId) list.push({ label: 'Sửa đề này', route: `/admin/exams/${examId}/edit`, icon: 'pencil', highlight: true });
-    list.push(
-      { label: 'Quản lý đề thi', route: '/admin/exams', icon: 'academic' },
-      { label: 'Quản lý từ vựng', route: '/admin/vocab', icon: 'book-open' },
-    );
+    if (examId && this.auth.can('content.update')) list.push({ label: 'Sửa đề này', route: `/admin/exams/${examId}/edit`, icon: 'pencil', highlight: true });
+    if (CONTENT_PERMISSIONS.some(p => this.auth.can(p))) {
+      list.push(
+        { label: 'Quản lý đề thi', route: '/admin/exams', icon: 'academic' },
+        { label: 'Quản lý từ vựng', route: '/admin/vocab', icon: 'book-open' },
+      );
+    } else {
+      list.push({ label: 'Khu quản trị', route: '/admin/dashboard', icon: 'home' });
+    }
     return list;
   });
 

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
+import { CONTENT_PERMISSIONS, guestOnlyGuard, permissionGuard, staffGuard, studentGuard } from './services/admin.guard';
 import type { AdminSiteComponent } from './features/admin/pages/admin-site/admin-site';
 import type { AdminStoriesComponent } from './features/admin/pages/admin-stories/admin-stories';
 import type { AdminCoursesComponent } from './features/admin/pages/admin-courses/admin-courses';
@@ -127,16 +127,19 @@ export const routes: Routes = [
       },
       {
         path: 'exams',
+        canActivate: [permissionGuard(...CONTENT_PERMISSIONS)],
         loadComponent: () =>
           import('./features/exams/pages/exam-manage/exam-manage').then(m => m.ExamManageComponent),
       },
       {
         path: 'exams/new',
+        canActivate: [permissionGuard('content.create')],
         loadComponent: () =>
           import('./features/exams/pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
       },
       {
         path: 'exams/:id/edit',
+        canActivate: [permissionGuard('content.update')],
         loadComponent: () =>
           import('./features/exams/pages/exam-editor/exam-editor').then(m => m.ExamEditorComponent),
       },
@@ -207,6 +210,7 @@ export const routes: Routes = [
       },
       {
         path: 'vocab',
+        canActivate: [permissionGuard(...CONTENT_PERMISSIONS)],
         loadComponent: () =>
           import('./features/flashcards/pages/flashcard-manage/flashcard-manage').then(m => m.FlashcardManageComponent),
       },

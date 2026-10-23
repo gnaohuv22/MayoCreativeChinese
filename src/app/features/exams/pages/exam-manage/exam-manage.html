@@ -12,15 +12,17 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <a
-          routerLink="/admin/exams/new"
-          class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs shadow-lg shadow-brand-pink/25 hover:scale-105 active:scale-95 transition-all"
-        >
-          <app-icon name="plus" size="xs" />
-          <span>Tạo đề thi mới</span>
-        </a>
-      </div>
+      @if (canCreate()) {
+        <div class="flex items-center gap-3">
+          <a
+            routerLink="/admin/exams/new"
+            class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs shadow-lg shadow-brand-pink/25 hover:scale-105 active:scale-95 transition-all"
+          >
+            <app-icon name="plus" size="xs" />
+            <span>Tạo đề thi mới</span>
+          </a>
+        </div>
+      }
     </div>
 
     <!-- STATS BANNER (Using generalized StatCardComponent) -->
@@ -140,13 +142,15 @@
           <app-icon name="document-text" size="lg" />
         </div>
         <h3 class="text-base font-bold text-brand-navy dark:text-white">Chưa có đề thi nào phù hợp</h3>
-        <a
-          routerLink="/admin/exams/new"
-          class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-brand-pink text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
-        >
-          <app-icon name="plus" size="xs" />
-          <span>Tạo đề thi đầu tiên</span>
-        </a>
+        @if (canCreate()) {
+          <a
+            routerLink="/admin/exams/new"
+            class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-brand-pink text-white text-xs font-bold shadow-md hover:scale-105 transition-all"
+          >
+            <app-icon name="plus" size="xs" />
+            <span>Tạo đề thi đầu tiên</span>
+          </a>
+        }
       </div>
     } @else {
       <!-- Using generalized ExamCardComponent in admin mode -->
@@ -155,6 +159,8 @@
           <app-exam-card
             [exam]="item"
             mode="admin"
+            [canCreate]="canCreate()"
+            [canUpdate]="canUpdate()"
             [canDelete]="canDelete()"
             [savingVisibility]="savingVisibilityId() === item.id"
             (visibilityChange)="setVisibility($event)"

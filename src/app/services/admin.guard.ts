@@ -28,19 +28,22 @@ export const guestOnlyGuard: CanActivateFn = async route => {
   const auth = await loadAuth(injector);
   const returnUrl = route.queryParamMap.get('returnUrl') ?? '';
   const safe = returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !/^\/(dang-nhap|dang-ky|admin\/login)/.test(returnUrl);
-  if (auth.isStaff()) return router.parseUrl(safe && returnUrl.startsWith('/admin') ? returnUrl : '/admin/exams');
+  if (auth.isStaff()) return router.parseUrl(safe && returnUrl.startsWith('/admin') ? returnUrl : '/admin/dashboard');
   if (auth.isLearner()) return router.parseUrl(safe && !returnUrl.startsWith('/admin') ? returnUrl : '/hoc-vien');
   if (auth.needsOauthProfile()) return router.createUrlTree(['/hoan-tat-ho-so'], { queryParams: safe ? { returnUrl } : {} });
   return true;
 };
 
-/** Trang cần một quyền cụ thể; thiếu quyền → về trang đề thi */
-export function permissionGuard(permission: Permission): CanActivateFn {
+/** Có ít nhất một quyền này mới vào được khu đề thi / từ vựng */
+export const CONTENT_PERMISSIONS: Permission[] = ['content.read', 'content.create', 'content.update', 'content.delete'];
+
+/** Trang cần một trong các quyền; thiếu quyền → về trang tổng quan */
+export function permissionGuard(...permissions: Permission[]): CanActivateFn {
   return async () => {
     const injector = inject(Injector);
     const router = inject(Router);
     const auth = await loadAuth(injector);
-    return auth.can(permission) || router.createUrlTree(['/admin/exams']);
+    return permissions.some(p => auth.can(p)) || router.createUrlTree(['/admin/dashboard']);
   };
 }
 
