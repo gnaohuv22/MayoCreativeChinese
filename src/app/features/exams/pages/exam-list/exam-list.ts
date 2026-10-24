@@ -42,6 +42,7 @@ export class ExamListComponent implements OnInit {
   /** Đề làm được — dùng để đếm và bật/tắt cấp độ */
   private allExams = computed(() => this.listedExams().filter(e => !isLockedAccess(this.accessOf(e))));
   isLoading = signal<boolean>(true);
+  loadFailed = signal(false);
 
   // Grouped by version first (HSK 2.0 vs HSK 3.0)
   selectedVersion = signal<HskVersion>('2.0');
@@ -87,8 +88,12 @@ export class ExamListComponent implements OnInit {
 
   async loadExams() {
     this.isLoading.set(true);
+    this.loadFailed.set(false);
     const [data] = await Promise.all([
-      this.examService.getExams({ learner: true }),
+      this.examService.getExams({ learner: true }).catch(() => {
+        this.loadFailed.set(true);
+        return [];
+      }),
       this.auth.ready.then(async () => {
         this.viewer.set(this.auth.viewer('exams'));
         this.signedIn.set(this.auth.isStaff() || this.auth.isLearner());

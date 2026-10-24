@@ -236,5 +236,7 @@
   "stories.subtitle": "MCC受講生の実績・学びの道のり・思い出の瞬間",
   "stories.read_more": "続きを読む",
   "contact.phone_label": "電話/Zalo",
-  "contact.email_label": "メール"
+  "contact.email_label": "メール",
+  "a11y.theme_toggle": "ライト/ダークモードを切り替え",
+  "a11y.menu_toggle": "ナビゲーションメニューを開閉"
 }

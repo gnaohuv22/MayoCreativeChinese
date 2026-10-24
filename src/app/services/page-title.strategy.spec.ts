@@ -71,4 +71,11 @@ describe('PageTitleStrategy', () => {
 
     expect(metaService.getTag('property="og:url"')?.content).toContain('/exams');
   });
+
+  it('sets the canonical link to www without query or hash', () => {
+    strategy.updateTitle(createMockSnapshot('/khoa-hoc/hsk-3-0?doi-tuong=nguoi-lon#lich', 'HSK 3.0'));
+    const link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    expect(link?.href).toBe('https://www.mayochinese.com/khoa-hoc/hsk-3-0');
+    expect(metaService.getTag('property="og:url"')?.content).toBe('https://www.mayochinese.com/khoa-hoc/hsk-3-0');
+  });
 });

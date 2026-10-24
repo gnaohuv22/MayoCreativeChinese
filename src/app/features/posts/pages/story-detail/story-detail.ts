@@ -78,7 +78,8 @@ export class StoryDetailComponent {
       if (loaded === undefined) return;
       const s = loaded;
       if (!s && this.slug()) {
-        this.router.navigateByUrl('/#stories');
+        // Không tồn tại → trang 404 (giữ nguyên địa chỉ trên thanh URL)
+        this.router.navigateByUrl('/khong-tim-thay', { skipLocationChange: true });
         return;
       }
       if (s) {

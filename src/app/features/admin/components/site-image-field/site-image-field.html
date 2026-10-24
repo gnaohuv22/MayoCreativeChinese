@@ -11,7 +11,7 @@
     [class]="aspectClass()"
   >
     @if (src()) {
-      <img [src]="src()" alt="" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+      <img [src]="src()" alt="Ảnh đã chọn" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
     } @else {
       <div class="absolute inset-0 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
         <app-icon name="image" size="lg" />

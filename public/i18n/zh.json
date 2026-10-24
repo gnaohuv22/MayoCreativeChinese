@@ -24,7 +24,7 @@
   "about.title": "关于 Mayo Creative Chinese",
   "about.subtitle": "智能教学法与创新思维，重塑语言学习体验",
   "about.motto_title": "教育理念",
-  "about.motto_content": "\u201c千里之行，始于足下\u201d\u2014\u2014我们深信，学习中文不仅局限于日常沟通或通过证书考试，更应成为实际工作中的有力工具，为学员创造实在的职业价值。",
+  "about.motto_content": "“千里之行，始于足下”——我们深信，学习中文不仅局限于日常沟通或通过证书考试，更应成为实际工作中的有力工具，为学员创造实在的职业价值。",
   "about.pillar.hsk": "同步进行 HSK 2.0 和 3.0 培训",
   "about.pillar.hsk_desc": "紧跟 HSK 2.0 与 NEW 3.0 国际汉语标准教程，快速更新，书面承诺教学质量，全面培养听、说、读、写、译五大技能。",
   "about.pillar.practical": "应用中文教学",
@@ -236,5 +236,7 @@
   "stories.subtitle": "MCC学员的成绩、学习历程与难忘瞬间",
   "stories.read_more": "阅读全文",
   "contact.phone_label": "电话/Zalo",
-  "contact.email_label": "邮箱"
+  "contact.email_label": "邮箱",
+  "a11y.theme_toggle": "切换浅色/深色模式",
+  "a11y.menu_toggle": "打开/关闭导航菜单"
 }

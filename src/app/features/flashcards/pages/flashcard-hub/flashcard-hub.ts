@@ -42,6 +42,8 @@ export class FlashcardHubComponent implements OnInit {
   private toast = inject(ToastService);
 
   loading = signal(true);
+  /** Không tải được số từ / mức hiển thị (máy chủ bận) — không hiện các bộ như "Sắp ra mắt" */
+  loadFailed = signal(false);
   collections = signal<CollectionCardItem[]>([]);
   totalWordsInSystem = signal(0);
   /** Học viên đăng nhập: tiến độ lưu theo tài khoản */
@@ -51,11 +53,16 @@ export class FlashcardHubComponent implements OnInit {
   uploading = signal(false);
 
   async ngOnInit() {
-    this.loading.set(true);
     this.progressService.isAccountBacked().then(async backed => {
       this.accountBacked.set(backed);
       if (backed) this.localCount.set(await this.progressService.localRecordCount());
     });
+    await this.loadCollections();
+  }
+
+  async loadCollections() {
+    this.loading.set(true);
+    this.loadFailed.set(false);
     try {
       // 4 bộ độc lập — gom số từ trong 1 query duy nhất
       const [access, allCounts] = await Promise.all([
@@ -139,6 +146,7 @@ export class FlashcardHubComponent implements OnInit {
       this.collections.set(items);
     } catch (err) {
       console.error('Error loading collections in hub', err);
+      this.loadFailed.set(true);
     } finally {
       this.loading.set(false);
     }

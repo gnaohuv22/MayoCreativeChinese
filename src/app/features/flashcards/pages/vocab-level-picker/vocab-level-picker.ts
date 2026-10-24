@@ -48,6 +48,7 @@ export class VocabLevelPickerComponent implements OnInit {
   subtitle = signal<string>('');
   levels = signal<CollectionLevelCard[]>([]);
   loading = signal(true);
+  loadFailed = signal(false);
 
   private readonly HSK_NAMES: Record<string, string> = {
     1: '一级', 2: '二级', 3: '三级', 4: '四级', 5: '五级',
@@ -74,8 +75,9 @@ export class VocabLevelPickerComponent implements OnInit {
     });
   }
 
-  private async initCollection(col: VocabCollection) {
+  async initCollection(col: VocabCollection) {
     this.loading.set(true);
+    this.loadFailed.set(false);
     const config = VOCAB_COLLECTIONS[col];
     this.title.set(config.title);
     this.subtitle.set(this.SUBTITLES[col]);
@@ -123,6 +125,7 @@ export class VocabLevelPickerComponent implements OnInit {
       this.levels.set(list);
     } catch (err) {
       console.error('Error loading level picker data:', err);
+      this.loadFailed.set(true);
     } finally {
       this.loading.set(false);
     }

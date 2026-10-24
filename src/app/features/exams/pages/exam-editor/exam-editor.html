@@ -135,6 +135,7 @@
           </label>
           <input
             type="number"
+            min="1"
             [(ngModel)]="exam.total_score"
             class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
           />
@@ -147,7 +148,11 @@
           </label>
           <input
             type="number"
+            min="0"
+            [max]="exam.total_score"
             [(ngModel)]="exam.passing_score"
+            [attr.aria-invalid]="exam.passing_score > exam.total_score"
+            [class.!border-red-500]="exam.passing_score > exam.total_score"
             class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-brand-navy dark:text-white font-semibold focus:outline-none focus:border-brand-pink"
           />
         </div>

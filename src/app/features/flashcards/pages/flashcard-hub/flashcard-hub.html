@@ -46,6 +46,14 @@
           </div>
         }
       </div>
+    } @else if (loadFailed()) {
+      <div class="py-16 text-center space-y-4">
+        <p class="text-sm font-semibold text-brand-navy dark:text-white">Không tải được kho từ vựng. Vui lòng thử lại sau ít giây.</p>
+        <button type="button" (click)="loadCollections()" class="mcc-btn mcc-btn-primary">
+          <app-icon name="arrow-path" size="xs" />
+          <span>Thử lại</span>
+        </button>
+      </div>
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @for (col of collections(); track col.key) {

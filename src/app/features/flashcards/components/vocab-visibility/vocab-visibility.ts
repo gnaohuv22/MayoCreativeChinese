@@ -39,10 +39,18 @@ export class VocabVisibilityComponent implements OnInit {
   readonly saving = signal<string | null>(null);
 
   async ngOnInit() {
-    const [map, ...counts] = await Promise.all([
-      this.vocabService.getVisibility(),
-      ...VOCAB_COLLECTION_KEYS.map(key => this.vocabService.getLevelCounts(key)),
-    ]);
+    let map: Awaited<ReturnType<VocabService['getVisibility']>>;
+    let counts: Map<number, number>[];
+    try {
+      [map, ...counts] = await Promise.all([
+        this.vocabService.getVisibility(),
+        ...VOCAB_COLLECTION_KEYS.map(key => this.vocabService.getLevelCounts(key)),
+      ]);
+    } catch {
+      this.toast.error('Không tải được trạng thái hiển thị. Vui lòng tải lại trang.');
+      this.loading.set(false);
+      return;
+    }
     this.collections.set(VOCAB_COLLECTION_KEYS.map((key, i) => ({
       key,
       title: VOCAB_COLLECTIONS[key].title,

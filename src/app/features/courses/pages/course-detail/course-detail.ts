@@ -121,8 +121,8 @@ export class CourseDetailComponent {
       if (this.loaded() === undefined) return;
       const c = this.course();
       if (!c && this.slug()) {
-        // Khóa không tồn tại → quay về danh sách khóa học trên trang chủ
-        this.router.navigateByUrl('/#courses');
+        // Không tồn tại → trang 404 (giữ nguyên địa chỉ trên thanh URL)
+        this.router.navigateByUrl('/khong-tim-thay', { skipLocationChange: true });
         return;
       }
       if (c) {

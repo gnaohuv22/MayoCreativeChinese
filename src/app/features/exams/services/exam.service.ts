@@ -75,6 +75,8 @@ export class ExamService {
 
     if (error) {
       console.error('Lỗi khi tải danh sách đề thi:', error);
+      // Trang học viên báo lỗi để thử lại, thay vì hiện như chưa có đề
+      if (filter?.learner) throw new Error(error.message);
       return [];
     }
 

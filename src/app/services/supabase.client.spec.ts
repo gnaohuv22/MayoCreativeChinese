@@ -51,4 +51,29 @@ describe('proxiedFetch', () => {
     await proxiedFetch('https://animyjihwiyqsxvikxxg.supabase.co/auth/v1/token');
     expect(calls[0].input).toBe('https://animyjihwiyqsxvikxxg.supabase.co/auth/v1/token');
   });
+
+  it('retries a 429 from the firewall, then returns the real response', async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal('fetch', async () => (++calls < 3 ? new Response('', { status: 429 }) : new Response('[]')));
+    const pending = proxiedFetch(REST, { method: 'POST', body: '{"a":1}' });
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await pending).status).toBe(200);
+    expect(calls).toBe(3);
+    vi.useRealTimers();
+  });
+
+  it('gives up after the last retry and returns the 429', async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal('fetch', async () => {
+      calls++;
+      return new Response('', { status: 429, headers: { 'retry-after': '1' } });
+    });
+    const pending = proxiedFetch(REST);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect((await pending).status).toBe(429);
+    expect(calls).toBe(4);
+    vi.useRealTimers();
+  });
 });

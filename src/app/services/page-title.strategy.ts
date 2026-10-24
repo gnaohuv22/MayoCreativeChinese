@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { DOCUMENT, inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
@@ -12,6 +12,7 @@ const DEFAULT_DESC = 'Mayo Creative Chinese (MCC) - Trung tâm đào tạo Tiế
 export class PageTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
   private readonly defaultTitle = this.title.getTitle();
 
   override updateTitle(snapshot: RouterStateSnapshot): void {
@@ -41,9 +42,9 @@ export class PageTitleStrategy extends TitleStrategy {
     }
 
     const ogTitle = pageTitle ? `${pageTitle} | ${SITE_NAME}` : DEFAULT_OG_TITLE;
-    const url = typeof window !== 'undefined'
-      ? `${window.location.origin}${snapshot.url}`
-      : `${BASE_URL}${snapshot.url}`;
+    // Luôn trỏ về www, bỏ query / hash (tên miền gốc và vercel.app chuyển hướng về www)
+    const url = `${BASE_URL}${snapshot.url.split(/[?#]/)[0]}`;
+    this.setCanonical(url);
 
     this.meta.updateTag({ name: 'description', content: desc });
     this.meta.updateTag({ property: 'og:title', content: ogTitle });
@@ -58,5 +59,15 @@ export class PageTitleStrategy extends TitleStrategy {
     } else {
       this.meta.removeTag("name='robots'");
     }
+  }
+
+  private setCanonical(url: string): void {
+    let link = this.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = this.document.createElement('link');
+      link.rel = 'canonical';
+      this.document.head.appendChild(link);
+    }
+    link.href = url;
   }
 }

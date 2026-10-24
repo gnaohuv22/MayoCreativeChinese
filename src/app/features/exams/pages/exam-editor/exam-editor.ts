@@ -220,6 +220,13 @@ export class ExamEditorComponent implements OnInit {
       this.saveMessage.set('Vui lòng nhập tên đề thi!');
       return;
     }
+    const total = Number(this.exam.total_score);
+    const passing = Number(this.exam.passing_score);
+    if (!(total > 0) || !(passing >= 0) || passing > total) {
+      this.saveStatus.set('error');
+      this.saveMessage.set('Điểm đạt phải từ 0 đến tổng điểm, và tổng điểm phải lớn hơn 0.');
+      return;
+    }
 
     this.isSaving.set(true);
     this.saveStatus.set(null);

@@ -236,5 +236,7 @@
   "stories.subtitle": "សមិទ្ធផល ដំណើរ និងពេលវេលាគួរឱ្យចងចាំរបស់សិស្ស MCC",
   "stories.read_more": "អានបន្ត",
   "contact.phone_label": "ទូរស័ព្ទ/Zalo",
-  "contact.email_label": "អ៊ីមែល"
+  "contact.email_label": "អ៊ីមែល",
+  "a11y.theme_toggle": "ប្ដូររបៀបភ្លឺ/ងងឹត",
+  "a11y.menu_toggle": "បើក/បិទម៉ឺនុយរុករក"
 }

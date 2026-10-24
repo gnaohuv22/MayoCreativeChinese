@@ -28,6 +28,9 @@ export type GuestRegisterError =
 /** Lỗi đăng nhập người học có xử lý riêng trên giao diện */
 export const EMAIL_NOT_CONFIRMED = 'email_not_confirmed';
 export const LOGIN_RATE_LIMITED = 'login_rate_limited';
+/** Quyền nạp lại khi tab được focus, tối đa 1 lần / phút */
+const CONTEXT_REFRESH_MS = 60_000;
+const CONTEXT_LOAD_FAILED = 'Máy chủ đang bận, chưa tải được quyền của tài khoản. Vui lòng thử lại sau ít giây.';
 
 export type OauthProfileError = 'not_oauth' | 'has_profile' | 'missing_name' | 'invalid_phone' | 'phone_taken' | 'no_consent';
 export type ResetPasswordError = 'not_recovery' | 'not_student' | 'weak_password';
@@ -201,7 +204,7 @@ export class AuthService {
   readonly needsOauthProfile = computed(() => {
     const user = this.session()?.user;
     const provider = user?.app_metadata?.['provider'];
-    return !!user && !!provider && provider !== 'email' && !this.context() && !this.studentContext();
+    return !!user && !!provider && provider !== 'email' && !this.context() && !this.studentContext() && !this.contextFailed();
   });
   /** Đăng nhập bằng mật khẩu (không phải Google) — mới đổi mật khẩu được */
   readonly hasPassword = computed(() => (this.session()?.user.app_metadata?.['provider'] ?? 'email') === 'email');
@@ -231,6 +234,12 @@ export class AuthService {
     });
     this.supabase.auth.onAuthStateChange((event, session) => {
       const hadSession = this.session() !== null;
+      const userChanged = !!session && this.session()?.user.id !== session.user.id;
+      // Đổi tài khoản: bỏ quyền của tài khoản cũ (loadContext lỗi sẽ giữ quyền đang có)
+      if (userChanged) {
+        this.context.set(null);
+        this.studentContext.set(null);
+      }
       this.session.set(session);
       if (!session) {
         if (hadSession && !this.signingOut) {
@@ -239,7 +248,9 @@ export class AuthService {
         }
         this.context.set(null);
         this.studentContext.set(null);
-      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      } else if (event === 'USER_UPDATED' || (event === 'SIGNED_IN' && (userChanged || this.contextFailed() || this.contextStale()))) {
+        // supabase-js phát lại SIGNED_IN mỗi lần tab được focus và gửi sang mọi tab khác —
+        // chỉ nạp lại quyền khi đổi tài khoản, lần trước lỗi, hoặc đã quá 1 phút (vai trò / Mayo+ đổi phía DB)
         // Không gọi Supabase trực tiếp trong callback (supabase-js có thể treo) — đẩy sang tick sau
         setTimeout(() => this.loadContext());
       }
@@ -277,14 +288,30 @@ export class AuthService {
     return this.context()?.permissions.includes(permission) ?? false;
   }
 
+  /** Lần nạp quyền gần nhất lỗi (mạng / 429) — quyền đang giữ là của lần nạp trước */
+  readonly contextFailed = signal(false);
+  private contextLoadedAt = 0;
+
+  private contextStale(): boolean {
+    return Date.now() - this.contextLoadedAt > CONTEXT_REFRESH_MS;
+  }
+
   async loadContext(): Promise<StaffContext | null> {
-    const [staff, student] = await Promise.all([
-      this.supabase.rpc('my_staff_context'),
-      this.supabase.rpc('my_student_context'),
-    ]);
-    const ctx = staff.error ? null : (staff.data as StaffContext | null);
-    this.context.set(ctx);
-    this.studentContext.set(student.error ? null : (student.data as StudentContext | null));
+    let staff, student;
+    for (let attempt = 0; ; attempt++) {
+      [staff, student] = await Promise.all([
+        this.supabase.rpc('my_staff_context'),
+        this.supabase.rpc('my_student_context'),
+      ]);
+      if ((!staff.error && !student.error) || attempt >= 2) break;
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    // Lỗi tạm thời không được coi là "không có quyền" — giữ quyền cũ, không đẩy về trang đăng nhập
+    this.contextFailed.set(!!(staff.error || student.error));
+    if (!this.contextFailed()) this.contextLoadedAt = Date.now();
+    if (!staff.error) this.context.set(staff.data as StaffContext | null);
+    if (!student.error) this.studentContext.set(student.data as StudentContext | null);
+    const ctx = this.context();
     if (!ctx && this.studentContext()) await this.registerDevice();
     else this.deviceBlocked.set(null);
     return ctx;
@@ -344,8 +371,9 @@ export class AuthService {
     }
     this.sessionLost.set(false);
     if (!(await this.loadContext())) {
-      await this.supabase.auth.signOut();
-      return { error: 'Tài khoản này không có quyền quản trị.' };
+      const failed = this.contextFailed();
+      await this.signOut();
+      return { error: failed ? CONTEXT_LOAD_FAILED : 'Tài khoản này không có quyền quản trị.' };
     }
     await this.supabase.rpc('log_self_event', { p_action: 'login' });
     return {};
@@ -378,8 +406,9 @@ export class AuthService {
     this.sessionLost.set(false);
     await this.loadContext();
     if (!this.studentContext()) {
+      const failed = this.contextFailed();
       await this.signOut();
-      return { error: 'Tài khoản này không phải tài khoản học viên.' };
+      return { error: failed ? CONTEXT_LOAD_FAILED : 'Tài khoản này không phải tài khoản học viên.' };
     }
     return {};
   }

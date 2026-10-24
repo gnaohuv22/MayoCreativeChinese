@@ -24,7 +24,7 @@
   "about.title": "About Mayo Creative Chinese",
   "about.subtitle": "Smart learning methodologies & creative thinking to elevate your language skills",
   "about.motto_title": "Educational Philosophy",
-  "about.motto_content": "\u201cA journey of a thousand miles begins with a single step\u201d. We believe that learning Chinese should not just stop at communication or certificate tests, but must become a practical tool that creates value in your career.",
+  "about.motto_content": "“A journey of a thousand miles begins with a single step”. We believe that learning Chinese should not just stop at communication or certificate tests, but must become a practical tool that creates value in your career.",
   "about.pillar.hsk": "Simultaneous HSK 2.0 & 3.0 Training",
   "about.pillar.hsk_desc": "Standardized pathway following HSK 2.0 and NEW 3.0 international standards, updated rapidly, guaranteed output in writing, comprehensively developing 5 skills: Listening, Speaking, Reading, Writing, and Translation.",
   "about.pillar.practical": "Practical Chinese Applications",
@@ -236,5 +236,7 @@
   "stories.subtitle": "Achievements, journeys and memorable moments of MCC students",
   "stories.read_more": "Read more",
   "contact.phone_label": "Hotline/Zalo",
-  "contact.email_label": "Email"
+  "contact.email_label": "Email",
+  "a11y.theme_toggle": "Toggle light/dark mode",
+  "a11y.menu_toggle": "Open/close navigation menu"
 }

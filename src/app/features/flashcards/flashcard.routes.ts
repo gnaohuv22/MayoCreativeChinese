@@ -20,10 +20,17 @@ const levelOpenGuard: CanActivateFn = async route => {
   }
 
   const vocabService = inject(VocabService);
-  const [counts, access] = await Promise.all([
-    vocabService.getLevelCounts(collection),
-    vocabService.accessResolver(),
-  ]);
+  let counts: Map<number, number>;
+  let access: Awaited<ReturnType<VocabService['accessResolver']>>;
+  try {
+    [counts, access] = await Promise.all([
+      vocabService.getLevelCounts(collection),
+      vocabService.accessResolver(),
+    ]);
+  } catch {
+    // Máy chủ bận: không đẩy về trang chọn cấp (sẽ hiện như "Sắp ra mắt") — RLS vẫn chặn thẻ không được xem
+    return true;
+  }
 
   const levelAccess = access(collection, levelParam);
   if (isLockedAccess(levelAccess)) {

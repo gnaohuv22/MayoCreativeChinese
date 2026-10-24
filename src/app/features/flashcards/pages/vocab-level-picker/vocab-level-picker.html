@@ -49,6 +49,14 @@
           </div>
         }
       </div>
+    } @else if (loadFailed()) {
+      <div class="py-16 text-center space-y-4">
+        <p class="text-sm font-semibold text-brand-navy dark:text-white">Không tải được danh sách cấp độ. Vui lòng thử lại sau ít giây.</p>
+        <button type="button" (click)="initCollection(collection())" class="mcc-btn mcc-btn-primary">
+          <app-icon name="arrow-path" size="xs" />
+          <span>Thử lại</span>
+        </button>
+      </div>
     } @else {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (item of levels(); track item.level) {

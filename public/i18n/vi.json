@@ -24,7 +24,7 @@
   "about.title": "Về Mayo Creative Chinese",
   "about.subtitle": "Phương pháp học thông minh & Tư duy sáng tạo nâng tầm trải nghiệm ngôn ngữ",
   "about.motto_title": "Triết Lý Giáo Dục",
-  "about.motto_content": "\u201c千里之行，始于足下\u201d \u2013 Hành trình vạn dặm bắt đầu từ bước chân đầu tiên. Chúng tôi tin rằng, việc học tiếng Trung không chỉ dừng lại ở khả năng giao tiếp hay thi chứng chỉ, mà còn phải trở thành công cụ hữu ích ứng dụng hiệu quả trong công việc thực tiễn.",
+  "about.motto_content": "“千里之行，始于足下” – Hành trình vạn dặm bắt đầu từ bước chân đầu tiên. Chúng tôi tin rằng, việc học tiếng Trung không chỉ dừng lại ở khả năng giao tiếp hay thi chứng chỉ, mà còn phải trở thành công cụ hữu ích ứng dụng hiệu quả trong công việc thực tiễn.",
   "about.pillar.hsk": "Đào tạo đồng thời chương trình HSK 2.0 và 3.0",
   "about.pillar.hsk_desc": "Lộ trình chuẩn hóa theo giáo trình chuẩn HSK quốc tế phiên bản 2.0 và NEW 3.0, được cập nhật nhanh chóng, cam kết đầu ra bằng văn bản, phát triển toàn diện 5 kỹ năng Nghe - Nói - Đọc - Viết - Dịch.",
   "about.pillar.practical": "Tiếng Trung Ứng Dụng",
@@ -236,5 +236,7 @@
   "stories.subtitle": "Thành tích, hành trình và những khoảnh khắc đáng nhớ của học viên MCC",
   "stories.read_more": "Đọc tiếp",
   "contact.phone_label": "Hotline/Zalo",
-  "contact.email_label": "Email"
+  "contact.email_label": "Email",
+  "a11y.theme_toggle": "Chuyển chế độ sáng/tối",
+  "a11y.menu_toggle": "Mở/đóng menu điều hướng"
 }

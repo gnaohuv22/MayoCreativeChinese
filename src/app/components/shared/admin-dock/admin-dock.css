@@ -159,6 +159,23 @@
   color: rgb(45 45 95 / 0.6);
 }
 
+/* Màn hình hẹp: con dấu nhỏ hơn để không che nút / chữ của trang học viên */
+@media (max-width: 639px) {
+  .dock {
+    right: 0.75rem;
+  }
+
+  .dock-seal {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.8rem;
+  }
+
+  .dock-seal-glyph {
+    font-size: 1.35rem;
+  }
+}
+
 @keyframes dock-in {
   to {
     opacity: 1;

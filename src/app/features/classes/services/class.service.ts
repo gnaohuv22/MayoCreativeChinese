@@ -23,6 +23,14 @@ import type { DeviceList } from '../../../services/auth.service';
 
 const CLASS_COLUMNS =
   'id, code, name, course_slug, hsk_level, hsk_version, study_mode, start_date, end_date, schedule, max_students, notes, status, archived_at, created_at, updated_at, staff:class_staff(user_id, role), students:student_profiles(count)';
+/** Các cách viết thường gặp của 1 số di động 0xxxxxxxxx: +84 / 84 / nhóm 4-3-3 bằng cách, chấm, gạch */
+export function phoneSpellings(phone: string): string[] {
+  if (!/^0\d{9}$/.test(phone)) return [phone];
+  const rest = phone.slice(1);
+  const [a, b, c] = [phone.slice(0, 4), phone.slice(4, 7), phone.slice(7)];
+  return [phone, `+84${rest}`, `84${rest}`, `+84 ${rest}`, ...[' ', '.', '-'].map(sep => [a, b, c].join(sep))];
+}
+
 const STUDENT_COLUMNS =
   'user_id, username, full_name, birth_year, phone, email, parent_phone, notes, class_id, status, account_type, must_change_password, created_at, access_grants(module, expires_at, note)';
 const SUGGESTION_COLUMNS =
@@ -102,6 +110,24 @@ export class ClassService {
     const { data, error } = await q.order('full_name');
     if (error) return { data: [], error: error.message };
     return { data: (data ?? []) as Student[] };
+  }
+
+  /**
+   * Tài khoản người học có thể trùng với số điện thoại / email này (cảnh báo khi tạo tài khoản lớp trùng người).
+   * Số đã lưu nguyên văn (học viên lớp) hoặc chuẩn hoá (khách) → tra theo các cách viết thường gặp; email không phân biệt hoa thường.
+   * Bên gọi so lại bằng giá trị đã chuẩn hoá.
+   */
+  async findExistingLearners(phones: string[], emails: string[]): Promise<Pick<Student, 'username' | 'full_name' | 'phone' | 'email' | 'account_type'>[]> {
+    const columns = 'username, full_name, phone, email, account_type';
+    const phoneVariants = [...new Set(phones.flatMap(phoneSpellings))];
+    // Giá trị trong or() đặt trong ngoặc kép; _ và % của ilike chỉ làm thừa kết quả, bên gọi lọc lại
+    const emailFilter = emails.map(e => `email.ilike."${e.replace(/["\\]/g, '')}"`).join(',');
+    const [byPhone, byEmail] = await Promise.all([
+      phoneVariants.length ? this.supabase.from('student_profiles').select(columns).in('phone', phoneVariants) : Promise.resolve({ data: [], error: null }),
+      emailFilter ? this.supabase.from('student_profiles').select(columns).or(emailFilter) : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (byPhone.error || byEmail.error) console.error('Không kiểm tra được tài khoản trùng:', byPhone.error ?? byEmail.error);
+    return [...(byPhone.data ?? []), ...(byEmail.data ?? [])] as Pick<Student, 'username' | 'full_name' | 'phone' | 'email' | 'account_type'>[];
   }
 
   async createStudents(classId: string, rows: NewStudentRow[]): Promise<{ data: CreatedStudent[]; error?: string }> {

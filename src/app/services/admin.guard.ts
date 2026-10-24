@@ -7,6 +7,8 @@ async function loadAuth(injector: Injector) {
   const { AuthService } = await import('./auth.service');
   const auth = injector.get(AuthService);
   await auth.ready;
+  // Đang đăng nhập mà nạp quyền lỗi (máy chủ bận) → thử lại trước khi coi là chưa đăng nhập
+  if (auth.contextFailed() && auth.userId()) await auth.loadContext();
   return auth;
 }
 

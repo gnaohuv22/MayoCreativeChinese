@@ -178,7 +178,10 @@ export class ClassDetailComponent {
     const [suggestions, exams, visibility] = await Promise.all([
       this.classService.listSuggestions(this.id()),
       this.classService.suggestableExams(),
-      this.vocabService.getVisibility(),
+      this.vocabService.getVisibility().catch(() => {
+        this.toast.error('Không tải được mức hiển thị từ vựng. Vui lòng tải lại trang.');
+        return new Map() as Awaited<ReturnType<VocabService['getVisibility']>>;
+      }),
     ]);
     this.suggestions.set(suggestions);
     this.exams.set(exams);

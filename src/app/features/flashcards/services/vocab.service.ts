@@ -61,7 +61,7 @@ export class VocabService {
 
   /** Mức hiển thị của mọi (bộ, cấp) đã đặt */
   async getVisibility(): Promise<VocabVisibilityMap> {
-    const { map } = await this.cache.get('visibility', async () => {
+    const { map, ok } = await this.cache.get('visibility', async () => {
       const { data, error } = await this.supabase
         .from('vocab_level_visibility')
         .select('collection, hsk_level, visibility');
@@ -71,6 +71,7 @@ export class VocabService {
       );
       return { map, ok: !error };
     }, r => r.ok);
+    if (!ok) throw new Error('Không tải được mức hiển thị từ vựng');
     return new Map(map);
   }
 
@@ -209,7 +210,7 @@ export class VocabService {
 
   /** Toàn bộ số từ theo từng cấp cho cả 4 bộ, gom trong 1 query và cache chung */
   async getAllLevelCounts(): Promise<Record<VocabCollection, Map<number, number>>> {
-    const { allCounts } = await this.cache.get('counts:all', async () => {
+    const { allCounts, ok } = await this.cache.get('counts:all', async () => {
       // Đếm sẵn trên server (migration 025), RLS vẫn áp dụng
       const { data, error } = await this.supabase.rpc('vocab_level_counts');
       if (error) console.error('Vocab count failed:', error);
@@ -228,6 +229,7 @@ export class VocabService {
       }
       return { allCounts, ok };
     }, r => r.ok);
+    if (!ok) throw new Error('Không tải được số từ vựng');
 
     return {
       hsk2: new Map(allCounts.hsk2),
