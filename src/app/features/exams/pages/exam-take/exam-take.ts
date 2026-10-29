@@ -428,6 +428,20 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     this.stopTimer();
 
+    const timeSpent = Math.max(0, this.initialDurationSeconds() - this.timeRemainingSeconds());
+    // Persist server-graded answers before the answer-key RPC becomes available.
+    if (this.auth.isLearner()) {
+      const saved = await this.studentService.submitAttempt(ex.id || '', this.answers(), timeSpent);
+      if (saved.error) {
+        this.isSubmitting.set(false);
+        this.saveDraft();
+        if (!force) this.startTimer();
+        this.toast.error('Chưa nộp được bài. Bài làm đã lưu trên máy, vui lòng thử lại.');
+        this.cdr.markForCheck();
+        return;
+      }
+    }
+
     // Đáp án không được tải khi làm bài — chỉ lấy lúc nộp
     const res = await this.examService.attachAnswers(ex);
     if (res.error) {
@@ -439,14 +453,7 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const timeSpent = this.initialDurationSeconds() - this.timeRemainingSeconds();
     const submission = this.examService.gradeExam(ex, this.answers(), Math.max(0, timeSpent));
-
-    // Người học đã đăng nhập: lưu bài lên tài khoản (giáo viên lớp xem được); nhân sự / chưa đăng nhập: chỉ lưu trên máy
-    if (this.auth.isLearner()) {
-      const saved = await this.studentService.submitAttempt(submission, this.answers());
-      if (saved.error) this.toast.error('Chưa lưu được bài lên tài khoản. Kết quả vẫn hiển thị bình thường.');
-    }
 
     // Xoá nháp sau khi nộp
     this.clearDraft(ex.id || '');

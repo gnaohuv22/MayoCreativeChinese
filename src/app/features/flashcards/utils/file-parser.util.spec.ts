@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCsv, validateRows, type ExistingVocabKeys } from './file-parser.util';
+import { parseCsv, parseXlsx, validateRows, type ExistingVocabKeys } from './file-parser.util';
 import { splitExamples, vocabEntryKey, vocabHanziKey } from '../models/vocab-card.model';
 import type { VocabCollection } from '../models/vocab-card.model';
 
@@ -142,4 +142,25 @@ describe('file-parser.util', () => {
       expect(supplement[2].status).toBe('error'); // Bổ sung chỉ có 3-6
     });
   });
+});
+
+
+describe('maintained SheetJS import compatibility', () => {
+  for (const bookType of ['xlsx', 'biff8'] as const) {
+    it(`imports ${bookType} with Unicode, numeric levels and multiline examples`, async () => {
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet([{
+        HANZI: '对', pinyin: 'duì', meaning: 'đúng', hsk_level: 3,
+        lesson_number: 2, example: '你说得对。\n对，我是老师。',
+        example_pinyin: 'Nǐ shuō de duì.\nDuì, wǒ shì lǎoshī.',
+        topic: 'Chào hỏi',
+      }]), 'Vocabulary');
+      const buffer = XLSX.write(workbook, { type: 'array', bookType });
+      const rows = await parseXlsx(buffer);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ hanzi: '对', pinyin: 'duì', meaning: 'đúng',
+        hsk_level: 3, lesson_number: 2, example: '你说得对。\n对，我是老师。', topic: 'Chào hỏi' });
+    });
+  }
 });
