@@ -1,3 +1,4 @@
+import { canonicalRestPath } from '../server/rest-path.mjs';
 /**
  * Proxy cho Supabase REST (/rest/v1/*) — trình duyệt gọi qua đây thay vì gọi thẳng supabase.co.
  * Vercel Firewall giới hạn số request / IP ở trước hàm này; hàm gắn header bí mật
@@ -18,7 +19,7 @@ const ALLOWED_ORIGINS = new Set([
 /**
  * Thao tác cần token Cloudflare Turnstile (action của widget phía trình duyệt).
  * Khoá theo tên hàm xuất hiện ở bất kỳ đâu trong đường dẫn đã giải mã — không lách được bằng //, %xx hay chữ hoa.
- * Chưa đặt biến môi trường TURNSTILE_SECRET thì bỏ qua kiểm tra (đăng ký chạy như trước).
+ * Missing CAPTCHA configuration fails closed, including local requests.
  */
 const TURNSTILE_ACTIONS = [{ pattern: /register_guest/i, action: 'signup' }];
 
@@ -28,7 +29,7 @@ const TURNSTILE_ACTIONS = [{ pattern: /register_guest/i, action: 'signup' }];
  */
 async function verifyTurnstile(token, action, clientIp) {
   const secret = process.env['TURNSTILE_SECRET'];
-  if (!secret) return true;
+  if (!secret?.trim()) return false;
   if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return false;
   const expectedHostnames = new Set([...ALLOWED_ORIGINS].map(origin => new URL(origin).hostname));
   try {
@@ -74,8 +75,8 @@ async function handler(request) {
   const origin = request.headers.get('origin');
   if (origin && !ALLOWED_ORIGINS.has(origin)) return new Response('Forbidden', { status: 403 });
 
-  const path = request.headers.get('x-rest-path') ?? '';
-  if (!path.startsWith('/rest/v1/') || path.includes('..')) {
+  const path = canonicalRestPath(request.headers.get('x-rest-path') ?? '');
+  if (!path) {
     return new Response('Bad Request', { status: 400, headers: cors });
   }
 
@@ -107,14 +108,18 @@ async function handler(request) {
   try {
     upstream = await fetch(SUPABASE_URL + path, {
       method: request.method,
+      redirect: 'manual',
       headers,
       body: hasBody ? await request.arrayBuffer() : undefined,
     });
   } catch (err) {
     console.error('REST proxy fetch failed:', err);
-    return Response.json({ message: `Proxy error: ${err.message}` }, { status: 502, headers: cors });
+    return Response.json({ message: 'Proxy unavailable' }, { status: 502, headers: cors });
   }
 
+  if (upstream.status >= 300 && upstream.status < 400) {
+    return Response.json({ message: 'upstream_redirect_rejected' }, { status: 502, headers: cors });
+  }
   const responseHeaders = new Headers(cors);
   upstream.headers.forEach((value, key) => {
     if (!SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) responseHeaders.set(key, value);

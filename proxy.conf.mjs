@@ -1,3 +1,4 @@
+import { canonicalRestPath } from './server/rest-path.mjs';
 // Proxy cho `ng serve`: thay cho api/rest.mjs khi chạy local — chuyển /api/rest thẳng tới
 // Supabase kèm header bí mật (migration 015), không đi qua Vercel.
 // Bí mật lấy từ biến môi trường SUPABASE_PROXY_SECRET hoặc file .env.local
@@ -23,18 +24,26 @@ export default {
     target: SUPABASE_URL,
     changeOrigin: true,
     secure: true,
+    followRedirects: false,
     configure: proxy => {
+      proxy.on('proxyRes', upstream => {
+        if (upstream.statusCode >= 300 && upstream.statusCode < 400) {
+          upstream.statusCode = 502;
+          delete upstream.headers.location;
+        }
+      });
       proxy.on('proxyReq', (proxyReq, req, res) => {
-        const path = String(req.headers['x-rest-path'] ?? '');
-        if (!path.startsWith('/rest/v1/') || path.includes('..')) {
-          res.writeHead(400).end('Bad Request');
+        const path = canonicalRestPath(String(req.headers['x-rest-path'] ?? ''));
+        if (!path || /register_guest/i.test(path)) {
+          proxyReq.destroy();
+          res.writeHead(400).end('Invalid path or protected registration: use offline mocks for local signup tests');
           return;
         }
         proxyReq.path = path;
         proxyReq.removeHeader('x-rest-path');
         proxyReq.removeHeader('origin');
         proxyReq.removeHeader('referer');
-        // Local dùng khoá Turnstile thử của Cloudflare; chỉ api/rest.mjs (Vercel) kiểm tra token
+        // Protected signup is rejected above; local security tests mock CAPTCHA and all writes.
         proxyReq.removeHeader('x-turnstile-token');
         if (secret) proxyReq.setHeader('x-mcc-proxy', secret);
         // Như api/rest.mjs: IP để DB giới hạn đăng ký khách (migration 021)

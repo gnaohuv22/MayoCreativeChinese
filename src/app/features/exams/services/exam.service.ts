@@ -25,7 +25,6 @@ const SECTION_COLUMNS = 'id, exam_id, section_type, title, sort_order, max_score
 const PART_COLUMNS = 'id, section_id, title, question_type, instructions, sort_order, example_text, stimulus_text, stimulus_image_url, stimulus_audio_url, option_labels';
 /** Cột học viên (anon) được đọc — đáp án lấy riêng qua get_exam_answers (migration 011) */
 const QUESTION_PUBLIC_COLUMNS = 'id, part_id, question_num, content, audio_url, image_url, score, sort_order';
-const QUESTION_COLUMNS = `${QUESTION_PUBLIC_COLUMNS}, correct_answer, explanation`;
 const OPTION_COLUMNS = 'id, question_id, label, content, image_url, sort_order';
 
 /** Cache phía học viên (đề đã xuất bản, không kèm đáp án); ghi bất kỳ → xoá cache */
@@ -98,7 +97,7 @@ export class ExamService {
 
   /**
    * Lấy chi tiết 1 đề thi bao gồm toàn bộ Sections -> Parts -> Questions -> Options.
-   * withAnswers chỉ dùng cho admin (anon không có quyền đọc cột đáp án).
+   * withAnswers chỉ dùng cho nhân sự có quyền đọc nội dung; đáp án lấy qua RPC (035).
    */
   async getExamWithDetails(examId: string, options: { withAnswers?: boolean } = {}): Promise<Exam | null> {
     if (options.withAnswers) return this.loadExamWithDetails(examId, true);
@@ -108,7 +107,7 @@ export class ExamService {
   }
 
   private async loadExamWithDetails(examId: string, withAnswers: boolean): Promise<Exam | null> {
-    const questionColumns = withAnswers ? QUESTION_COLUMNS : QUESTION_PUBLIC_COLUMNS;
+    const questionColumns = QUESTION_PUBLIC_COLUMNS;
     const { data, error } = await this.supabase
       .from('exams')
       .select(`
@@ -153,6 +152,10 @@ export class ExamService {
       }
     }
 
+    if (withAnswers) {
+      const result = await this.attachAnswers(exam);
+      if (result.error) return null;
+    }
     return exam;
   }
 
@@ -162,6 +165,13 @@ export class ExamService {
     if (error) {
       console.error('Lỗi khi tải đáp án:', error);
       return { error: error.message };
+    }
+    const expectedIds = new Set((exam.sections ?? []).flatMap(section =>
+      (section.parts ?? []).flatMap(part => (part.questions ?? []).map(question => question.id))));
+    if (!data || expectedIds.size === 0 || data.length !== expectedIds.size
+      || new Set(data.map((answer: { question_id: string }) => answer.question_id)).size !== expectedIds.size
+      || data.some((answer: { question_id: string }) => !expectedIds.has(answer.question_id))) {
+      return { error: 'Không có quyền xem đáp án hoặc đề thi đã thay đổi. Vui lòng tải lại.' };
     }
     const byId = new Map((data as { question_id: string; correct_answer: string; explanation: string | null }[])
       .map(a => [a.question_id, a]));

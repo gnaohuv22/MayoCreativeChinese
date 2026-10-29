@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { getSupabase } from '../../../services/supabase.client';
 import { AuthService } from '../../../services/auth.service';
 import { RequestCache } from '../../../services/request-cache';
-import type { ExamSubmission, UserAnswers } from '../../exams/models/exam.model';
+import type { UserAnswers } from '../../exams/models/exam.model';
 import type { ClassAnnouncement, ClassSuggestion, ExamAttempt, LearningSummary } from '../models/class.model';
 import { ATTEMPT_COLUMNS } from './class.service';
 
@@ -59,25 +59,10 @@ export class StudentService {
   }
 
   /** Lưu bài nộp lên tài khoản (chỉ học viên; nhân sự làm bài thì không lưu) */
-  async submitAttempt(submission: ExamSubmission, answers: UserAnswers): Promise<{ error?: string }> {
+  async submitAttempt(examId: string, answers: UserAnswers, timeSpentSeconds: number): Promise<{ error?: string }> {
     if (!this.auth.isLearner()) return {};
     const { error } = await this.supabase.rpc('submit_exam_attempt', {
-      p_attempt: {
-        exam_id: submission.examId,
-        score: submission.totalScoreEarned,
-        total_score: submission.totalScoreMax,
-        passing_score: submission.passingScore,
-        correct_count: submission.correctCount,
-        question_count: submission.totalQuestions,
-        section_scores: submission.sectionResults.map(s => ({
-          section_type: s.sectionType,
-          title: s.title,
-          score: s.scoreEarned,
-          max_score: s.maxScore,
-        })),
-        answers,
-        time_spent_secs: submission.timeSpentSeconds,
-      },
+      p_attempt: { exam_id: examId, answers, time_spent_secs: timeSpentSeconds },
     });
     if (error) console.error('submit_exam_attempt failed:', error);
     return error ? { error: error.message } : {};
