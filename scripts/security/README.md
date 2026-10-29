@@ -15,8 +15,8 @@ Local implementation only. No deployment, push, live migration, browser access, 
 
 ## Validation
 
-- `npm run test:security`: 10 tests pass, including the substantive SQL assertions in `scripts/db/tests/035-exam-integrity.test.sql`.
-- `npm test -- --watch=false`: 94 tests pass in 15 files, including 2 new XLSX/XLS compatibility tests. Initial sandboxed execution hit Windows EPERM on Vitest temp-file rename; the normal command passed outside that sandbox.
+- `npm run test:security`: 11 tests pass, including the substantive SQL assertions in `scripts/db/tests/035-exam-integrity.test.sql`.
+- `npm test -- --watch=false`: 97 tests pass in 15 files, including 2 XLSX/XLS compatibility tests and 3 ordering parity regressions. Initial sandboxed execution hit Windows EPERM on Vitest temp-file rename; the normal command passed outside that sandbox.
 - `npm run build`: production build passes (initial bundle approximately 485 kB).
 - Full and production npm audit snapshots contain zero advisories. Registry audits do not establish exploit absence or independently review vendor source.
 
@@ -39,3 +39,12 @@ Local signup through `ng serve` now fails closed; use offline mocks (`npm run te
 - Angular advisory: https://github.com/angular/angular/security/advisories/GHSA-hh8m-fm6v-7cvg
 - Official SheetJS install/distribution: https://docs.sheetjs.com/docs/getting-started/installation/nodejs/
 - Vendor archive provenance/checksum: `vendor/README.md`
+
+
+## Independent review correction
+
+The initial commit's server grading treated identical duplicate word chips as interchangeable, while the client still compared chip identities. For `① 我 ② 我 ③ 学习`, user `①②③` and key `②①③` could therefore show different page/account scores. Client grading now compares normalized assembled sentences, matching the server; editing/display conversion retains chip identity.
+
+`grading-parity.mjs` executes the actual TypeScript matcher used by `gradeExam` against the actual migration functions for **5,543 deterministic cases**, including independently expected duplicate/unique/prefix-sharing words, numeric/circled/full-sentence forms, alternate keys, punctuation, Unicode whitespace, out-of-range and oversized numeric fields, and the other six supported question types. It additionally calls the actual `gradeExam` method and persists RPC attempts in an isolated transaction, comparing total score, correct count and section score for five duplicate-word answers (including an incorrect order).
+
+This comparison also exposed normalization gaps: SQL separated numeric input now uses the same token-count bounds as compact input and safely rejects oversized integers; empty/punctuation-only grading keys never earn credit; SQL whitespace normalization explicitly matches ECMAScript whitespace rather than relying on locale-sensitive PostgreSQL classes. These changes are in the still-unapplied migration 035. No historical applied migration was edited. The corpus is regression evidence, not proof of equivalence for every possible Unicode string or of deployed RLS.

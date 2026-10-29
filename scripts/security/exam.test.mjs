@@ -1,7 +1,8 @@
+import { verifyGradingParity } from './grading-parity.mjs';
 import { test } from 'node:test';
 import fs from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
-test('035 migration grading, privileges, ownership and answer release in isolated PostgreSQL', async () => {
+test('035 migration grading, privileges, ownership and answer release in isolated PostgreSQL', async (t) => {
   const db = new PGlite();
   try {
     await db.exec(fs.readFileSync('scripts/security/exam-fixture.sql', 'utf8'));
@@ -28,6 +29,13 @@ test('035 migration grading, privileges, ownership and answer release in isolate
         fs.readFileSync('src/app/features/classes/data/035-exam-integrity.sql', 'utf8'),
       );
     await db.exec(fs.readFileSync('scripts/db/tests/035-exam-integrity.test.sql', 'utf8'));
+    await t.test(
+      'actual SQL and gradeExam matcher remain equivalent across supported forms and edge cases',
+      async () => {
+        const count = await verifyGradingParity(db);
+        t.diagnostic(`${count} differential grading cases passed`);
+      },
+    );
   } catch (e) {
     console.error({
       message: e.message,

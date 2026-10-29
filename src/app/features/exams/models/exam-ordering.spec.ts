@@ -116,3 +116,35 @@ describe('orderingAnswerMatches', () => {
     expect(orderingAnswerMatches('', '①④②③', tokens)).toBe(false);
   });
 });
+
+
+describe('ordering grading parity with server practice scoring', () => {
+  it('treats duplicate words as interchangeable across all supported answer formats', () => {
+    const duplicate = parseOrderingTokens('① 我 ② 我 ③ 学习');
+    for (const user of ['①②③', '②①③', '123', '2,1,3', '我我学习', '我 我 学习。']) {
+      for (const correct of ['②①③', '123', '2 → 1 → 3', '我我学习']) {
+        expect(orderingAnswerMatches(user, correct, duplicate), `${user} / ${correct}`).toBe(true);
+      }
+    }
+    expect(orderingAnswerMatches('①③②', '②①③', duplicate)).toBe(false);
+    expect(orderingAnswerMatches('我学习我', '②①③', duplicate)).toBe(false);
+    // Grading equivalence must not merge the identities of chips used by the editor.
+    expect(toOrderingMarks('②①③', duplicate)).toBe('②①③');
+  });
+
+  it('normalizes case, punctuation and Unicode whitespace consistently', () => {
+    const words = parseOrderingTokens('① A ② B');
+    expect(orderingAnswerMatches('a\u00a0B！', '①②', words)).toBe(true);
+    expect(orderingAnswerMatches('①\u3000②', 'AB', words)).toBe(true);
+    expect(orderingAnswerMatches('ba', '①②', words)).toBe(false);
+    for (const empty of ['', ' ', '。', '!', ',']) {
+      expect(orderingAnswerMatches(empty, '', words)).toBe(false);
+    }
+  });
+
+  it('bounds separated numbers and preserves zero-padded valid numbers', () => {
+    expect(orderingAnswerMatches('1,4,2,00003', '①④②③', tokens)).toBe(true);
+    expect(orderingAnswerMatches('1,4,2,5', '①④②③', tokens)).toBe(false);
+    expect(orderingAnswerMatches('1,4,2,999999999999999999999999', '①④②③', tokens)).toBe(false);
+  });
+});

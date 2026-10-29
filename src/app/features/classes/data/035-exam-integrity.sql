@@ -12,12 +12,19 @@ grant select (id, part_id, question_num, content, audio_url, image_url, score, s
   on public.exam_questions to anon, authenticated;
 revoke insert, update, delete on public.exam_attempts from public, anon, authenticated;
 
+-- Use exactly ECMAScript whitespace, independent of PostgreSQL locale character classes.
+create or replace function public.exam_grading_whitespace(p_text text)
+returns text language sql immutable set search_path = '' as $$
+  select translate(coalesce(p_text,''),
+    U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF', repeat(' ',25))
+$$;
+
 -- Canonical ordering representation: numeric/circled orders become the token sentence.
 -- Comparing token sentences also treats identical duplicate words as interchangeable.
 create or replace function public.exam_ordering_key(p_answer text, p_content text)
 returns text language plpgsql immutable set search_path = '' as $$
 declare
-  v text := trim(coalesce(p_answer, ''));
+  v text := trim(public.exam_grading_whitespace(p_answer));
   marks text := '';
   token text[];
   words jsonb := '{}'::jsonb;
@@ -25,21 +32,22 @@ declare
   n integer;
   result text := '';
 begin
-  for token in select regexp_matches(coalesce(p_content, ''), '([①-⑳])\s*([^①-⑳]*)', 'g') loop
+  for token in select regexp_matches(public.exam_grading_whitespace(p_content), '([①-⑳]) *([^①-⑳]*)', 'g') loop
     if trim(token[2]) <> '' and not words ? token[1] then words := words || jsonb_build_object(token[1], trim(token[2])); end if;
   end loop;
   select coalesce(string_agg(m[1], ''), '') into marks from regexp_matches(v, '([①-⑳])', 'g') m;
-  if marks = '' and v ~ '^[0-9\s,.–>→-]+$' then
+  if marks = '' and v ~ '^[0-9 ,.–>→-]+$' then
     if v ~ '^[0-9]+$' then
       for part in select regexp_split_to_table(v, '') loop
         n := part::integer;
-        if n < 1 or n > (case when words = '{}' then 20 else (select count(*) from jsonb_object_keys(words)) end) then return lower(regexp_replace(v, '\s', '', 'g')); end if;
+        if n < 1 or n > (case when words = '{}' then 20 else (select count(*) from jsonb_object_keys(words)) end) then return lower(regexp_replace(v, '[ 。，、！？!?,.;；:："“”''‘’…]', '', 'g')); end if;
         marks := marks || chr(9311+n);
       end loop;
     else
       for token in select regexp_matches(v, '([0-9]+)', 'g') loop
+        if length(ltrim(token[1],'0')) > 2 then return lower(regexp_replace(v, '[ 。，、！？!?,.;；:："“”''‘’…]', '', 'g')); end if;
         n := token[1]::integer;
-        if n < 1 or n > 20 then return lower(regexp_replace(v, '\s', '', 'g')); end if;
+        if n < 1 or n > (case when words = '{}' then 20 else (select count(*) from jsonb_object_keys(words)) end) then return lower(regexp_replace(v, '[ 。，、！？!?,.;；:："“”''‘’…]', '', 'g')); end if;
         marks := marks || chr(9311+n);
       end loop;
     end if;
@@ -52,20 +60,22 @@ begin
     end loop;
     v := result;
   end if;
-  return lower(regexp_replace(v, '[\s。，、！？!?,.;；:："“”''‘’…]', '', 'g'));
+  return lower(regexp_replace(v, '[ 。，、！？!?,.;；:："“”''‘’…]', '', 'g'));
 end $$;
 
 create or replace function public.exam_answer_matches(p_user text, p_correct text, p_type text, p_content text)
 returns boolean language plpgsql immutable set search_path = '' as $$
 declare
-  u text := lower(trim(coalesce(p_user, '')));
-  c text := lower(trim(coalesce(p_correct, '')));
+  u text := lower(trim(public.exam_grading_whitespace(p_user)));
+  c text := lower(trim(public.exam_grading_whitespace(p_correct)));
   alt text;
 begin
   if u = '' then return false; end if;
   if p_type = 'ordering' then
+    u := public.exam_ordering_key(p_user, p_content);
+    if u = '' then return false; end if;
     for alt in select regexp_split_to_table(coalesce(p_correct, ''), '/|\||hoặc', 'i') loop
-      if public.exam_ordering_key(p_user, p_content) = public.exam_ordering_key(alt, p_content) then return true; end if;
+      if u = public.exam_ordering_key(alt, p_content) then return true; end if;
     end loop;
     return false;
   end if;
@@ -73,11 +83,11 @@ begin
     if c = any(array['true','t','1','đúng','dung','对','dui']) then return u = any(array['true','t','1','đúng','dung','对','dui']); end if;
     if c = any(array['false','f','0','sai','错','cuo']) then return u = any(array['false','f','0','sai','错','cuo']); end if;
   end if;
-  u := regexp_replace(u, '\s', '', 'g');
+  u := replace(u, ' ', '');
   for alt in select regexp_split_to_table(c, '[/|,]|hoặc') loop
-    if u = regexp_replace(trim(alt), '\s', '', 'g') then return true; end if;
+    if u = replace(trim(alt), ' ', '') then return true; end if;
   end loop;
-  return u = regexp_replace(c, '\s', '', 'g');
+  return u = replace(c, ' ', '');
 end $$;
 
 create or replace function public.submit_exam_attempt(p_attempt jsonb)
@@ -142,3 +152,5 @@ $$;
 revoke all on function public.submit_exam_attempt(jsonb), public.get_exam_answers(uuid) from public, anon;
 grant execute on function public.submit_exam_attempt(jsonb), public.get_exam_answers(uuid) to authenticated;
 revoke all on function public.exam_answer_matches(text,text,text,text), public.exam_ordering_key(text,text) from public, anon, authenticated;
+
+revoke all on function public.exam_grading_whitespace(text) from public, anon, authenticated;

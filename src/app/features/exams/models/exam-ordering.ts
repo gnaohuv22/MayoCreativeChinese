@@ -60,15 +60,35 @@ export function toOrderingMarks(
   );
 }
 
+/** Grading compares the resulting sentence, so identical word chips are interchangeable.
+ * Keep this normalization in parity with exam_ordering_key in migration 035.
+ * Display/chip conversion still uses toOrderingMarks to retain each chip's identity.
+ */
+export function orderingGradingKey(
+  answer: string | null | undefined,
+  tokens: OrderingToken[],
+): string {
+  const text = (answer ?? '').trim();
+  const marks = orderingMarks(text).join('') || fromNumbers(text, tokens);
+  if (marks) {
+    if (!tokens.length) return marks;
+    const byMark = new Map(tokens.map(token => [token.mark, token.text]));
+    const sequence = orderingMarks(marks);
+    if (sequence.some(mark => !byMark.has(mark))) return marks;
+    return sequence.map(mark => byMark.get(mark)).join('').replace(IGNORED, '').toLowerCase();
+  }
+  return text.replace(IGNORED, '').toLowerCase();
+}
+
 /** Câu trả lời của học viên có khớp 1 trong các cách xếp của đáp án đúng không */
 export function orderingAnswerMatches(
   userAnswer: string | null | undefined,
   correctAnswer: string | null | undefined,
   tokens: OrderingToken[],
 ): boolean {
-  const user = toOrderingMarks(userAnswer, tokens);
+  const user = orderingGradingKey(userAnswer, tokens);
   if (!user) return false;
-  return orderingAlternatives(correctAnswer).some((alt) => toOrderingMarks(alt, tokens) === user);
+  return orderingAlternatives(correctAnswer).some((alt) => orderingGradingKey(alt, tokens) === user);
 }
 
 /**
